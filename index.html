@@ -109,7 +109,8 @@
       <p class="intro">כל 20 התשובות יישלחו יחד. לחצו על תשובה כדי לערוך אותה.</p>
       <div class="review-list" id="review-list"></div>
       <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="send" type="button">שליחת כל התשובות</button></div>
-      <p class="privacy">התשובות והשם יישלחו בדוא״ל למורה באמצעות FormSubmit. בעת השליחה ייתכן שתופיע בדיקת אבטחה קצרה.</p>
+      <p class="error" id="send-error" role="alert"></p>
+      <p class="privacy">התשובות והשם יישלחו בדוא״ל למורה באמצעות FormSubmit.</p>
     </section>
 
     <form id="delivery" action="https://formsubmit.co/345287@gmail.com" method="POST" hidden>
@@ -211,7 +212,7 @@
       show('review');
     }
     byId('back-to-questions').addEventListener('click', () => showQuestion(questions.length - 1));
-    byId('send').addEventListener('click', () => {
+    byId('send').addEventListener('click', async () => {
       const missing = questions.findIndex((_, index) => !answers[index] || !answers[index].trim());
       if (missing !== -1) { showQuestion(missing); byId('answer-error').textContent = 'יש לכתוב תשובה לפני השליחה.'; return; }
       const form = byId('delivery');
@@ -223,8 +224,23 @@
         form.append(input);
       });
       byId('send').disabled = true;
-      byId('send').textContent = 'מעבירים לשליחה…';
-      form.submit();
+      byId('send').textContent = 'שולחים…';
+      byId('send-error').textContent = '';
+      try {
+        const response = await fetch('https://formsubmit.co/ajax/345287@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(form)))
+        });
+        const result = await response.json();
+        if (!response.ok || (result.success !== 'true' && result.success !== true)) throw new Error('Submission failed');
+        try { sessionStorage.removeItem(storageKey); } catch (_) {}
+        window.location.assign('thanks.html');
+      } catch (_) {
+        byId('send-error').textContent = 'השליחה לא הושלמה. בדקו את החיבור לאינטרנט ונסו שוב.';
+        byId('send').disabled = false;
+        byId('send').textContent = 'שליחת כל התשובות';
+      }
     });
   </script>
 </body>
