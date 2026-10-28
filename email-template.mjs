@@ -2,14 +2,14 @@ const escape = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': 
 
 // Table layout with inline styles only: mail clients ignore <style> blocks and modern CSS.
 export function renderExamEmail({ name, answers, origin: rawOrigin }) {
-  const origin = rawOrigin.replace(/\/+$/, '');
+  const origin = escape(rawOrigin.replace(/\/+$/, ''));
   const font = "font-family:Arial,'Noto Sans Hebrew',sans-serif;";
   const cards = answers.map((item, i) => `
     <tr><td style="padding:0 24px 14px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #e5e9ec;border-radius:16px;">
         <tr><td style="padding:14px 16px 6px;${font}font-size:13px;font-weight:bold;color:#46a302;">שאלה ${i + 1}</td></tr>
         <tr><td style="padding:0 16px 8px;${font}font-size:16px;font-weight:bold;line-height:1.6;color:#273541;">${escape(item.question)}</td></tr>
-        <tr><td style="padding:0 16px 16px;"><div style="padding:12px 14px;background:#e9fbdc;border-radius:12px;${font}font-size:16px;line-height:1.7;color:#273541;white-space:pre-wrap;">${escape(item.answer)}</div></td></tr>
+        <tr><td style="padding:0 16px 16px;"><div style="padding:12px 14px;background:#e9fbdc;border-radius:12px;${font}font-size:16px;line-height:1.7;color:#273541;white-space:pre-wrap;" dir="auto">${escape(item.answer)}</div></td></tr>
       </table>
     </td></tr>`).join('');
   return `<!doctype html>

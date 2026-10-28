@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <title>תרגול לקראת המבחן | PrepX</title>
-  <link rel="stylesheet" href="practice.css?v=4">
+  <link rel="stylesheet" href="practice.css?v=5">
   <script src="quiz-core.js?v=1" defer></script>
-  <script src="practice.js?v=6" defer></script>
+  <script src="practice.js?v=7" defer></script>
   <link rel="stylesheet" href="branding.css?v=1">
 </head>
 <body>
@@ -34,12 +34,12 @@
 
       <div class="question-panel">
         <span id="question-index" class="question-index"></span>
-        <h2 id="question-text"></h2>
+        <h2 id="question-text" tabindex="-1"></h2>
         <div id="choices" class="choices" role="group" aria-labelledby="question-text"></div>
       </div>
       <div class="response-panel">
         <p id="streak-badge" class="streak-badge" role="status" hidden></p>
-        <div id="feedback" class="feedback" role="status" aria-live="polite" hidden>
+        <div id="feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" hidden>
           <strong id="feedback-title"></strong>
           <p id="feedback-he"></p>
           <p id="feedback-en" class="english" dir="ltr"></p>

@@ -110,7 +110,7 @@ for (const [key, [title, description, questions]] of Object.entries(physicsLesso
 
 const byId = id => document.getElementById(id);
 const quizKey = new URLSearchParams(location.search).get('quiz');
-const selectedQuiz = quizzes[quizKey];
+const selectedQuiz = Object.hasOwn(quizzes, quizKey) ? quizzes[quizKey] : undefined;
 const { scoreQuiz, starsFor, feedbackTier, shuffled, shuffleChoices, missedQuestions, scheduleReask, streakCelebrates } = QuizCore;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -123,7 +123,7 @@ let answered = false;
 let fullRound = true;
 
 const bestKey = `prepx-best-${quizKey}`;
-const readBest = () => { try { return Number(localStorage.getItem(bestKey)) || 0; } catch { return 0; } };
+const readBest = () => { try { const raw = localStorage.getItem(bestKey); return /^\d{1,3}$/.test(raw) && Number(raw) <= 100 ? Number(raw) : 0; } catch { return 0; } };
 const saveBest = value => { try { localStorage.setItem(bestKey, String(value)); } catch { /* storage unavailable */ } };
 
 if (!selectedQuiz) {
@@ -151,8 +151,10 @@ function startRound(questions, full = true) {
   position = 0;
   streak = 0;
   byId('result-screen').hidden = true;
+  byId('confetti').replaceChildren();
   byId('quiz-screen').hidden = false;
   showQuestion();
+  byId('question-text').focus({ preventScroll: true });
   window.scrollTo(0, 0);
 }
 
@@ -210,6 +212,7 @@ function selectChoice(index) {
   byId('streak-badge').hidden = !(correct && !question.reask && streakCelebrates(streak));
   if (!byId('streak-badge').hidden) byId('streak-badge').textContent = `${streak} ברצף!`;
   byId('next-button').hidden = false;
+  byId('feedback').focus({ preventScroll: true });
   byId('next-button').textContent = position === queue.length - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
 }
 
@@ -218,6 +221,7 @@ byId('next-button').addEventListener('click', () => {
   if (position < queue.length - 1) {
     position++;
     showQuestion();
+    byId('question-text').focus({ preventScroll: true });
     window.scrollTo(0, 0);
   } else {
     showResult();
@@ -227,20 +231,22 @@ byId('next-button').addEventListener('click', () => {
 const messages = {
   low: 'זו התחלה, ובדיוק בשביל זה מתרגלים! קראו שוב את ההסברים ונסו עוד פעם. בכל ניסיון תשתפרו.',
   ok: 'כל הכבוד! עוד סבב קצר על הטעויות ותגיעו לציון גבוה יותר.',
-  great: 'מצוין! שלטתם בחומר. אפשר לבחור תרגול נוסף.'
+  great: 'מצוין! שלטתם בחומר. אפשר לבחור תרגול נוסף.',
+  review: 'יפה מאוד על החזרה! אפשר לתרגל שוב את כל השאלות ולשפר את הציון.'
 };
 
 const messagesEn = {
   low: 'A good start, and that is exactly what practice is for. Read the explanations and try again.',
   ok: 'Well done! One short round on your mistakes will raise your score.',
-  great: 'Excellent! You know this material.'
+  great: 'Excellent! You know this material.',
+  review: 'Nice work reviewing! Practice all the questions again to improve your score.'
 };
 
 function showResult() {
   const { earned } = scoreQuiz(roundQuestions, results);
   const missed = missedQuestions(roundQuestions, results);
   const correctCount = roundQuestions.length - missed.length;
-  const tier = feedbackTier(earned);
+  const tier = fullRound ? feedbackTier(earned) : 'review';
   const stars = starsFor(earned);
   const previousBest = readBest();
   if (fullRound && earned > previousBest) saveBest(earned);
@@ -249,10 +255,12 @@ function showResult() {
   const panel = byId('result-screen');
   panel.hidden = false;
   panel.dataset.tier = tier;
+  byId('result-stars').hidden = !fullRound;
   byId('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
   byId('result-stars').setAttribute('aria-label', `${stars} כוכבים מתוך 3`);
-  byId('result-score').textContent = `${earned} מתוך 100`;
-  byId('result-count').textContent = `${correctCount} מתוך ${roundQuestions.length} תשובות נכונות בניסיון הראשון`;
+  byId('result-score').textContent = fullRound ? `${earned} מתוך 100` : `תיקנתם ${correctCount} מתוך ${roundQuestions.length} טעויות`;
+  byId('result-count').textContent = fullRound ? `${correctCount} מתוך ${roundQuestions.length} תשובות נכונות בניסיון הראשון` : 'סבב חזרה על הטעויות. הציון הקודם נשמר.';
+  byId('confetti').replaceChildren();
   byId('result-message').textContent = messages[tier];
   byId('result-message-en').textContent = messagesEn[tier];
   const improvement = fullRound && previousBest > 0 && earned > previousBest ? earned - previousBest : 0;
