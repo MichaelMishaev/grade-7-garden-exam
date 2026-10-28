@@ -1,7 +1,10 @@
 const escape = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 const fmt = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const duration = (start, end) => `${Math.max(1, Math.round((Date.parse(end) - Date.parse(start)) / 60000))} דקות`;
+const duration = (start, end) => {
+  const mins = Math.max(1, Math.round((Date.parse(end) - Date.parse(start)) / 60000));
+  return mins === 1 ? 'דקה אחת' : `${mins} דקות`;
+};
 
 export function timeLines({ startedAt, finishedAt } = {}) {
   if (!startedAt) return '';

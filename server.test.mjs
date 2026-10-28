@@ -96,6 +96,8 @@ test('start, finish and duration reach the teacher email; bad times are ignored'
   await submit({ ...payload, startedAt: '2026-10-28T10:00:00.000Z', finishedAt: '2026-10-28T10:25:00.000Z' });
   assert.match(calls[0].body.text, /משך: 25 דקות/);
   assert.match(calls[0].body.html, /משך: 25 דקות/);
+  await submit({ ...payload, startedAt: '2026-10-28T10:00:00.000Z', finishedAt: '2026-10-28T10:00:40.000Z' });
+  assert.match(calls[1].body.text, /משך: דקה אחת/);
   await submit({ ...payload, startedAt: 'nonsense', finishedAt: '2026-10-28T10:25:00.000Z' });
-  assert.doesNotMatch(calls[1].body.text, /משך:/);
+  assert.doesNotMatch(calls[2].body.text, /משך:/);
 }));
