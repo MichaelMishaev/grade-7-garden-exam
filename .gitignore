@@ -1,2 +1,7 @@
 mobile-preview.png
 submission-success.png
+.env
+.env.*
+backups/
+*.dump
+node_modules/

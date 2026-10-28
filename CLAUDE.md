@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-PrepX: a mobile-first Hebrew (RTL) exam-prep site for class ז׳2 at שי עגנון school, Netanya. Plain static HTML/CSS/JS with no framework, no build step, no npm dependencies, and no test or lint tooling.
+PrepX: a mobile-first Hebrew (RTL) exam-prep site for class ז׳2 at שי עגנון school, Netanya. Plain static HTML/CSS/JS with no framework, no build step, and no test or lint tooling. The only npm dependency is `postgres`, used by the optional database layer.
 
 ## Commands
 
@@ -12,7 +12,7 @@ PrepX: a mobile-first Hebrew (RTL) exam-prep site for class ז׳2 at שי עגנ
 npm start            # node server.mjs → http://localhost:3000 (override with PORT)
 ```
 
-There is nothing to build or lint. Run `node --test server.test.mjs` for the submission API. Verify changes by loading the pages in a browser (mobile viewport first; every page is `lang="he" dir="rtl"`).
+There is nothing to build or lint. Run `node --test *.test.mjs db/*.test.mjs` for scoring, the submission API and the database layer (Postgres tests skip unless `TEST_DATABASE_URL` / `E2E_DATABASE_URL` is set). Verify changes by loading the pages in a browser (mobile viewport first; every page is `lang="he" dir="rtl"`).
 
 ## Architecture
 
@@ -29,7 +29,9 @@ There is nothing to build or lint. Run `node --test server.test.mjs` for the sub
 - `garden-exam.html` → the full 20-question open-answer exam; all logic is inline. Questions are in the inline `questions` array. On submit it POSTs JSON to `/api/submit-exam`, which emails the teacher through Resend. GitHub Pages uses `https://hitech.agnon.online/api/submit-exam`. Provider acceptance redirects to `thanks.html`; failures keep the draft.
 - `thanks.html` → also clears the exam draft.
 
-**Exam drafts** are kept in `sessionStorage` under `garden-exam-draft-v1`. That key appears in both `garden-exam.html` and `thanks.html`; change both together. No student data is stored server-side.
+**Exam drafts** are kept in `sessionStorage` under `garden-exam-draft-v1`. That key appears in both `garden-exam.html` and `thanks.html`; change both together. Server-side storage is optional and off by default: with `DATABASE_URL` and `DB_WRITE_SUBMISSIONS=1`, submissions (name and answers) are saved to Postgres and kept with no automatic deletion.
+
+**Database (optional, off by default):** `db/` holds the Postgres schema, `extract.mjs` (reads questions from the page sources, which remain the source of truth), `seed.mjs`, `verify.mjs` and the server-side layer. Flags: `DATABASE_URL`, `DB_WRITE_SUBMISSIONS=1` (save before emailing; a DB failure or >2s delay must never stop the email), `DB_READ_API=1` (`/api/subjects|quizzes|exams`, `/api/health`). With the flags off, behavior must stay identical to the no-database server. Migrations are additive only; never delete database rows without explicit permission and a backup. After changing any question text, re-run `npm run db:seed` and `npm run db:verify`. `content-api.js` loads API content with inline fallback and is opt-in on `practice.html`. Never log the `postgres` error object (it can contain parameters); log `error.code` only.
 
 **Resend configuration:** `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are private Railway variables. `APP_ORIGIN` is the canonical app origin; set `NODE_ENV=production` in production. Never log student answers or credentials. Local checks mock Resend (`node --test server.test.mjs`); only a real provider delivery event or inbox receipt proves delivery.
 

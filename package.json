@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "db:migrate": "node db/migrate.mjs",
+    "db:seed": "node db/seed.mjs",
+    "db:verify": "node db/verify.mjs"
+  },
+  "dependencies": {
+    "postgres": "^3.4.9"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

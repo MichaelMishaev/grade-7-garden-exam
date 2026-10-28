@@ -22,13 +22,46 @@ The server listens on `PORT` or port 3000. It serves `/api/submit-exam` and stat
 - `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short Hebrew practice quizzes with immediate Hebrew and English feedback. `?quiz=physics-basics`, `physics-units`, `physics-precision`, `physics-pole`: physics quizzes with Hebrew feedback. Practice is scored out of 100 with 0–3 stars, and the best full-round score is kept in `localStorage` (`prepx-best-<quiz>`) and shown on the subject page. Scoring rules are in `QUESTION-RULES.md`.
 - `thanks.html`: confirmation after the full exam is submitted.
 
-The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are not stored on the app server or written to its logs; Resend processes the email content. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser and send nothing.
+The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are never written to the server logs; Resend processes the email content. If the optional database is enabled (see [Database](#database)), the name and answers are also saved there, with no automatic deletion. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser and send nothing.
 
 Railway requires `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_ORIGIN=https://hitech.agnon.online`, and `NODE_ENV=production`. Keep the API key in Railway variables, never in browser code or Git. GitHub Pages submits to the Railway endpoint using an explicitly allowed origin. Identical submissions use Resend's idempotency key (24-hour window). The server accepts at most 100 valid submission attempts per hour per running instance; this in-memory limit resets on restart.
 
-Run the checks with `node --test quiz-core.test.mjs server.test.mjs` (scoring logic and the submission API; Resend is mocked).
+Run the checks with `node --test *.test.mjs db/*.test.mjs` (scoring logic, the submission API, content extraction and the database layer; Resend is mocked). Tests that need Postgres are skipped unless `TEST_DATABASE_URL` or `E2E_DATABASE_URL` is set (see [Database](#database)).
 
 On 2026-10-28, a synthetic submission from the live exam reached `thanks.html`; Resend reported it delivered to the teacher address, with the test marker and all 20 answer sections present (email ID `01a182f9-659f-765f-b663-2ad92e7a5267`).
+
+## Database
+
+PostgreSQL holds the exam and quiz content (subjects, exams, quizzes, questions with answers and explanations) and, optionally, student submissions. **It is off by default.** With no `DATABASE_URL` or flags, the server behaves exactly as described above, and the pages use their inline data.
+
+| Variable | Effect |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string. Nothing database-related runs without it. |
+| `DB_WRITE_SUBMISSIONS=1` | `/api/submit-exam` saves the submission (name, answers, start/finish times, email status) before sending the email. A slow or failing database never blocks or fails the email: the server waits at most 2 seconds. |
+| `DB_READ_API=1` | Enables `GET /api/subjects`, `/api/subjects/:id`, `/api/quizzes/:id` and `/api/exams/:id`, plus `/api/health`. Same allowed origins as the submit endpoint. |
+
+**Student data is kept.** With the write flag on, student names and answers are stored with no automatic deletion. The teacher email is still sent as before. Deleting any data needs an explicit decision and a backup first; no script here deletes anything.
+
+Files:
+
+- `db/migrations/001_init.sql`: the schema. Migrations are additive only; `db/migrate.mjs` refuses `DROP`, `TRUNCATE` and `DELETE`.
+- `db/extract.mjs`: reads the questions and answers out of `garden-exam.html`, `library-exam.js`, `practice.js` and `subject.html`. The files stay the source of truth; nothing is retyped.
+- `db/seed.mjs`: inserts or updates the content (never deletes). `db/verify.mjs` compares the database with the source files and exits 1 on any difference.
+- `db/runtime.mjs`, `db/content.mjs`, `db/submissions.mjs`: the server-side database layer. `postgres` is the only npm dependency; it is loaded lazily, so the server starts without a database.
+- `content-api.js`: loads content from the API and falls back to the inline data on any error. `practice.html` uses it only with `?source=api` or when its `prepx-content-source` meta tag is set to `api` (shipped as `inline`).
+
+Run it locally with Docker:
+
+```bash
+npm install
+docker compose up -d --build         # Postgres on :54330, app on :3010, migrated and seeded
+npm run db:migrate && npm run db:seed && npm run db:verify   # against DATABASE_URL, outside compose
+E2E_DATABASE_URL=postgres://postgres:dev@localhost:54330/prepx node --test e2e/full-stack.test.mjs
+```
+
+The integration and end-to-end tests drop and recreate the `public` schema of the database they are given. Point them only at a throwaway database (`TEST_DATABASE_URL` must contain `test` in its name).
+
+Railway rollout (not done yet): add a Postgres service, run `db:migrate`, `db:seed` and `db:verify` against it, take a `pg_dump -Fc` backup outside the repo, then set `DATABASE_URL` and the flags on `web`. Unsetting the flags restores the previous behavior.
 
 ## Deployment
 

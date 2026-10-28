@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { renderExamEmail, timeLines, scoreLine } from './email-template.mjs';
+import { createDb } from './db/runtime.mjs';
 
 const root = process.cwd();
 const types = {
@@ -15,20 +16,20 @@ const types = {
   '.pdf': 'application/pdf'
 };
 
-export function createApp({ env = process.env, sendFetch = fetch } = {}) {
+export function createApp({ env = process.env, sendFetch = fetch, db = createDb(env) } = {}) {
   let attempts = [];
   return http.createServer(async (request, response) => {
+  const allowedOrigins = new Set([
+    env.APP_ORIGIN || 'https://hitech.agnon.online',
+    'https://web-production-1a642.up.railway.app',
+    'https://michaelmishaev.github.io',
+    ...(env.NODE_ENV === 'production' ? [] : ['http://localhost:3000', 'http://127.0.0.1:3000'])
+  ]);
   const json = (status, body) => response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store'
   }).end(JSON.stringify(body));
 
   if (request.url === '/api/submit-exam') {
-    const allowedOrigins = new Set([
-      env.APP_ORIGIN || 'https://hitech.agnon.online',
-      'https://web-production-1a642.up.railway.app',
-      'https://michaelmishaev.github.io',
-      ...(env.NODE_ENV === 'production' ? [] : ['http://localhost:3000', 'http://127.0.0.1:3000'])
-    ]);
     if (!allowedOrigins.has(request.headers.origin)) return json(403, { error: 'Origin not allowed' });
     response.setHeader('Access-Control-Allow-Origin', request.headers.origin);
     response.setHeader('Vary', 'Origin');
@@ -74,6 +75,16 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
     const name = payload.name.trim();
     const answers = payload.answers.map(item => ({ question: item.question.trim(), answer: item.answer.trim(), correct: typeof item.correct === 'boolean' ? item.correct : undefined }));
     const key = createHash('sha256').update(JSON.stringify({ name, answers })).digest('hex');
+    // Best effort: a slow or failing database must never block or fail the email.
+    // A write that outlives the 2s wait still completes, and the email status is recorded once it does.
+    const storing = db?.flags.write ? db.storeSubmission({ key, name, answers, ...times }) : null;
+    storing?.catch(error => console.error('submission store failed', error?.code ?? error?.name));
+    if (storing) {
+      let timer;
+      await Promise.race([storing.catch(() => {}), new Promise(resolve => { timer = setTimeout(resolve, 2000); })]);
+      clearTimeout(timer);
+    }
+    const markEmail = update => storing?.then(id => db.markEmail(id, update)).catch(() => {});
     try {
       const result = await sendFetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -90,13 +101,50 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
       const data = await result.json();
       if (!result.ok || typeof data.id !== 'string' || !data.id) {
         console.error('Resend rejected submission', result.status);
+        markEmail({ status: 'failed', httpStatus: result.status });
         return json(502, { error: 'Email submission failed' });
       }
       console.info('Exam email accepted by Resend', data.id);
+      markEmail({ status: 'accepted', resendId: data.id, httpStatus: result.status });
       return json(200, { success: true });
     } catch {
       console.error('Resend submission unavailable');
+      markEmail({ status: 'failed' });
       return json(502, { error: 'Email submission failed' });
+    }
+  }
+
+  if (db && (request.method === 'GET' || request.method === 'HEAD') && (request.url === '/api/health' || request.url.startsWith('/api/health?'))) {
+    return json(200, { ok: true, db: await db.health() ? 'up' : 'down' });
+  }
+
+  if (db?.flags.read && request.url.startsWith('/api/') && (request.method === 'GET' || request.method === 'HEAD' || request.method === 'OPTIONS')) {
+    const origin = request.headers.origin;
+    if (origin) {
+      if (!allowedOrigins.has(origin)) return json(403, { error: 'Origin not allowed' });
+      response.setHeader('Access-Control-Allow-Origin', origin);
+      response.setHeader('Vary', 'Origin');
+    }
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204, { 'Access-Control-Allow-Methods': 'GET', 'Access-Control-Allow-Headers': 'Content-Type' }).end();
+      return;
+    }
+    const [, , kind, rawId] = new URL(request.url, 'http://localhost').pathname.split('/');
+    let id;
+    try { id = rawId === undefined ? undefined : decodeURIComponent(rawId); } catch { return json(400, { error: 'Bad request' }); }
+    const lookup = { subjects: id ? db.getSubject : db.listSubjects, quizzes: db.getQuiz, exams: db.getExam }[kind];
+    if (!lookup || (kind !== 'subjects' && !id)) return json(404, { error: 'Not found' });
+    try {
+      const data = await lookup(id ?? '');
+      if (!data) return json(404, { error: 'Not found' });
+      const etag = `"${await db.contentVersion()}"`;
+      if (request.headers['if-none-match'] === etag) { response.writeHead(304, { ETag: etag }).end(); return; }
+      response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=300', ETag: etag });
+      response.end(request.method === 'HEAD' ? undefined : JSON.stringify(data));
+      return;
+    } catch {
+      console.error('content lookup failed');
+      return json(503, { error: 'Content unavailable' });
     }
   }
 
@@ -116,7 +164,7 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
   if (pathname === '/') pathname = '/index.html';
   const file = resolve(root, `.${pathname}`);
   const type = types[extname(file)];
-  if (!type || !file.startsWith(root + sep) || pathname.split('/').some(part => part.startsWith('.'))) {
+  if (!type || !file.startsWith(root + sep) || pathname.split('/').some(part => part.startsWith('.') || part === 'node_modules')) {
     response.writeHead(404).end();
     return;
   }

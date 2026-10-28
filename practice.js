@@ -110,7 +110,11 @@ for (const [key, [title, description, questions]] of Object.entries(physicsLesso
 
 const byId = id => document.getElementById(id);
 const quizKey = new URLSearchParams(location.search).get('quiz');
-const selectedQuiz = Object.hasOwn(quizzes, quizKey) ? quizzes[quizKey] : undefined;
+const inlineQuiz = Object.hasOwn(quizzes, quizKey) ? quizzes[quizKey] : undefined;
+let selectedQuiz = inlineQuiz;
+// Opt-in only: ?source=api or <meta name="prepx-content-source" content="api">. Inline data is always the fallback.
+const useApi = new URLSearchParams(location.search).get('source') === 'api'
+  || document.querySelector('meta[name="prepx-content-source"]')?.content === 'api';
 const { scoreQuiz, starsFor, feedbackTier, shuffled, shuffleChoices, missedQuestions, scheduleReask, streakCelebrates } = QuizCore;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -126,22 +130,30 @@ const bestKey = `prepx-best-${quizKey}`;
 const readBest = () => { try { const raw = localStorage.getItem(bestKey); return /^\d{1,3}$/.test(raw) && Number(raw) <= 100 ? Number(raw) : 0; } catch { return 0; } };
 const saveBest = value => { try { localStorage.setItem(bestKey, String(value)); } catch { /* storage unavailable */ } };
 
-if (!selectedQuiz) {
-  byId('quiz-title').textContent = 'התרגול לא נמצא';
-  byId('quiz-description').textContent = 'חזרו לדף הראשי ובחרו תרגול מהרשימה.';
-  byId('progress-count').textContent = '';
-  byId('question-text').textContent = '';
-  byId('progress-fill').parentElement.hidden = true;
-  byId('question-index').hidden = true;
-} else {
-  if (quizKey.startsWith('physics-')) {
-    document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים במדעים'; });
+async function init() {
+  if (useApi && inlineQuiz && window.ContentApi) {
+    const { loadContent, quizFromApi, quizMatches } = ContentApi;
+    const data = await loadContent(`quizzes/${quizKey}`, null, { valid: quiz => quizMatches(quiz, inlineQuiz.questions.length) });
+    if (data) selectedQuiz = quizFromApi(data);
   }
-  document.title = `${selectedQuiz.title} | PrepX`;
-  byId('quiz-title').textContent = selectedQuiz.title;
-  byId('quiz-description').textContent = selectedQuiz.description;
-  startRound(selectedQuiz.questions.map((q, i) => ({ ...q, id: `q${i}`, type: 'mcq', difficulty: q.difficulty || 'medium' })));
+  if (!selectedQuiz) {
+    byId('quiz-title').textContent = 'התרגול לא נמצא';
+    byId('quiz-description').textContent = 'חזרו לדף הראשי ובחרו תרגול מהרשימה.';
+    byId('progress-count').textContent = '';
+    byId('question-text').textContent = '';
+    byId('progress-fill').parentElement.hidden = true;
+    byId('question-index').hidden = true;
+  } else {
+    if (quizKey.startsWith('physics-')) {
+      document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים במדעים'; });
+    }
+    document.title = `${selectedQuiz.title} | PrepX`;
+    byId('quiz-title').textContent = selectedQuiz.title;
+    byId('quiz-description').textContent = selectedQuiz.description;
+    startRound(selectedQuiz.questions.map((q, i) => ({ ...q, id: `q${i}`, type: 'mcq', difficulty: q.difficulty || 'medium' })));
+  }
 }
+init();
 
 function startRound(questions, full = true) {
   roundQuestions = questions;
