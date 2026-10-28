@@ -3,24 +3,27 @@
 body { margin: 0; min-width: 300px; }
 a { color: inherit; text-decoration: none; }
 .page { width: min(100% - 32px, 880px); margin: auto; padding: 22px 0 38px; }
-.site-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 48px; }
+.site-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 36px; }
 .brand { color: #246a43; font-size: 16px; font-weight: 800; }
 .grade { color: #687b6f; font-size: 14px; }
-.intro { max-width: 660px; margin-bottom: 36px; }
+.intro { max-width: 660px; margin-bottom: 26px; }
 h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.14; letter-spacing: -.03em; margin: 0 0 14px; }
 .intro p { color: #566d5e; font-size: 18px; line-height: 1.72; margin: 0; }
-.featured { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px; background: #e8f2e8; border: 1px solid #c8ddc9; border-radius: 22px; padding: clamp(24px, 5vw, 38px); margin-bottom: 16px; }
-.featured-copy { max-width: 540px; }
-.eyebrow { display: block; color: #327c4e; font-size: 14px; font-weight: 800; margin-bottom: 15px; }
-.featured h2 { font-size: clamp(25px, 4.2vw, 34px); line-height: 1.3; margin: 0 0 12px; }
-.featured p { font-size: 16px; line-height: 1.65; color: #53695a; margin: 0; }
-.featured-link { display: inline-flex; justify-content: center; align-items: center; gap: 15px; flex: 0 0 auto; min-height: 54px; padding: 12px 20px; border-radius: 13px; background: #267449; color: white; font-size: 16px; font-weight: 800; white-space: nowrap; }
-.featured-link:hover { background: #1c603b; }
-.upcoming-exam { display: flex; justify-content: space-between; align-items: center; gap: 24px; border: 1px solid #dce5db; border-radius: 18px; background: white; padding: 22px 28px; margin-bottom: 44px; }
-.upcoming-label { color: #687b6f; font-size: 13px; font-weight: 800; }
-.upcoming-exam h2 { font-size: 23px; margin: 7px 0 5px; }
-.upcoming-exam p { margin: 0; color: #617568; line-height: 1.5; }
-.upcoming-status { flex: 0 0 auto; border-radius: 999px; background: #eef2ed; padding: 8px 13px; color: #607468; font-size: 14px; font-weight: 800; }
+.exam-list { display: grid; gap: 12px; }
+.exam-card { display: flex; align-items: center; gap: 16px; min-height: 92px; padding: 16px 20px; border: 1px solid #dce5db; border-radius: 17px; background: white; }
+.exam-card:first-child { background: #e8f2e8; border-color: #c8ddc9; }
+.exam-card:hover { border-color: #8fbea0; box-shadow: 0 8px 22px rgba(24,60,44,.06); }
+.exam-icon { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 13px; background: #d8eadb; color: #267449; font-size: 23px; font-weight: 800; }
+.physics-icon { background: #eef2ed; color: #607468; }
+.exam-copy { flex: 1; min-width: 0; }
+.exam-copy strong { display: block; font-size: 20px; margin-bottom: 4px; }
+.exam-copy small { display: block; color: #617568; font-size: 14px; line-height: 1.4; }
+.exam-arrow { color: #267449; font-size: 24px; }
+.back-link { display: inline-block; color: #246a43; font-weight: 700; margin-bottom: 22px; }
+.subject-intro { margin-bottom: 30px; }
+.subject-section { margin-top: 30px; }
+.subject-section h2 { font-size: 24px; margin: 0 0 12px; }
+.empty-state { border: 1px dashed #cbd9cb; border-radius: 17px; padding: 22px; color: #617568; background: white; line-height: 1.6; }
 .section-heading { margin-bottom: 14px; }
 .section-heading h2 { font-size: 25px; margin: 0 0 5px; }
 .section-heading p { margin: 0; color: #617568; line-height: 1.55; }
@@ -37,12 +40,13 @@ footer { text-align: center; margin-top: 38px; color: #718477; font-size: 13px; 
 a:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
 @media (max-width: 650px) {
   .page { width: min(100% - 28px, 880px); padding-top: 17px; }
-  .site-header { padding-bottom: 38px; }
-  .intro { margin-bottom: 26px; }
+  .site-header { padding-bottom: 26px; }
+  .intro { margin-bottom: 24px; }
   .intro p { font-size: 16px; }
-  .featured { display: block; margin-bottom: 14px; }
-  .featured-link { display: flex; width: 100%; margin-top: 24px; }
-  .upcoming-exam { margin-bottom: 38px; padding: 20px; }
+  .exam-card { min-height: 82px; padding: 13px 15px; gap: 12px; }
+  .exam-icon { flex-basis: 42px; height: 42px; }
+  .exam-copy strong { font-size: 18px; }
+  .exam-copy small { font-size: 13px; }
   .quiz-row { min-height: 94px; padding: 16px; gap: 12px; }
   .quiz-icon { flex-basis: 42px; width: 42px; height: 42px; }
   .quiz-copy strong { font-size: 17px; }

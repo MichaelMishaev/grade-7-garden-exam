@@ -1,6 +1,10 @@
 # Grade 7 Hebrew exam practice
 
-A mobile-first RTL study hub. Students choose an exam on the home page. The Hebrew exam for 29.10 is available now; Physics is listed as upcoming until its material is provided. Three short Hebrew practice quizzes cover facts versus opinions, question words, and instruction words.
+A study hub for exam preparation for students in class ז׳2 (Grade 7, class 2) at שי עגנון school in נתניה (Netanya).
+
+**קהל היעד:** תלמידי כיתה ז׳2 בבית הספר שי עגנון, נתניה.
+
+A mobile-first RTL study hub. Students choose a subject on the home page, then a separate version of its exam. The Hebrew exam for 29.10 has one available version; Physics opens a version list that is empty until its material is provided. Three short Hebrew practice quizzes cover facts versus opinions, question words, and instruction words.
 
 ## Run locally
 
@@ -12,7 +16,8 @@ The server listens on `PORT` or port 3000 and serves only static HTML, CSS, Java
 
 ## Pages
 
-- `index.html`: exam selector and Hebrew practice choices.
+- `index.html`: compact subject selector.
+- `subject.html?subject=hebrew` and `?subject=physics`: exam version lists. Add further versions to the `subjects` data in this page.
 - `garden-exam.html`: original 20-question reading exam, with review and email submission.
 - `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short practice quizzes with immediate Hebrew and English feedback.
 - `thanks.html`: confirmation after the full exam is submitted.
@@ -23,9 +28,10 @@ The full exam submits the student's name and answers to FormSubmit for forwardin
 
 - Source repository: <https://github.com/MichaelMishaev/grade-7-garden-exam>
 - Railway project: `grade-7-exam-study`; service: `web`; environment: `production`
+- Custom domain: <https://hitech.agnon.online/> (Cloudflare DNS; Railway hosting and TLS)
 - Railway domain: <https://web-production-1a642.up.railway.app/>
 - GitHub Pages also serves the same static pages; the Node server is used only by Railway.
 
 ## Design references
 
-The hub uses a prominent first exam and a vertical list of short practice choices, adapted for RTL from Mobbin references: [Brilliant course catalog](https://mobbin.com/screens/9360c5fd-857f-4ada-b27f-f1e4e70332df), [Brilliant learning plan](https://mobbin.com/screens/10af6f6b-f0e0-4104-8551-289cbeca755c), [Quizlet question](https://mobbin.com/screens/f8af7017-ac7b-4584-bd0c-9845d160911a), and [Kahoot quiz library](https://mobbin.com/screens/f99622cf-fde9-4136-ab15-4e2ee2608cfc).
+The compact subject rows adapt the scannable list pattern in [LinkedIn's course list](https://mobbin.com/screens/6e8c4863-601c-4f24-9467-0a2b782ab8a9). The version list follows the separate-item structure in [Insight Timer's course days](https://mobbin.com/screens/86450a91-1ecc-42e6-967e-df3336cc8316). The earlier quiz layout drew on [Brilliant's course catalog](https://mobbin.com/screens/9360c5fd-857f-4ada-b27f-f1e4e70332df) and [Quizlet's question screen](https://mobbin.com/screens/f8af7017-ac7b-4584-bd0c-9845d160911a). All were adapted for Hebrew RTL and a small exam catalog.

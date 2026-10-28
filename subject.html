@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>גרסאות המבחן | מתכוננים למבחן</title>
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <a class="brand" href="index.html">מתכוננים למבחן</a>
+      <span class="grade">כיתה ז׳ · הכנה למבחנים</span>
+    </header>
+    <main>
+      <a class="back-link" href="index.html">→ לכל המבחנים</a>
+      <section class="intro subject-intro" aria-labelledby="subject-title">
+        <h1 id="subject-title"></h1>
+        <p id="subject-description"></p>
+      </section>
+      <section class="subject-section" aria-labelledby="variants-title">
+        <h2 id="variants-title">גרסאות המבחן</h2>
+        <div id="variant-list" class="exam-list"></div>
+      </section>
+      <section id="practice-section" class="subject-section" aria-labelledby="practice-heading" hidden>
+        <div class="section-heading">
+          <h2 id="practice-heading">תרגול לפי נושא</h2>
+          <p>תרגולים קצרים שאפשר לנסות שוב. בכל שאלה מקבלים הסבר מיד אחרי התשובה.</p>
+        </div>
+        <div class="quiz-list">
+          <a class="quiz-row" href="practice.html?quiz=facts">
+            <span class="quiz-icon" aria-hidden="true">א</span>
+            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small></span>
+            <span class="arrow" aria-hidden="true">←</span>
+          </a>
+          <a class="quiz-row" href="practice.html?quiz=questions">
+            <span class="quiz-icon" aria-hidden="true">?</span>
+            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small></span>
+            <span class="arrow" aria-hidden="true">←</span>
+          </a>
+          <a class="quiz-row" href="practice.html?quiz=instructions">
+            <span class="quiz-icon" aria-hidden="true">✓</span>
+            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small></span>
+            <span class="arrow" aria-hidden="true">←</span>
+          </a>
+        </div>
+      </section>
+    </main>
+    <footer>בהצלחה בלמידה!</footer>
+  </div>
+  <script>
+    const subjects = {
+      hebrew: {
+        title: 'עברית',
+        description: 'מבחן בתאריך 29.10. בחרו גרסה של המבחן או תרגלו נושא אחד.',
+        variants: [
+          { title: 'גרסה 1 · הבנת הנקרא', detail: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר · 20 שאלות', href: 'garden-exam.html' }
+        ]
+      },
+      physics: {
+        title: 'פיזיקה',
+        description: 'גרסאות המבחן בפיזיקה יופיעו כאן כשיתווספו השאלות והנושאים.',
+        variants: []
+      }
+    };
+    const key = new URLSearchParams(location.search).get('subject');
+    const subject = subjects[key] || subjects.hebrew;
+    document.title = `${subject.title} · גרסאות המבחן`;
+    document.getElementById('subject-title').textContent = subject.title;
+    document.getElementById('subject-description').textContent = subject.description;
+    const list = document.getElementById('variant-list');
+    if (subject.variants.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'אין עדיין גרסאות זמינות למבחן הזה. חזרו לכאן כשהחומר יתווסף.';
+      list.append(empty);
+    } else {
+      subject.variants.forEach((variant, index) => {
+        const link = document.createElement('a');
+        link.className = 'exam-card';
+        link.href = variant.href;
+        const icon = document.createElement('span');
+        icon.className = 'exam-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = String(index + 1);
+        const copy = document.createElement('span');
+        copy.className = 'exam-copy';
+        const title = document.createElement('strong');
+        title.textContent = variant.title;
+        const detail = document.createElement('small');
+        detail.textContent = variant.detail;
+        copy.append(title, detail);
+        const arrow = document.createElement('span');
+        arrow.className = 'exam-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '←';
+        link.append(icon, copy, arrow);
+        list.append(link);
+      });
+      document.getElementById('practice-section').hidden = subject !== subjects.hebrew;
+    }
+  </script>
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f8f4">
   <meta name="description" content="בוחרים מבחן ומתכוננים אליו: מבחן בעברית לכיתה ז׳ ותרגולים קצרים.">
   <title>בוחרים מבחן | מתכוננים למבחן</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <div class="page">
@@ -18,49 +18,20 @@
     <main>
       <section class="intro" aria-labelledby="welcome-title">
         <h1 id="welcome-title">איזה מבחן מתרגלים היום?</h1>
-        <p>בחרו מבחן כדי להתחיל. לקראת המבחן בעברית אפשר גם להתאמן על נושא אחד בכל פעם.</p>
+        <p>בחרו מקצוע, ואז בחרו גרסה של המבחן.</p>
       </section>
 
-      <section class="featured" aria-labelledby="exam-heading">
-        <div class="featured-copy">
-          <span class="eyebrow">מבחן בעברית בתאריך 29.10 · 20 שאלות</span>
-          <h2 id="exam-heading">עברית: תלמידי כיתה ז׳ הקימו גינה בבית הספר</h2>
-          <p>קוראים את הטקסט ועונים על כל השאלות. בסיום אפשר לבדוק את התשובות ולשלוח אותן.</p>
-        </div>
-        <a class="featured-link" href="garden-exam.html">בחירת מבחן בעברית <span aria-hidden="true">←</span></a>
-      </section>
-
-      <section class="upcoming-exam" aria-labelledby="physics-heading">
-        <div>
-          <span class="upcoming-label">המבחן הבא</span>
-          <h2 id="physics-heading">פיזיקה</h2>
-          <p>השאלות והנושאים יתווספו בהמשך.</p>
-        </div>
-        <span class="upcoming-status">בקרוב</span>
-      </section>
-
-      <section class="practice" aria-labelledby="practice-heading">
-        <div class="section-heading">
-          <h2 id="practice-heading">מתרגלים לקראת המבחן בעברית</h2>
-          <p>תרגולים קצרים שאפשר לנסות שוב. בכל שאלה מקבלים הסבר מיד אחרי התשובה.</p>
-        </div>
-        <div class="quiz-list">
-          <a class="quiz-row" href="practice.html?quiz=facts">
-            <span class="quiz-icon" aria-hidden="true">א</span>
-            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small></span>
-            <span class="arrow" aria-hidden="true">←</span>
-          </a>
-          <a class="quiz-row" href="practice.html?quiz=questions">
-            <span class="quiz-icon" aria-hidden="true">?</span>
-            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small></span>
-            <span class="arrow" aria-hidden="true">←</span>
-          </a>
-          <a class="quiz-row" href="practice.html?quiz=instructions">
-            <span class="quiz-icon" aria-hidden="true">✓</span>
-            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small></span>
-            <span class="arrow" aria-hidden="true">←</span>
-          </a>
-        </div>
+      <section class="exam-list" aria-label="בחירת מקצוע">
+        <a class="exam-card" href="subject.html?subject=hebrew">
+          <span class="exam-icon" aria-hidden="true">א</span>
+          <span class="exam-copy"><strong>עברית</strong><small>מבחן בתאריך 29.10 · גרסה אחת זמינה</small></span>
+          <span class="exam-arrow" aria-hidden="true">←</span>
+        </a>
+        <a class="exam-card" href="subject.html?subject=physics">
+          <span class="exam-icon physics-icon" aria-hidden="true">Φ</span>
+          <span class="exam-copy"><strong>פיזיקה</strong><small>גרסאות המבחן יתווספו בהמשך</small></span>
+          <span class="exam-arrow" aria-hidden="true">←</span>
+        </a>
       </section>
     </main>
     <footer>בהצלחה בלמידה!</footer>
