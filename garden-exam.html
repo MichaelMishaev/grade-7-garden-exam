@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>מבחן הבנת הנקרא לכיתה ז׳</title>
+  <meta name="description" content="מבחן הבנת הנקרא לכיתה ז׳ על הקמת גינה בבית הספר.">
+  <style>
+    :root { font-family: Arial, "Noto Sans Hebrew", sans-serif; color: #19382e; background: #f7f8f4; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 300px; }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(100% - 32px, 760px); margin: 0 auto; padding: 24px 0 48px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 34px; }
+    .brand { color: #275b47; font-size: 15px; font-weight: 800; letter-spacing: .01em; text-decoration: none; }
+    .brand:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .time { color: #6c7e73; font-size: 13px; }
+    h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.16; letter-spacing: -.035em; margin: 0 0 14px; }
+    .intro { color: #53675b; font-size: 17px; line-height: 1.65; margin: 0 0 28px; }
+    .card { background: #fff; border: 1px solid #dce5db; border-radius: 22px; box-shadow: 0 14px 35px rgba(24,60,44,.055); }
+    .reading { padding: clamp(22px, 5vw, 36px); }
+    .reading h2 { font-size: clamp(24px, 4.8vw, 31px); line-height: 1.3; margin: 0 0 10px; }
+    .byline { font-size: 14px; color: #67766d; margin: 0 0 24px; line-height: 1.7; }
+    .reading p:not(.byline) { font-size: 18px; line-height: 1.95; margin: 0 0 17px; }
+    .reading p:last-child { margin-bottom: 0; }
+    .name-box { margin-top: 26px; }
+    label { display: block; font-weight: 700; margin-bottom: 9px; }
+    input[type=text], textarea { width: 100%; border: 1.5px solid #b9cbbb; border-radius: 13px; background: white; color: #19382e; padding: 14px 16px; outline: none; }
+    input[type=text]:focus, textarea:focus { border-color: #317d57; box-shadow: 0 0 0 4px #e2f2e7; }
+    input[type=text] { min-height: 50px; }
+    textarea { min-height: 148px; resize: vertical; line-height: 1.7; font-size: 17px; }
+    input::placeholder, textarea::placeholder { color: #819388; }
+    .field-note, .privacy { color: #64776b; font-size: 13px; line-height: 1.5; }
+    .field-note { margin: 7px 0 0; }
+    .actions { display: flex; gap: 10px; margin-top: 25px; }
+    .button { border: 0; border-radius: 13px; padding: 14px 22px; min-height: 52px; font-weight: 800; font-size: 16px; }
+    .primary { background: #267449; color: white; }
+    .primary:hover { background: #1c603b; }
+    .secondary { background: #e8efe8; color: #28553e; }
+    .secondary:hover { background: #dce9de; }
+    .button:focus-visible, summary:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .stage { display: none; }
+    .stage.active { display: block; }
+    .progress-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin: 3px 0 11px; font-weight: 700; font-size: 14px; }
+    .progress-row span:last-child { color: #64776b; }
+    .bar { height: 8px; background: #dce8db; border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
+    .bar > span { display: block; height: 100%; background: #56aa6c; transition: width .2s ease; }
+    details { background: #edf4ed; border-radius: 14px; margin-bottom: 20px; }
+    summary { padding: 16px 18px; font-weight: 800; cursor: pointer; }
+    details .reading { border-top: 1px solid #d4e3d4; padding: 20px; }
+    details .reading h2 { font-size: 21px; }
+    details .reading p:not(.byline) { font-size: 16px; line-height: 1.8; }
+    .question-card { padding: clamp(22px, 5vw, 34px); }
+    .question-number { display: block; color: #2c8052; font-weight: 800; margin-bottom: 13px; font-size: 14px; }
+    .question-title { font-size: clamp(22px, 4.7vw, 27px); line-height: 1.45; margin: 0 0 25px; }
+    .error { color: #aa3535; font-size: 14px; font-weight: 700; min-height: 20px; margin: 9px 0 0; }
+    .review-title { font-size: 30px; margin: 0 0 12px; }
+    .review-list { display: grid; gap: 10px; margin-top: 22px; }
+    .review-item { text-align: right; width: 100%; display: block; border: 1px solid #dce5db; background: #fff; border-radius: 13px; padding: 14px 17px; color: inherit; }
+    .review-item:hover { border-color: #5a9e6d; }
+    .review-item strong { display: block; font-size: 14px; line-height: 1.5; }
+    .review-item span { display: block; margin-top: 4px; color: #586d60; font-size: 14px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .review-actions { margin-top: 26px; }
+    .privacy { margin: 14px 0 0; }
+    .footer { margin-top: 32px; text-align: center; color: #718477; font-size: 13px; }
+    @media (max-width: 560px) { .shell { width: min(100% - 28px, 760px); padding-top: 17px; } header { margin-bottom: 26px; } .time { font-size: 12px; } .actions { flex-direction: column; } .actions .button { width: 100%; } .reading p:not(.byline) { font-size: 17px; } }
+    @media (prefers-reduced-motion: reduce) { .bar > span { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><a class="brand" href="index.html">← כל התרגולים</a><span class="time">כיתה ז׳ · 20 שאלות</span></header>
+    <section id="start" class="stage active" aria-labelledby="page-title">
+      <h1 id="page-title">קוראים, חושבים ועונים</h1>
+      <p class="intro">קראו את הטקסט וענו על כל השאלות. אפשר לחזור לטקסט ולשנות תשובות לפני השליחה.</p>
+      <article class="card reading" id="article">
+        <h2>תלמידי כיתה ז׳ הקימו גינה בבית הספר</h2>
+        <p class="byline">מאת: יעל כהן | פורסם באתר בית הספר „אופק” | 20.10.2026<br><em>טקסט שנכתב לצורך התרגול.</em></p>
+        <p>בתחילת אוקטובר הקימו תלמידי כיתה ז׳ גינה בחצר בית הספר. בפעילות השתתפו שלוש כיתות, והתלמידים שתלו נענע, רוזמרין וחסה. כל כיתה קיבלה אחריות להשקיה ביום אחר בשבוע.</p>
+        <p>לפני השתילה קראו התלמידים על התנאים הדרושים לצמחים. לאחר מכן בחרו מקום שמקבל אור שמש ובדקו שיש בקרבתו ברז מים. לדברי המורה למדעים, הפעילות נועדה לחבר בין הלמידה בכיתה להתנסות מעשית.</p>
+        <p>אחד התלמידים אמר: „לדעתי, שיעורים בגינה מעניינים יותר משיעורים בכיתה”. תלמידה אחרת הציעה להוסיף לגינה פרחים. בעוד חודש ימדדו התלמידים את גובה הצמחים וישוו בין התוצאות.</p>
+      </article>
+      <div class="name-box">
+        <label for="student-name">שם התלמיד או התלמידה</label>
+        <input id="student-name" type="text" autocomplete="name" placeholder="כתבו את השם כאן" maxlength="100">
+        <p class="field-note">השם יעזור לזהות למי שייכות התשובות.</p>
+        <p class="error" id="name-error" role="alert"></p>
+      </div>
+      <div class="actions"><button class="button primary" id="begin" type="button">מתחילים לענות</button></div>
+    </section>
+
+    <section id="question-stage" class="stage" aria-live="polite">
+      <div class="progress-row"><span id="counter"></span><span id="answered"></span></div>
+      <div class="bar" aria-hidden="true"><span id="progress"></span></div>
+      <details><summary>פתיחת הטקסט לקריאה חוזרת</summary><div class="reading" id="article-copy"></div></details>
+      <div class="card question-card">
+        <span class="question-number" id="question-number"></span>
+        <h2 class="question-title" id="question-title"></h2>
+        <label for="answer">התשובה שלי</label>
+        <textarea id="answer" placeholder="כתבו כאן את התשובה" spellcheck="true"></textarea>
+        <p class="error" id="answer-error" role="alert"></p>
+      </div>
+      <div class="actions"><button class="button secondary" id="previous" type="button">לשאלה הקודמת</button><button class="button primary" id="next" type="button">לשאלה הבאה</button></div>
+    </section>
+
+    <section id="review" class="stage" aria-labelledby="review-title">
+      <h1 class="review-title" id="review-title">בודקים לפני ששולחים</h1>
+      <p class="intro">כל 20 התשובות יישלחו יחד. לחצו על תשובה כדי לערוך אותה.</p>
+      <div class="review-list" id="review-list"></div>
+      <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="send" type="button">שליחת כל התשובות</button></div>
+      <p class="error" id="send-error" role="alert"></p>
+      <p class="privacy">התשובות והשם יישלחו בדוא״ל למורה באמצעות FormSubmit.</p>
+    </section>
+
+    <form id="delivery" action="https://formsubmit.co/345287@gmail.com" method="POST" hidden>
+      <input type="hidden" name="_subject" value="תשובות למבחן הבנת הנקרא - כיתה ז׳">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_next" value="">
+      <input type="hidden" name="_url" value="">
+      <input type="text" name="_honey" tabindex="-1" autocomplete="off">
+    </form>
+    <footer class="footer">בהצלחה!</footer>
+  </main>
+  <script>
+    const questions = [
+      'מהו הנושא המרכזי של הטקסט?',
+      'כתבו את תעודת הזהות של הטקסט: הכותרת, שם הכותבת, מקום הפרסום ותאריך הפרסום.',
+      'האם כותרת הטקסט היא כותרת מידעית או כותרת נוקטת עמדה? נמקו.',
+      'כתבו כותרת חלופית לטקסט שתביע עמדה חיובית על הפעילות.',
+      'קבעו אם המשפט הבא הוא עובדה או דעה: „בפעילות השתתפו שלוש כיתות”.',
+      'קבעו אם המשפט הבא הוא עובדה או דעה: „שיעורים בגינה מעניינים יותר משיעורים בכיתה”.',
+      'העתיקו מהטקסט עובדה נוספת.',
+      'איזו מילה בדברי התלמיד מסמנת שהוא מביע דעה?',
+      'הסבירו כיצד אפשר לבדוק אם הטענה „התלמידים שתלו נענע, רוזמרין וחסה” נכונה.',
+      'מדוע קראו התלמידים על התנאים הדרושים לצמחים לפני השתילה?',
+      'לשם מה נועדה הפעילות, לפי המורה למדעים?',
+      'כיצד חילקו הכיתות את האחריות להשקיה?',
+      'מה יעשו התלמידים בעוד חודש?',
+      'מהי מילת השאלה בשאלה 10? איזה סוג מידע היא מבקשת?',
+      'איזו מילת שאלה מתאימה לבירור מועד הקמת הגינה? נסחו בעזרתה שאלה מלאה.',
+      'איזו מילת שאלה מתאימה לבירור מספר הכיתות שהשתתפו? נסחו בעזרתה שאלה מלאה.',
+      'מהי מילת ההוראה בשאלה 7? מה צריך לעשות בעקבותיה?',
+      'מה ההבדל בין ההוראות „ציינו” ו־„הסבירו”?',
+      'בשאלה 3 מופיעה ההוראה „נמקו”. האם מספיק לכתוב רק „כותרת מידעית”? הסבירו.',
+      'הביעו את דעתכם: האם כדאי לקיים פעילויות לימודיות בגינה? כתבו עמדה ונימוק אחד.'
+    ];
+    const storageKey = 'garden-exam-draft-v1';
+    let saved = {};
+    try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) { saved = {}; }
+    let answers = Array.isArray(saved.answers) ? saved.answers.slice(0, questions.length) : [];
+    let current = 0;
+    const byId = id => document.getElementById(id);
+    byId('student-name').value = saved.name || '';
+    byId('article-copy').innerHTML = byId('article').innerHTML;
+    function persist() {
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, answers })); } catch (_) {}
+    }
+    function show(id) {
+      document.querySelectorAll('.stage').forEach(stage => stage.classList.toggle('active', stage.id === id));
+      window.scrollTo(0, 0);
+    }
+    function saveCurrent() { answers[current] = byId('answer').value; persist(); }
+    function showQuestion(index) {
+      current = index;
+      byId('counter').textContent = `שאלה ${index + 1} מתוך ${questions.length}`;
+      byId('answered').textContent = `${answers.filter(answer => answer && answer.trim()).length} תשובות מולאו`;
+      byId('progress').style.width = `${((index + 1) / questions.length) * 100}%`;
+      byId('question-number').textContent = `שאלה ${index + 1}`;
+      byId('question-title').textContent = questions[index];
+      byId('answer').value = answers[index] || '';
+      byId('answer-error').textContent = '';
+      byId('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
+      byId('next').textContent = index === questions.length - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
+      show('question-stage');
+    }
+    byId('student-name').addEventListener('input', persist);
+    byId('answer').addEventListener('input', saveCurrent);
+    byId('begin').addEventListener('click', () => {
+      if (!byId('student-name').value.trim()) {
+        byId('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.';
+        byId('student-name').focus();
+        return;
+      }
+      byId('name-error').textContent = '';
+      persist();
+      showQuestion(0);
+    });
+    byId('previous').addEventListener('click', () => { saveCurrent(); current === 0 ? show('start') : showQuestion(current - 1); });
+    byId('next').addEventListener('click', () => {
+      saveCurrent();
+      if (!answers[current].trim()) {
+        byId('answer-error').textContent = 'יש לכתוב תשובה לפני שממשיכים.';
+        byId('answer').focus();
+        return;
+      }
+      if (current < questions.length - 1) showQuestion(current + 1);
+      else showReview();
+    });
+    function showReview() {
+      const list = byId('review-list');
+      list.replaceChildren();
+      questions.forEach((question, index) => {
+        const item = document.createElement('button');
+        item.type = 'button'; item.className = 'review-item';
+        const title = document.createElement('strong'); title.textContent = `${index + 1}. ${question}`;
+        const summary = document.createElement('span'); summary.textContent = answers[index] || 'לא נכתבה תשובה';
+        item.append(title, summary);
+        item.addEventListener('click', () => showQuestion(index));
+        list.append(item);
+      });
+      show('review');
+    }
+    byId('back-to-questions').addEventListener('click', () => showQuestion(questions.length - 1));
+    byId('send').addEventListener('click', async () => {
+      const missing = questions.findIndex((_, index) => !answers[index] || !answers[index].trim());
+      if (missing !== -1) { showQuestion(missing); byId('answer-error').textContent = 'יש לכתוב תשובה לפני השליחה.'; return; }
+      const form = byId('delivery');
+      form.querySelector('[name="_next"]').value = new URL('thanks.html', location.href).href;
+      form.querySelector('[name="_url"]').value = location.href;
+      form.querySelectorAll('[data-answer]').forEach(field => field.remove());
+      const fields = [['שם התלמיד/ה', byId('student-name').value.trim()], ...questions.map((question, index) => [`שאלה ${index + 1}: ${question}`, answers[index].trim()])];
+      fields.forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = name; input.value = value; input.dataset.answer = 'true';
+        form.append(input);
+      });
+      byId('send').disabled = true;
+      byId('send').textContent = 'שולחים…';
+      byId('send-error').textContent = '';
+      try {
+        const response = await fetch('https://formsubmit.co/ajax/345287@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(form)))
+        });
+        const result = await response.json();
+        if (!response.ok || (result.success !== 'true' && result.success !== true)) throw new Error('Submission failed');
+        try { sessionStorage.removeItem(storageKey); } catch (_) {}
+        window.location.assign('thanks.html');
+      } catch (_) {
+        byId('send-error').textContent = 'השליחה לא הושלמה. בדקו את החיבור לאינטרנט ונסו שוב.';
+        byId('send').disabled = false;
+        byId('send').textContent = 'שליחת כל התשובות';
+      }
+    });
+  </script>
+</body>
+</html>

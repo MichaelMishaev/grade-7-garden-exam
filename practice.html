@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>תרגול לקראת המבחן</title>
+  <link rel="stylesheet" href="practice.css">
+  <script src="practice.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="back-link" href="index.html">← כל התרגולים</a>
+      <span class="brand">מתכוננים למבחן</span>
+    </header>
+
+    <section id="quiz-screen" aria-labelledby="quiz-title">
+      <div class="intro-row">
+        <div>
+          <h1 id="quiz-title"></h1>
+          <p id="quiz-description" class="subheading"></p>
+        </div>
+        <span class="practice-label">תרגול קצר</span>
+      </div>
+
+      <div class="progress-header">
+        <span id="progress-count"></span>
+        <span>בחרו תשובה אחת</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="התקדמות בתרגול" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-fill"></span></div>
+
+      <div class="question-panel">
+        <span id="question-index" class="question-index"></span>
+        <h2 id="question-text"></h2>
+        <div id="choices" class="choices" role="group" aria-labelledby="question-text"></div>
+        <div id="feedback" class="feedback" role="status" aria-live="polite" hidden>
+          <strong id="feedback-title"></strong>
+          <p id="feedback-he"></p>
+          <p id="feedback-en" class="english" dir="ltr"></p>
+        </div>
+      </div>
+
+      <button id="next-button" class="primary-button" type="button" hidden></button>
+      <p class="note">זהו תרגול עצמי. התשובות כאן אינן נשלחות למורה.</p>
+    </section>
+
+    <section id="result-screen" class="result-panel" aria-labelledby="result-title" hidden>
+      <div class="result-mark" aria-hidden="true">✓</div>
+      <h1 id="result-title" tabindex="-1">סיימת את התרגול!</h1>
+      <p id="result-score" class="score"></p>
+      <p id="result-message"></p>
+      <p class="english" dir="ltr">Good work! Review the explanations and try again whenever you like.</p>
+      <div class="result-actions">
+        <button id="retry-button" class="primary-button" type="button">לתרגל שוב</button>
+        <a class="secondary-button" href="index.html">לכל התרגולים</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
