@@ -22,17 +22,59 @@ The server listens on `PORT` or port 3000 and serves only static HTML, CSS, Java
 - `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short practice quizzes with immediate Hebrew and English feedback.
 - `thanks.html`: confirmation after the full exam is submitted.
 
-The full exam submits the student's name and answers to FormSubmit for forwarding to the configured teacher email. The email address was activated and a test from the original site was confirmed received; a later Railway test stalled at FormSubmit, so delivery from the Railway site remains unconfirmed. Student answers are not stored on this server. An unfinished exam is stored in the browser's `sessionStorage` and cleared after successful submission. Practice quizzes run entirely in the browser.
+The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are not stored on the app server or written to its logs; Resend processes the email content. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser.
+
+Railway requires `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_ORIGIN=https://hitech.agnon.online`, and `NODE_ENV=production`. Keep the API key in Railway variables, never in browser code or Git. GitHub Pages submits to the Railway endpoint using an explicitly allowed origin. Identical submissions use Resend's idempotency key (24-hour window). The server accepts at most 100 valid submission attempts per hour per running instance; this in-memory limit resets on restart.
+
+Run the focused server checks with `node --test server.test.mjs`.
+
+On 2026-10-28, a synthetic submission from the live exam reached `thanks.html`; Resend reported it delivered to the teacher address, with the test marker and all 20 answer sections present (email ID `01a182f9-659f-765f-b663-2ad92e7a5267`).
 
 ## Deployment
 
-- Source repository: <https://github.com/MichaelMishaev/grade-7-garden-exam>
-- Railway project: `grade-7-exam-study`; service: `web`; environment: `production`
-- Custom domain: <https://hitech.agnon.online/> (Cloudflare DNS; Railway hosting and TLS)
-- Railway domain: <https://web-production-1a642.up.railway.app/>
-- GitHub Pages also serves the same static pages; the Node server is used only by Railway.
+Pushing to `main` on GitHub deploys the site. There is no manual deploy step.
+
+| Where | URL | How it updates |
+| --- | --- | --- |
+| GitHub repository (public) | <https://github.com/MichaelMishaev/grade-7-garden-exam> | Source of truth |
+| Railway, custom domain | <https://hitech.agnon.online/> | Auto-deploys on push to `main` |
+| Railway domain | <https://web-production-1a642.up.railway.app/> | Same Railway service |
+| GitHub Pages | <https://michaelmishaev.github.io/grade-7-garden-exam/> | Auto-publishes on push to `main` |
+
+### Railway
+
+- Project `grade-7-exam-study`, service `web`, environment `production`, region `europe-west4`, 1 replica.
+- Source: GitHub repo above, branch `main`. Built with Railpack; start command `npm start` (runs `server.mjs`).
+- Health check: `GET /` must return 200 before a new deployment replaces the old one.
+- No environment variables are set; Railway supplies `PORT`.
+- The custom domain uses Cloudflare DNS, with Railway handling hosting and TLS.
+- To roll back, redeploy an earlier deployment from the Railway dashboard.
+
+### GitHub Pages
+
+Pages serves the repository files directly (`.nojekyll` disables Jekyll), without `server.mjs`. Everything must therefore work as plain static files. A file type missing from the `types` list in `server.mjs` (for example `.webp` or fonts) works on Pages but returns 404 on Railway, so add new asset types there.
+
+### Before you push
+
+- Increase the `?v=` number on any stylesheet link whose CSS changed (for example `styles.css?v=4`), so browsers load the new styles.
+- The repository is public. Everything committed is visible, including the fixed teacher email in `server.mjs`.
+- Uncommitted local changes are not live. Check `git status` before assuming a change is deployed.
+
+### Checking a deployment
+
+```bash
+curl -sI https://hitech.agnon.online/ | head -1   # expect HTTP/2 200
+```
+
+Then open the home page, a subject page, a practice quiz, and the exam on a phone-sized screen. Deployment status and logs are in the Railway dashboard for project `grade-7-exam-study`.
 
 ## Design references
+
+### PrepX branding
+
+The approved logo combines a violet X mascot with a rounded PrepX wordmark. The transparent PNG is at `assets/branding/prepx-logo.png`; its generation prompt and Mobbin reference are recorded in `assets/branding/prepx-logo-prompt.txt`. It was generated with OpenAI image generation, drawing on the approachable mascot and lettering in [Duolingo's welcome screen](https://mobbin.com/screens/fb4eda98-538d-4bc0-9ef6-bf06ed401c12).
+
+All five pages display the logo as a link to the home page and include PrepX in their browser titles. `branding.css` controls its responsive sizing and keyboard focus indicator. Preserve the PNG's transparency and aspect ratio when reusing it.
 
 The compact subject rows adapt the scannable list pattern in [LinkedIn's course list](https://mobbin.com/screens/6e8c4863-601c-4f24-9467-0a2b782ab8a9). The version list follows the separate-item structure in [Insight Timer's course days](https://mobbin.com/screens/86450a91-1ecc-42e6-967e-df3336cc8316). The earlier quiz layout drew on [Brilliant's course catalog](https://mobbin.com/screens/9360c5fd-857f-4ada-b27f-f1e4e70332df) and [Quizlet's question screen](https://mobbin.com/screens/f8af7017-ac7b-4584-bd0c-9845d160911a). All were adapted for Hebrew RTL and a small exam catalog.
 

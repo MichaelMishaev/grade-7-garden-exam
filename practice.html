@@ -4,15 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <title>תרגול לקראת המבחן</title>
-  <link rel="stylesheet" href="practice.css?v=3">
-  <script src="practice.js" defer></script>
+  <title>תרגול לקראת המבחן | PrepX</title>
+  <link rel="stylesheet" href="practice.css?v=4">
+  <script src="quiz-core.js?v=1" defer></script>
+  <script src="practice.js?v=6" defer></script>
+  <link rel="stylesheet" href="branding.css?v=1">
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <a class="back-link" href="subject.html?subject=hebrew">← לתרגולים בעברית</a>
-      <span class="brand">מתכוננים למבחן</span>
+      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
     </header>
 
     <section id="quiz-screen" aria-labelledby="quiz-title">
@@ -36,6 +38,7 @@
         <div id="choices" class="choices" role="group" aria-labelledby="question-text"></div>
       </div>
       <div class="response-panel">
+        <p id="streak-badge" class="streak-badge" role="status" hidden></p>
         <div id="feedback" class="feedback" role="status" aria-live="polite" hidden>
           <strong id="feedback-title"></strong>
           <p id="feedback-he"></p>
@@ -47,13 +50,17 @@
     </section>
 
     <section id="result-screen" class="result-panel" aria-labelledby="result-title" hidden>
-      <div class="result-mark" aria-hidden="true">✓</div>
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
+      <p id="result-stars" class="result-stars" role="img"></p>
       <h1 id="result-title" tabindex="-1">סיימת את התרגול!</h1>
       <p id="result-score" class="score"></p>
+      <p id="result-count" class="result-count"></p>
+      <p id="result-improvement" class="improvement" hidden></p>
       <p id="result-message"></p>
-      <p class="english" dir="ltr">Good work! Review the explanations and try again whenever you like.</p>
+      <p id="result-message-en" class="english" dir="ltr"></p>
       <div class="result-actions">
         <button id="retry-button" class="primary-button" type="button">לתרגל שוב</button>
+        <button id="missed-button" class="secondary-button" type="button" hidden></button>
         <a class="secondary-button" href="subject.html?subject=hebrew">לכל התרגולים</a>
       </div>
     </section>

@@ -37,11 +37,94 @@ const quizzes = {
   }
 };
 
+
+const physicsLessons = {
+  'physics-basics': ['מדידה ושיטות מדידה', 'מזהים תוצאות ומבדילים בין מדידה ישירה לעקיפה.', [
+    ['מה חייבים לציין בתוצאת מדידה?', ['מספר ויחידת מידה', 'מספר בלבד', 'שם כלי המדידה בלבד'], 0, 'תוצאת מדידה כוללת מספר ויחידה, למשל 14 ס״מ.'],
+    ['מדדתם אורך מחברת וקראתם את התוצאה מהסרגל. איזו מדידה זו?', ['ישירה', 'עקיפה', 'לא מדידה'], 0, 'במדידה ישירה קוראים את הגודל המבוקש מכלי המדידה.'],
+    ['מדדתם עובי של ערימת דפים וחילקתם במספר הדפים. איזו מדידה זו?', ['ישירה', 'עקיפה', 'הערכה ללא מדידה'], 1, 'מודדים גודל אחר ומחשבים ממנו את העובי הממוצע של דף.'],
+    ['איך מחשבים עובי ממוצע של דף בערימה?', ['עובי הערימה חלקי מספר הדפים', 'מספר הדפים חלקי עובי הערימה', 'עובי הערימה כפול מספר הדפים'], 0, 'מחלקים את עובי הערימה במספר הדפים, לא במספר העמודים.'],
+    ['ערימה של 100 דפים עובייה 10 מ״מ. מה העובי הממוצע של דף?', ['0.1 מ״מ', '1 מ״מ', '10 מ״מ'], 0, 'מחלקים 10 מ״מ ב־100 ומקבלים 0.1 מ״מ לדף.'],
+    ['למה כדאי למדוד ערימה של דפים מאותו סוג?', ['כדי להעריך את העובי הממוצע של דף מהסוג הזה', 'כי אין צורך לספור את הדפים', 'כדי לקבל תמיד תוצאה מדויקת לגמרי'], 0, 'דפים מאותו סוג מאפשרים אומדן שימושי יותר של עובי דף ממוצע.']
+  ]],
+  'physics-units': ['המרת יחידות אורך', 'מתרגלים קילומטרים, מטרים, סנטימטרים ומילימטרים.', [
+    ['כמה סנטימטרים יש במטר אחד?', ['10', '100', '1,000'], 1, 'מטר אחד שווה ל־100 סנטימטרים.'],
+    ['כמה מילימטרים יש בסנטימטר אחד?', ['10', '100', '1,000'], 0, 'סנטימטר אחד שווה ל־10 מילימטרים.'],
+    ['כמה מטרים יש ב־2 קילומטרים?', ['200', '2,000', '20,000'], 1, 'קילומטר אחד הוא 1,000 מטרים, ולכן 2 ק״מ הם 2,000 מטרים.'],
+    ['כמה סנטימטרים הם 2.4 מטרים?', ['24', '240', '2,400'], 1, 'ממטר לסנטימטר כופלים ב־100: 2.4 × 100 = 240.'],
+    ['כמה מטרים הם 350 סנטימטרים?', ['3.5', '35', '0.35'], 0, 'מסנטימטר למטר מחלקים ב־100: 350 ÷ 100 = 3.5.'],
+    ['כמה הם מטר אחד ועוד 25 ס״מ?', ['1.25 מטרים', '26 מטרים', '1.025 מטרים'], 0, 'ממירים 25 ס״מ ל־0.25 מטר ואז מחברים: 1 + 0.25 = 1.25.']
+  ]],
+  'physics-precision': ['מודדים נכון', 'בוחרים כלי מתאים וקוראים את הסרגל בזהירות.', [
+    ['מאיזו נקודה בסרגל מתחילים למדוד אורך?', ['מסימון האפס', 'תמיד מקצה הסרגל', 'מהמספר 1'], 0, 'מצמידים את תחילת הגוף לסימון האפס, שלא תמיד נמצא בקצה הסרגל.'],
+    ['גוף מתחיל ב־2.0 ס״מ ומסתיים ב־8.2 ס״מ. מה אורכו?', ['6.2 ס״מ', '8.2 ס״מ', '10.2 ס״מ'], 0, 'מחסרים את קריאת ההתחלה מקריאת הסיום: 8.2 − 2.0 = 6.2 ס״מ.'],
+    ['איך מסתכלים על שנתות הסרגל כדי לצמצם טעות קריאה?', ['בניצב לסולם', 'באלכסון ככל האפשר', 'ממרחק גדול'], 0, 'מבט בניצב לסולם מצמצם שגיאת קריאה בגלל זווית ההסתכלות.'],
+    ['איזה כלי מתאים יותר למדידת אורך של חדר?', ['סרט מדידה', 'סרגל קצר בלבד', 'שעון'], 0, 'סרט מדידה מתאים יותר לאורכו של חדר.'],
+    ['מה מאפשרות שנתות קטנות יותר על כלי מדידה?', ['קריאה מפורטת יותר', 'ביטול מוחלט של כל טעות', 'שינוי האורך של הגוף'], 0, 'שנתות קטנות מאפשרות לקרוא את המדידה בפירוט רב יותר.'],
+    ['מדוע חוזרים על מדידה?', ['כדי לזהות חריגות ולהקטין השפעת שגיאות אקראיות', 'כדי לתקן בהכרח כלי פגום', 'כדי לשנות את גודל הגוף'], 0, 'חזרות מסייעות לזהות חריגות, אך אינן מתקנות כלי פגום או שיטה שגויה.']
+  ]],
+  'physics-pole': ['מודדים גובה של עמוד', 'מחשבים גובה בעזרת זווית של 45° ומרחק אופקי.', [
+    ['בשיטת העמוד, באיזו זווית לאופק מכוונים אל ראש העמוד?', ['45°', '90°', '180°'], 0, 'מכוונים את קו הראייה בזווית של 45° ביחס לאופק.'],
+    ['מה שווה למרחק האופקי לעמוד בשיטת 45°?', ['גובה ראש העמוד מעל גובה העיניים', 'גובה העמוד כולו', 'גובה העיניים'], 0, 'במשולש ישר־זווית ושווה־שוקיים שני הניצבים שווים.'],
+    ['המרחק האופקי לעמוד 6 מטרים וגובה העיניים 1.4 מטרים. מה גובה העמוד?', ['7.4 מטרים', '6 מטרים', '4.6 מטרים'], 0, 'מחברים את המרחק האופקי לגובה העיניים: 6 + 1.4 = 7.4 מטרים.'],
+    ['איזה מרחק מודדים לצורך החישוב?', ['המרחק האופקי אל בסיס העמוד', 'אורך קו הראייה האלכסוני', 'המרחק מראש העמוד לקרקע באומדן'], 0, 'מודדים את המרחק האופקי מהנקודה שמתחת לעין אל בסיס העמוד.'],
+    ['איזה גובה מוסיפים למרחק האופקי?', ['גובה העיניים מעל הקרקע', 'גובה התלמיד כולו', 'גובה המשולש שביד'], 0, 'מוסיפים את גובה העיניים, כי המשולש מתחיל בגובה העין.'],
+    ['איזה תנאי נדרש לשיטה המתוארת?', ['קרקע אופקית ובסיס העמוד באותו מפלס', 'העמוד חייב להיות נמוך מהתלמיד', 'אין צורך לדעת את זווית הראייה'], 0, 'הנוסחה מתאימה כאשר הקרקע אופקית ובסיס העמוד באותו מפלס.']
+  ]]
+};
+const extraPhysicsQuestions = {
+  'physics-basics': [
+    ['מהי מדידה?', ['השוואה ליחידת מידה מוסכמת', 'ניחוש ללא השוואה', 'כתיבת שם הגוף'], 0, 'מדידה משווה גודל ליחידת מידה מוסכמת.'],
+    ['מה מתאים לתיאור אורך עיפרון?', ['14 ס״מ', '14 בלבד', 'ס״מ בלבד'], 0, 'תוצאת מדידה כוללת גם מספר וגם יחידת מידה.'],
+    ['איזו פעולה היא מדידה עקיפה?', ['מדידת ערימת דפים וחלוקה במספר הדפים', 'קריאת אורך עיפרון מסרגל', 'קריאת הטמפרטורה ממדחום'], 0, 'מודדים את הערימה ומחשבים ממנה את עובי הדף הממוצע.'],
+    ['ערימה של 50 דפים היא בעובי 5 מ״מ. מה עובי דף ממוצע?', ['0.1 מ״מ', '10 מ״מ', '1 מ״מ'], 0, 'מחלקים 5 מ״מ ב־50 דפים ומקבלים 0.1 מ״מ לדף.'],
+    ['למה מודדים ערימת דפים בלי הכריכה?', ['כדי שהכריכה לא תוסיף עובי לתוצאה', 'כדי לשנות את מספר הדפים', 'כי הכריכה מחליפה את הסרגל'], 0, 'הכריכה אינה דף בערימה ולכן עובייה יטה את החישוב.']
+  ],
+  'physics-units': [
+    ['כמה מילימטרים הם 3 ס״מ?', ['30 מ״מ', '3 מ״מ', '300 מ״מ'], 0, 'כל סנטימטר הוא 10 מ״מ, ולכן 3 ס״מ הם 30 מ״מ.'],
+    ['כמה סנטימטרים הם 12 מ״מ?', ['1.2 ס״מ', '12 ס״מ', '120 ס״מ'], 0, 'מחלקים את מספר המילימטרים ב־10: התוצאה היא 1.2 ס״מ.'],
+    ['כמה קילומטרים הם 1,500 מטרים?', ['1.5 ק״מ', '15 ק״מ', '0.15 ק״מ'], 0, 'מחלקים ב־1,000: 1,500 מטרים הם 1.5 ק״מ.'],
+    ['מה ארוך יותר: 90 ס״מ או מטר אחד?', ['מטר אחד', '90 ס״מ', 'הם שווים'], 0, 'מטר אחד הוא 100 ס״מ, ולכן הוא ארוך מ־90 ס״מ.'],
+    ['מה קורה לאורך עצמו כשממירים אותו מס״מ למ״מ?', ['האורך נשאר זהה', 'האורך גדל פי 10', 'האורך קטן פי 10'], 0, 'הגוף אינו משתנה; רק המספר והיחידה שבהם מתארים אותו משתנים.']
+  ],
+  'physics-precision': [
+    ['גוף מתחיל בסימון 3 ס״מ ומסתיים ב־9 ס״מ. מה אורכו?', ['6 ס״מ', '9 ס״מ', '12 ס״מ'], 0, 'מחסרים את קריאת ההתחלה מקריאת הסיום: 9 פחות 3 הם 6 ס״מ.'],
+    ['למה לא תמיד מתחילים למדוד מקצה הסרגל?', ['כי סימון האפס יכול להיות רחוק מהקצה', 'כי הסרגל תמיד מתחיל ב־1', 'כי אסור להשתמש בסימון האפס'], 0, 'חשוב להתחיל מסימון האפס; קצה הסרגל לא תמיד נמצא בדיוק באפס.'],
+    ['איזה כלי מתאים למדידת אורך של עיפרון?', ['סרגל עם שנתות קטנות', 'שעון עצר', 'מדחום'], 0, 'סרגל עם שנתות מתאימות מאפשר למדוד את אורך העיפרון.'],
+    ['מה חזרה על מדידה אינה מתקנת בהכרח?', ['שיטה שגויה או כלי פגום', 'טעות אקראית בודדת', 'תוצאה חריגה שאפשר לזהות'], 0, 'חזרה יכולה לעזור לזהות חריגות, אך אינה מתקנת כלי פגום או שיטה שגויה.'],
+    ['מה כדאי לבדוק לפני שרושמים תוצאה?', ['את היחידה, נקודת האפס וזווית ההסתכלות', 'רק את צבע כלי המדידה', 'רק את שם הגוף'], 0, 'יחידה מתאימה, נקודת אפס נכונה ומבט בניצב עוזרים למדוד נכון.']
+  ],
+  'physics-pole': [
+    ['המרחק לעמוד 4 מטרים וגובה העיניים 1.5 מטרים. מה גובה העמוד בשיטת 45°?', ['5.5 מטרים', '4 מטרים', '2.5 מטרים'], 0, 'מחברים מרחק אופקי וגובה עיניים: 4 + 1.5 = 5.5 מטרים.'],
+    ['מה צריך לראות דרך הגליל כשקובעים את נקודת המדידה?', ['את ראש העמוד', 'את בסיס העמוד בלבד', 'את הקרקע מתחת לעיניים'], 0, 'מתקדמים או מתרחקים עד שרואים את ראש העמוד דרך הגליל המכוון ב־45°.'],
+    ['מהו תפקיד המשולש בעל זווית 45°?', ['לעזור לכוון את הגליל בזווית הנכונה לאופק', 'למדוד ישירות את גובה העמוד', 'למדוד את עובי העמוד'], 0, 'המשולש עוזר לקבע את הגליל בזווית של 45° ביחס לאופק.'],
+    ['אם המרחק האופקי לעמוד 5 מטרים, מה גובה ראש העמוד מעל גובה העיניים בשיטה זו?', ['5 מטרים', '10 מטרים', '2.5 מטרים'], 0, 'בזווית של 45° הניצבים במשולש שווים, ולכן הגובה מעל העיניים שווה למרחק האופקי.'],
+    ['למה זו מדידה עקיפה?', ['כי מודדים מרחק וגובה עיניים ומחשבים מהם את גובה העמוד', 'כי קוראים את גובה העמוד ישירות מסרגל', 'כי אין צורך למדוד דבר'], 0, 'גובה העמוד מתקבל מחישוב המבוסס על מדידות אחרות.']
+  ]
+};
+for (const [key, questions] of Object.entries(extraPhysicsQuestions)) physicsLessons[key][2].push(...questions);
+
+for (const [key, [title, description, questions]] of Object.entries(physicsLessons)) {
+  quizzes[key] = { title, description, questions: questions.map(([text, choices, correct, he]) => ({ text, choices, correct, he, en: '' })) };
+}
+
 const byId = id => document.getElementById(id);
-const selectedQuiz = quizzes[new URLSearchParams(location.search).get('quiz')];
+const quizKey = new URLSearchParams(location.search).get('quiz');
+const selectedQuiz = quizzes[quizKey];
+const { scoreQuiz, starsFor, feedbackTier, shuffled, shuffleChoices, missedQuestions, scheduleReask, streakCelebrates } = QuizCore;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let roundQuestions = [];
+let queue = [];
+let results = {};
 let position = 0;
-let score = 0;
+let streak = 0;
 let answered = false;
+let fullRound = true;
+
+const bestKey = `prepx-best-${quizKey}`;
+const readBest = () => { try { return Number(localStorage.getItem(bestKey)) || 0; } catch { return 0; } };
+const saveBest = value => { try { localStorage.setItem(bestKey, String(value)); } catch { /* storage unavailable */ } };
 
 if (!selectedQuiz) {
   byId('quiz-title').textContent = 'התרגול לא נמצא';
@@ -51,21 +134,38 @@ if (!selectedQuiz) {
   byId('progress-fill').parentElement.hidden = true;
   byId('question-index').hidden = true;
 } else {
-  document.title = `${selectedQuiz.title} | מתכוננים למבחן`;
+  if (quizKey.startsWith('physics-')) {
+    document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים בפיזיקה'; });
+  }
+  document.title = `${selectedQuiz.title} | PrepX`;
   byId('quiz-title').textContent = selectedQuiz.title;
   byId('quiz-description').textContent = selectedQuiz.description;
+  startRound(selectedQuiz.questions.map((q, i) => ({ ...q, id: `q${i}`, type: 'mcq', difficulty: q.difficulty || 'medium' })));
+}
+
+function startRound(questions, full = true) {
+  roundQuestions = questions;
+  fullRound = full;
+  queue = shuffled(questions).map(q => shuffleChoices(q));
+  results = {};
+  position = 0;
+  streak = 0;
+  byId('result-screen').hidden = true;
+  byId('quiz-screen').hidden = false;
   showQuestion();
+  window.scrollTo(0, 0);
 }
 
 function showQuestion() {
   answered = false;
-  const question = selectedQuiz.questions[position];
-  const total = selectedQuiz.questions.length;
+  const question = queue[position];
+  const total = queue.length;
   byId('progress-count').textContent = `שאלה ${position + 1} מתוך ${total}`;
-  byId('question-index').textContent = `שאלה ${position + 1}`;
+  byId('question-index').textContent = question.reask ? 'שאלה לחזרה' : `שאלה ${position + 1}`;
   byId('question-text').textContent = question.text;
   byId('feedback').hidden = true;
   byId('feedback').classList.remove('incorrect');
+  byId('streak-badge').hidden = true;
   byId('next-button').hidden = true;
   byId('next-button').textContent = position === total - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
   const progress = Math.round((position / total) * 100);
@@ -87,9 +187,14 @@ function showQuestion() {
 function selectChoice(index) {
   if (answered) return;
   answered = true;
-  const question = selectedQuiz.questions[position];
+  const question = queue[position];
   const correct = index === question.correct;
-  if (correct) score++;
+  // Only the first attempt counts; a re-asked question is for learning, not score.
+  if (!question.reask) {
+    results[question.id] = correct ? 1 : 0;
+    streak = correct ? streak + 1 : 0;
+    if (!correct) queue = scheduleReask(queue, position, shuffleChoices(question));
+  }
 
   [...byId('choices').children].forEach((button, choiceIndex) => {
     button.disabled = true;
@@ -97,16 +202,20 @@ function selectChoice(index) {
     if (choiceIndex === index && !correct) button.classList.add('incorrect');
   });
   byId('feedback-title').textContent = correct ? 'נכון מאוד!' : 'כמעט!';
-  byId('feedback-he').textContent = question.he;
-  byId('feedback-en').textContent = `${correct ? 'Correct! ' : 'Not quite. '}${question.en}`;
+  byId('feedback-he').textContent = !correct && !question.reask ? `${question.he} נחזור לשאלה הזאת עוד מעט.` : question.he;
+  byId('feedback-en').textContent = question.en ? `${correct ? 'Correct! ' : 'Not quite. '}${question.en}` : '';
+  byId('feedback-en').hidden = !question.en;
   byId('feedback').classList.toggle('incorrect', !correct);
   byId('feedback').hidden = false;
+  byId('streak-badge').hidden = !(correct && !question.reask && streakCelebrates(streak));
+  if (!byId('streak-badge').hidden) byId('streak-badge').textContent = `${streak} ברצף!`;
   byId('next-button').hidden = false;
+  byId('next-button').textContent = position === queue.length - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
 }
 
 byId('next-button').addEventListener('click', () => {
   if (!answered || !selectedQuiz) return;
-  if (position < selectedQuiz.questions.length - 1) {
+  if (position < queue.length - 1) {
     position++;
     showQuestion();
     window.scrollTo(0, 0);
@@ -115,23 +224,58 @@ byId('next-button').addEventListener('click', () => {
   }
 });
 
+const messages = {
+  low: 'זו התחלה, ובדיוק בשביל זה מתרגלים! קראו שוב את ההסברים ונסו עוד פעם. בכל ניסיון תשתפרו.',
+  ok: 'כל הכבוד! עוד סבב קצר על הטעויות ותגיעו לציון גבוה יותר.',
+  great: 'מצוין! שלטתם בחומר. אפשר לבחור תרגול נוסף.'
+};
+
+const messagesEn = {
+  low: 'A good start, and that is exactly what practice is for. Read the explanations and try again.',
+  ok: 'Well done! One short round on your mistakes will raise your score.',
+  great: 'Excellent! You know this material.'
+};
+
 function showResult() {
-  const total = selectedQuiz.questions.length;
+  const { earned } = scoreQuiz(roundQuestions, results);
+  const missed = missedQuestions(roundQuestions, results);
+  const correctCount = roundQuestions.length - missed.length;
+  const tier = feedbackTier(earned);
+  const stars = starsFor(earned);
+  const previousBest = readBest();
+  if (fullRound && earned > previousBest) saveBest(earned);
+
   byId('quiz-screen').hidden = true;
-  byId('result-screen').hidden = false;
-  byId('result-score').textContent = `${score} מתוך ${total} תשובות נכונות`;
-  byId('result-message').textContent = score === total
-    ? 'מצוין! אפשר לבחור תרגול נוסף או לחזור על השאלות.'
-    : 'כל תרגול עוזר ללמוד. נסו שוב וקראו את ההסברים אחרי כל שאלה.';
+  const panel = byId('result-screen');
+  panel.hidden = false;
+  panel.dataset.tier = tier;
+  byId('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  byId('result-stars').setAttribute('aria-label', `${stars} כוכבים מתוך 3`);
+  byId('result-score').textContent = `${earned} מתוך 100`;
+  byId('result-count').textContent = `${correctCount} מתוך ${roundQuestions.length} תשובות נכונות בניסיון הראשון`;
+  byId('result-message').textContent = messages[tier];
+  byId('result-message-en').textContent = messagesEn[tier];
+  const improvement = fullRound && previousBest > 0 && earned > previousBest ? earned - previousBest : 0;
+  byId('result-improvement').textContent = improvement ? `שיפרתם ב-${improvement} נקודות מהניסיון הטוב ביותר הקודם!` : '';
+  byId('result-improvement').hidden = !improvement;
+  byId('missed-button').hidden = missed.length === 0;
+  byId('missed-button').textContent = `לחזור רק על הטעויות (${missed.length})`;
+  if (tier === 'great' && !reducedMotion) launchConfetti();
   window.scrollTo(0, 0);
   byId('result-title').focus();
 }
 
-byId('retry-button').addEventListener('click', () => {
-  position = 0;
-  score = 0;
-  byId('result-screen').hidden = true;
-  byId('quiz-screen').hidden = false;
-  showQuestion();
-  window.scrollTo(0, 0);
-});
+function launchConfetti() {
+  const layer = byId('confetti');
+  layer.replaceChildren();
+  for (let i = 0; i < 18; i++) {
+    const piece = document.createElement('span');
+    piece.style.setProperty('--x', `${Math.round(Math.random() * 100)}%`);
+    piece.style.setProperty('--delay', `${Math.round(Math.random() * 300)}ms`);
+    piece.style.setProperty('--hue', String(80 + Math.round(Math.random() * 120)));
+    layer.append(piece);
+  }
+}
+
+byId('retry-button').addEventListener('click', () => startRound(selectedQuiz.questions.map((q, i) => ({ ...q, id: `q${i}`, type: 'mcq', difficulty: q.difficulty || 'medium' }))));
+byId('missed-button').addEventListener('click', () => startRound(missedQuestions(roundQuestions, results), false));

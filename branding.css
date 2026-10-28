@@ -1,0 +1,24 @@
+.prepx-brand {
+  display: block;
+  flex: 0 0 auto;
+  width: 180px;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  text-decoration: none;
+}
+.prepx-brand img { display: block; width: 100%; height: auto; }
+.prepx-brand:focus-visible { outline: 3px solid #7025ff; outline-offset: 5px; }
+.prepx-brand:active { transform: none; box-shadow: none; }
+.site-header .prepx-brand, .topbar .prepx-brand { margin: 0; }
+.home-page .prepx-brand { width: 240px; }
+.topbar .prepx-brand { width: 132px; }
+.subject-page .site-header { display: flex; padding-bottom: 24px; }
+@media (max-width: 400px) {
+  .subject-page .site-header .grade { max-width: 100px; line-height: 1.5; }
+  .subject-page .site-header .prepx-brand { width: 150px; }
+  .topbar .prepx-brand { width: 108px; }
+}

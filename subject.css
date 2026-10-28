@@ -64,3 +64,41 @@
   .subject-page .quiz-row:active { transform: none; }
 }
 @keyframes subject-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Make the question sets and their action visible at a glance. */
+.subject-page .practice-shortcut { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 9px 14px; border: 1px solid #b7e4a6; border-radius: 12px; background: #effbe9; color: #327e17; font-size: 14px; font-weight: 800; text-decoration: none; }
+.subject-page .practice-shortcut:focus-visible, .subject-page .quiz-row:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
+.subject-page #practice-section { scroll-margin-top: 20px; }
+.subject-page #practice-section .quiz-row { border-color: #d6e9d0; }
+.subject-page .practice-action { display: inline-flex; gap: 6px; align-items: center; margin-top: 8px; color: #348c16; font-size: 13px; font-weight: 800; }
+
+.subject-page #physics-materials .quiz-row { background: #f7fafc; border-color: #e2eaf0; box-shadow: none; }
+.subject-page #practice-section .quiz-row .arrow { visibility: hidden; }
+
+.subject-page .best-badge { display: inline-flex; gap: 4px; align-items: center; margin-top: 8px; margin-inline-start: 10px; padding: 2px 9px; border-radius: 999px; background: #e9f9df; color: #2f7d12; font-size: 12px; font-weight: 800; line-height: 1.5; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+
+/* Keep each exam and its topic practice in one expandable group. */
+.subject-page .variant-group { min-width: 0; border: 2px solid #d6e9d0; border-radius: 24px; background: #fff; box-shadow: 0 4px 0 #d9e5d4; }
+.subject-page .variant-group .variant-card { margin: 0; cursor: pointer; list-style: none; box-shadow: none; animation: none; }
+.subject-page .variant-group .variant-card::-webkit-details-marker { display: none; }
+.subject-page .variant-group[open] .variant-card { border-radius: 22px 22px 0 0; }
+.subject-page .variant-group .variant-card:hover, .subject-page .variant-group .variant-card:active { transform: none; box-shadow: none; }
+.subject-page .variant-group .exam-arrow { transition: transform 140ms ease; }
+.subject-page .variant-group[open] .exam-arrow { transform: rotate(180deg); }
+.subject-page .variant-card:focus-visible { outline: 3px solid #247eb5; outline-offset: 4px; }
+.subject-page .variant-content { padding: 20px; }
+.subject-page .variant-start { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 16px; border: 2px solid #b7e4a6; border-radius: 14px; background: var(--green-soft); color: #327e17; font-weight: 800; }
+.subject-page .variant-content .subject-section { margin-top: 26px; scroll-margin-top: 20px; }
+.subject-page .variant-content h3 { margin: 0 0 10px; color: #2c3a48; font-size: 18px; }
+.subject-page .variant-content .quiz-row { border-color: #d6e9d0; grid-template-columns: 32px minmax(0, 1fr) 48px; }
+.subject-page .variant-content .quiz-row .arrow { display: none; }
+.subject-page .variant-content .lesson-number { grid-column: 1; }
+.subject-page .variant-content .quiz-copy { grid-column: 2; }
+.subject-page .variant-content .quiz-icon { grid-column: 3; }
+@media (max-width: 500px) {
+  .subject-page .variant-content { padding: 14px; }
+  .subject-page .variant-content .quiz-row { grid-template-columns: 29px minmax(0, 1fr) 42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .subject-page .variant-group .exam-arrow { transition: none; }
+}

@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="בוחרים מבחן ומתכוננים אליו: מבחן בעברית לכיתה ז׳ ותרגולים קצרים.">
-  <title>בוחרים מבחן | מתכוננים למבחן</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <title>בוחרים מבחן | PrepX</title>
+  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="branding.css?v=1">
 </head>
 <body class="home-page">
   <div class="page">
     <header class="site-header">
-      <a class="brand" href="index.html" aria-label="עמוד הבית">מתכוננים למבחן</a>
+      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+      <a class="calendar-link" href="#exam-calendar" aria-label="לוח מבחנים" title="לוח מבחנים">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2M8 18h2"/></svg>
+      </a>
       <span class="grade">כיתה ז׳ · הכנה למבחנים</span>
     </header>
 
@@ -29,9 +33,42 @@
         </a>
         <a class="exam-card" href="subject.html?subject=physics">
           <img class="subject-art" src="assets/atom.png" alt="" width="112" height="112">
-          <span class="exam-copy"><strong>פיזיקה</strong><small>גרסאות המבחן יתווספו בהמשך</small></span>
+          <span class="exam-copy"><strong>פיזיקה</strong><small>תרגול מדידות · 4 נושאים</small></span>
           <span class="exam-arrow" aria-hidden="true">←</span>
         </a>
+      </section>
+
+      <section class="exam-calendar" id="exam-calendar" aria-labelledby="calendar-title" tabindex="-1">
+        <div class="section-heading calendar-heading">
+          <div>
+            <h2 id="calendar-title">לוח מבחנים</h2>
+            <p>כיתה ז׳2 · מחצית א׳ · תשפ״ז</p>
+          </div>
+          <a class="calendar-home" href="index.html"><span aria-hidden="true">→</span> חזרה לבית</a>
+        </div>
+        <div class="calendar-table-wrap">
+          <table class="calendar-table">
+            <caption class="visually-hidden">לוח מבחנים לכיתה ז׳2 — מחצית א׳, 2026–2027</caption>
+            <thead><tr><th scope="col">תאריך</th><th scope="col">יום</th><th scope="col">מקצוע</th></tr></thead>
+            <tbody>
+              <tr><td><time datetime="2026-10-21" dir="ltr">21.10.26</time></td><td>רביעי</td><th scope="row">מדעים</th></tr>
+              <tr><td><time datetime="2026-10-26" dir="ltr">26.10.26</time></td><td>שני</td><th scope="row">מדעי המחשב</th></tr>
+              <tr><td><time datetime="2026-10-29" dir="ltr">29.10.26</time></td><td>חמישי</td><th scope="row">עברית</th></tr>
+              <tr><td><time datetime="2026-11-02" dir="ltr">2.11.26</time></td><td>שני</td><th scope="row">פיזיקה</th></tr>
+              <tr><td><time datetime="2026-11-09" dir="ltr">9.11.26</time></td><td>שני</td><th scope="row">אנגלית</th></tr>
+              <tr><td><time datetime="2026-11-17" dir="ltr">17.11.26</time></td><td>שלישי</td><th scope="row">מתמטיקה עמ״ט</th></tr>
+              <tr><td><time datetime="2026-11-19" dir="ltr">19.11.26</time></td><td>חמישי</td><th scope="row">תנ״ך</th></tr>
+              <tr><td><time datetime="2026-11-24" dir="ltr">24.11.26</time></td><td>שלישי</td><th scope="row">מתמטיקה</th></tr>
+              <tr><td><time datetime="2026-12-02" dir="ltr">2.12.26</time></td><td>רביעי</td><th scope="row">תרבות ישראל</th></tr>
+              <tr><td><time datetime="2026-12-17" dir="ltr">17.12.26</time></td><td>חמישי</td><th scope="row">עברית</th></tr>
+              <tr><td><time datetime="2026-12-21" dir="ltr">21.12.26</time></td><td>שני</td><th scope="row">מדעי המחשב</th></tr>
+              <tr><td><time datetime="2026-12-28" dir="ltr">28.12.26</time></td><td>שני</td><th scope="row">פיזיקה</th></tr>
+              <tr><td><time datetime="2026-12-30" dir="ltr">30.12.26</time></td><td>רביעי</td><th scope="row">מדעים</th></tr>
+              <tr><td><time datetime="2027-01-04" dir="ltr">4.1.27</time></td><td>שני</td><th scope="row">אנגלית</th></tr>
+              <tr><td><time datetime="2027-01-07" dir="ltr">7.1.27</time></td><td>חמישי</td><th scope="row">מתמטיקה</th></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
     <footer>בהצלחה בלמידה!</footer>

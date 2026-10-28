@@ -1,0 +1,9 @@
+Generation tool: built-in image_gen; transparent background.
+Reference: https://mobbin.com/screens/fb4eda98-538d-4bc0-9ef6-bf06ed401c12
+
+Use case: logo-brand.
+Create a polished original logo for "PrepX", an exam preparation app for teenage students. Inspired by the approachability and graphic simplicity of Duolingo branding, with a distinctive original identity.
+Asset: one horizontal logo lockup on a genuinely transparent background, mascot on the left, wordmark on the right. Generous clear space, tightly cohesive proportions, no presentation board.
+Mascot: a chunky rounded four-armed X shaped character, electric violet body, two large white eyes with dark pupils and a small confident grin, slight dynamic tilt, expressive clever study-buddy personality. Simple flat vector-style shapes, very subtle darker purple flat underside accent for dimension, clean silhouette that works as a small app icon. Cool and friendly for high-school students, not babyish. No owl, bird, book, graduation cap, or school crest.
+Wordmark exact text: "PrepX" (capital P and capital X, spell P r e p X). Bold custom rounded geometric sans lettering, slightly playful with expertly balanced kerning, dark midnight-purple "Prep" and electric violet "X". Mascot and wordmark optically aligned.
+Style: premium contemporary education app branding, crisp vector-like edges, minimal details, no outline strokes, no gradients, no 3D render, no mockup, no tagline, no extra text, no watermark. Entire logo clearly visible, nothing cropped.

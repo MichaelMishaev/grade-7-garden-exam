@@ -4,14 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <title>גרסאות המבחן | מתכוננים למבחן</title>
+  <title>גרסאות המבחן | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=5">
-  <link rel="stylesheet" href="subject.css?v=1">
+  <link rel="stylesheet" href="subject.css?v=4">
+  <link rel="stylesheet" href="branding.css?v=1">
 </head>
 <body class="subject-page">
   <div class="page">
     <header class="site-header">
-      <a class="brand" href="index.html">מתכוננים למבחן</a>
+      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
       <span class="grade">כיתה ז׳ · הכנה למבחנים</span>
     </header>
     <main>
@@ -20,72 +21,100 @@
         <img id="subject-art" class="subject-header-art" src="assets/books.png" alt="" width="112" height="112">
         <h1 id="subject-title"></h1>
         <p id="subject-description"></p>
+        <a class="practice-shortcut" href="#practice-section">לשאלות תרגול לפי נושא <span aria-hidden="true">↓</span></a>
       </section>
       <section class="subject-section" aria-labelledby="variants-title">
         <h2 id="variants-title">גרסאות המבחן</h2>
         <div id="variant-list" class="exam-list"></div>
       </section>
+      <section id="physics-materials" class="subject-section" aria-labelledby="materials-heading" hidden>
+        <div class="section-heading">
+          <h2 id="materials-heading">חומרי לימוד למבחן</h2>
+          <p>אפשר לעיין בסיכום ולתרגל גם באתר החיצוני.</p>
+        </div>
+        <div class="quiz-list">
+          <a class="quiz-row" href="assets/materials/physics-measurements-grade-7.pdf" target="_blank" rel="noopener">
+            <span class="arrow" aria-hidden="true">←</span><span class="quiz-copy"><strong>סיכום נושא מדידות</strong><small>קובץ PDF · פיזיקה לכיתה ז׳</small></span><span class="quiz-icon" aria-hidden="true">PDF</span>
+          </a>
+          <a class="quiz-row" href="https://physics7-measurement-sarit.sarityarongaya.chatgpt.site/" target="_blank" rel="noopener">
+            <span class="arrow" aria-hidden="true">←</span><span class="quiz-copy"><strong>מתרגלים פיזיקה ז׳</strong><small>אתר תרגול בנושא מדידות · נפתח באתר חיצוני</small></span><span class="quiz-icon" aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
       <section id="practice-section" class="subject-section" aria-labelledby="practice-heading" hidden>
         <div class="section-heading">
-          <h2 id="practice-heading">תרגול לפי נושא</h2>
-          <p>תרגולים קצרים שאפשר לנסות שוב. בכל שאלה מקבלים הסבר מיד אחרי התשובה.</p>
+          <h2 id="practice-heading">שאלות לתרגול לפי נושא</h2>
+          <p>בחרו נושא כדי להתחיל לענות על שאלות. אחרי כל תשובה תקבלו הסבר ותוכלו לתרגל שוב.</p>
         </div>
         <div class="quiz-list">
           <a class="quiz-row" href="practice.html?quiz=facts">
             <span class="arrow" aria-hidden="true">←</span>
             <span class="lesson-number" aria-hidden="true">1</span>
-            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small></span>
+            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span>
             <span class="quiz-icon" aria-hidden="true">א</span>
           </a>
           <a class="quiz-row" href="practice.html?quiz=questions">
             <span class="arrow" aria-hidden="true">←</span>
             <span class="lesson-number" aria-hidden="true">2</span>
-            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small></span>
+            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span>
             <span class="quiz-icon" aria-hidden="true">?</span>
           </a>
           <a class="quiz-row" href="practice.html?quiz=instructions">
             <span class="arrow" aria-hidden="true">←</span>
             <span class="lesson-number" aria-hidden="true">3</span>
-            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small></span>
-            <span class="quiz-icon" aria-hidden="true">✓</span>
+            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span>
+            <span class="quiz-icon" aria-hidden="true">?</span>
           </a>
         </div>
       </section>
     </main>
     <footer>בהצלחה בלמידה!</footer>
   </div>
+  <script src="quiz-core.js?v=1"></script>
   <script>
     const subjects = {
       hebrew: {
         title: 'עברית',
         description: 'מבחן בתאריך 29.10. בחרו גרסה של המבחן או תרגלו נושא אחד.',
         variants: [
-          { title: 'גרסה 1 · הבנת הנקרא', detail: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר', date: '29.10', count: '20 שאלות', href: 'garden-exam.html' }
+          { title: 'גרסה 1 · הבנת הנקרא', detail: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר', date: '29.10', count: '20 שאלות', href: 'garden-exam.html', practiceQuizzes: ['facts', 'questions', 'instructions'] }
         ]
       },
       physics: {
         title: 'פיזיקה',
-        description: 'גרסאות המבחן בפיזיקה יופיעו כאן כשיתווספו השאלות והנושאים.',
+        description: 'מתרגלים מדידות לקראת המבחן, צעד אחר צעד.',
         variants: []
       }
     };
     const key = new URLSearchParams(location.search).get('subject');
     const subject = subjects[key] || subjects.hebrew;
-    document.title = `${subject.title} · גרסאות המבחן`;
+    document.title = `${subject.title} · גרסאות המבחן | PrepX`;
     document.getElementById('subject-title').textContent = subject.title;
     document.getElementById('subject-description').textContent = subject.description;
     document.getElementById('subject-art').src = subject === subjects.physics ? 'assets/atom.png' : 'assets/books.png';
+    if (subject === subjects.physics) {
+      document.getElementById('physics-materials').hidden = false;
+      document.getElementById('practice-section').hidden = false;
+      document.querySelector('#practice-section .quiz-list').innerHTML = [
+        ['physics-basics', 'מדידה ושיטות מדידה', 'מדידה ישירה ועקיפה ועובי דף', '1'],
+        ['physics-units', 'המרת יחידות אורך', 'מטרים, סנטימטרים ומילימטרים', '2'],
+        ['physics-precision', 'מודדים נכון', 'קריאת סרגל, דיוק ובחירת כלי', '3'],
+        ['physics-pole', 'גובה של עמוד', 'זווית של 45° ומדידה עקיפה', '4']
+      ].map(([id, title, detail, number]) => `<a class="quiz-row" href="practice.html?quiz=${id}"><span class="arrow" aria-hidden="true">←</span><span class="lesson-number" aria-hidden="true">${number}</span><span class="quiz-copy"><strong>${title}</strong><small>${detail} · 11 שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span><span class="quiz-icon" aria-hidden="true">?</span></a>`).join('');
+    }
     const list = document.getElementById('variant-list');
     if (subject.variants.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-state';
-      empty.textContent = 'אין עדיין גרסאות זמינות למבחן הזה. חזרו לכאן כשהחומר יתווסף.';
+      empty.textContent = subject === subjects.physics ? 'גרסאות מבחן עדיין לא נוספו. אפשר לתרגל לפי נושא בהמשך העמוד.' : 'אין עדיין גרסאות זמינות למבחן הזה. חזרו לכאן כשהחומר יתווסף.';
       list.append(empty);
     } else {
-      subject.variants.forEach(variant => {
-        const link = document.createElement('a');
-        link.className = 'exam-card variant-card';
-        link.href = variant.href;
+      subject.variants.forEach((variant, index) => {
+        const group = document.createElement('details');
+        group.className = 'variant-group';
+        group.open = index === 0;
+        const summary = document.createElement('summary');
+        summary.className = 'exam-card variant-card';
         const icon = document.createElement('img');
         icon.className = 'variant-art';
         icon.src = 'assets/exam-sheet.png';
@@ -105,7 +134,7 @@
         const arrow = document.createElement('span');
         arrow.className = 'exam-arrow';
         arrow.setAttribute('aria-hidden', 'true');
-        arrow.textContent = '←';
+        arrow.textContent = '⌄';
         const meta = document.createElement('span');
         meta.className = 'variant-meta';
         const count = document.createElement('span');
@@ -113,11 +142,58 @@
         const date = document.createElement('span');
         date.textContent = variant.date;
         meta.append(count, date);
-        link.append(icon, copy, arrow, meta);
-        list.append(link);
+        summary.append(icon, copy, arrow, meta);
+        const content = document.createElement('div');
+        content.className = 'variant-content';
+        const examLink = document.createElement('a');
+        examLink.className = 'variant-start';
+        examLink.href = variant.href;
+        examLink.textContent = 'מתחילים את המבחן המלא ←';
+        content.append(examLink);
+        if (variant.practiceQuizzes?.length) {
+          const practice = document.getElementById('practice-section').cloneNode(true);
+          practice.id = `variant-${index + 1}-practice`;
+          practice.hidden = false;
+          const heading = document.createElement('h3');
+          heading.id = `variant-${index + 1}-practice-heading`;
+          heading.textContent = practice.querySelector('h2').textContent;
+          practice.querySelector('h2').replaceWith(heading);
+          practice.setAttribute('aria-labelledby', heading.id);
+          practice.querySelectorAll('.quiz-row').forEach(row => {
+            const quiz = new URLSearchParams(row.getAttribute('href').split('?')[1]).get('quiz');
+            if (!variant.practiceQuizzes.includes(quiz)) row.remove();
+          });
+          content.append(practice);
+        }
+        group.append(summary, content);
+        list.append(group);
       });
-      document.getElementById('practice-section').hidden = subject !== subjects.hebrew;
+      document.getElementById('practice-section').remove();
+      const shortcut = document.querySelector('.practice-shortcut');
+      const firstPractice = document.querySelector('.variant-content section');
+      if (firstPractice) shortcut.href = '#' + firstPractice.id;
+      else shortcut.hidden = true;
     }
+    // Saved best scores (written by practice.js). Read-only; storage may be blocked.
+    (function showBestScores() {
+      const names = ['', 'כוכב אחד', 'שני כוכבים', 'שלושה כוכבים'];
+      document.querySelectorAll('a.quiz-row[href^="practice.html?quiz="]').forEach(row => {
+        let best = null;
+        try {
+          const quizKey = new URLSearchParams(row.getAttribute('href').split('?')[1]).get('quiz');
+          const raw = localStorage.getItem('prepx-best-' + quizKey);
+          if (raw !== null && /^\d{1,3}$/.test(raw.trim())) best = Number(raw.trim());
+        } catch (e) { best = null; }
+        if (best === null || best > 100 || typeof QuizCore === 'undefined') return;
+        const stars = QuizCore.starsFor(best);
+        const badge = document.createElement('span');
+        badge.className = 'best-badge';
+        badge.setAttribute('role', 'img');
+        badge.setAttribute('aria-label', `הציון הטוב ביותר: ${best} מתוך 100${stars ? ', ' + names[stars] : ', ללא כוכבים'}`);
+        badge.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars) + ' · ' + best;
+        row.querySelector('.quiz-copy').append(badge);
+      });
+    })();
   </script>
 </body>
 </html>
