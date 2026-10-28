@@ -101,3 +101,15 @@ test('start, finish and duration reach the teacher email; bad times are ignored'
   await submit({ ...payload, startedAt: 'nonsense', finishedAt: '2026-10-28T10:25:00.000Z' });
   assert.doesNotMatch(calls[2].body.text, /משך:/);
 }));
+
+test('physics submission requires 27 answers and sends a correctly titled email', () => withServer(async ({ submit, calls }) => {
+  const answers = Array.from({ length: 27 }, (_, i) => ({ question: `שאלה ${i + 1}`, answer: `תשובה ${i + 1}` }));
+  assert.equal((await submit({ exam: 'physics-v1-assessment', name: 'בדיקה', answers: answers.slice(0, 20) })).status, 400);
+  assert.equal((await submit({ name: 'בדיקה', answers })).status, 400);
+  assert.equal((await submit({ exam: 'unknown', name: 'בדיקה', answers })).status, 400);
+  assert.equal((await submit({ exam: 'physics-v1-assessment', name: 'בדיקה', answers })).status, 200);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].body.subject, /מדידות/);
+  assert.match(calls[0].body.html, /משימת הערכה במדידות/);
+  assert.match(calls[0].body.text, /27\. שאלה 27/);
+}));

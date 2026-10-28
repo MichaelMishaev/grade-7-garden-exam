@@ -63,7 +63,7 @@
       .then(exam => (exam && contentApi.examFromApi(exam, inlineQuestions)) || inlineQuestions, () => inlineQuestions)
     : Promise.resolve(inlineQuestions)
   ).then(questions => {
-    // Self-graded: nothing is sent anywhere. The draft lives only in this tab.
+    // Draft stays in this tab until the teacher email is accepted.
     const storageKey = 'physics-exam-draft-v1';
     const total = questions.length;
     const ids = new Set(questions.map(q => q.id));
@@ -73,7 +73,7 @@
     const state = {
       answers: known(saved.answers), work: known(saved.work), checks: known(saved.checks), first: known(saved.first), selfChecks: known(saved.selfChecks),
       current: Number.isInteger(saved.current) ? Math.max(0, Math.min(total - 1, saved.current)) : 0,
-      started: saved.started === true, finished: saved.finished === true
+      started: saved.started === true, finished: saved.finished === true, name: typeof saved.name === 'string' ? saved.name : ''
     };
     const persist = () => { try { sessionStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} };
     const sectionOf = q => sections.findIndex(s => s.title === q.topic);
@@ -265,6 +265,35 @@
       });
       show('results', 'results-title');
     }
+
+    $('student-name').value = state.name;
+    $('student-name').addEventListener('input', () => { state.name = $('student-name').value; persist(); });
+    $('send').addEventListener('click', async () => {
+      const status = $('send-status');
+      if (!state.name.trim()) { status.textContent = 'יש למלא שם לפני השליחה.'; $('student-name').focus(); return; }
+      if (questions.some(q => !hasAnswer(q))) { status.textContent = 'יש לענות על כל השאלות לפני השליחה.'; return; }
+      const answers = questions.map(q => {
+        const node = document.createElement('div'); node.innerHTML = q.prompt.replace(/<br\s*\/?>/gi, ' ');
+        const answer = q.type === 'mcq' ? q.choices[state.answers[q.id]] : state.answers[q.id];
+        const work = typeof state.work[q.id] === 'string' ? state.work[q.id].trim() : '';
+        const result = grade(q);
+        return { question: node.textContent.trim(), answer: answer + (work ? '\nדרך חישוב: ' + work : ''), ...(typeof result === 'boolean' ? { correct: result } : {}) };
+      });
+      if (answers.some(item => item.answer.length > 3000)) { status.textContent = 'אחת התשובות ארוכה מדי. קצרו את התשובה ודרך החישוב ל־3000 תווים יחד.'; return; }
+      $('send').disabled = true; status.textContent = 'שולחים…';
+      try {
+        const response = await fetch(location.hostname === 'michaelmishayev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exam: 'physics-v1-assessment', name: state.name.trim(), answers })
+        });
+        if (!response.ok) throw new Error('submission failed');
+        try { sessionStorage.removeItem(storageKey); } catch (_) {}
+        status.textContent = 'התשובות התקבלו לשליחה למורה.';
+        $('send').textContent = 'התשובות נשלחו';
+      } catch (_) {
+        status.textContent = 'השליחה לא הצליחה. התשובות נשמרו בלשונית; בדקו עם המורה לפני ניסיון נוסף.';
+        $('send').disabled = false;
+      }
+    });
 
     $('begin').textContent = state.started ? 'ממשיכים מהמקום שעצרתם' : 'מתחילים';
     $('begin').addEventListener('click', () => { state.started = true; persist(); questionAt(state.current); });

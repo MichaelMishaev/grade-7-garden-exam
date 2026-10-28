@@ -13,7 +13,7 @@ async function loadExamQuestions(sql) {
 export function matchExam(rows, answers) {
   const byExam = Map.groupBy(rows, (r) => r.exam_id);
   for (const [examId, questions] of byExam) {
-    const lookup = new Map(questions.map((q) => [q.prompt, q]));
+    const lookup = new Map(questions.map((q) => [q.exam_id === 'physics-v1-assessment' ? q.prompt.replace(/<br\s*\/?>/gi, ' ').trim() : q.prompt, q]));
     const matched = answers.map((a) => lookup.get(a.question.startsWith(libraryPrefix) ? a.question.slice(libraryPrefix.length) : a.question));
     if (matched.every(Boolean) && new Set(matched.map((q) => q.id)).size === answers.length) return { examId, matched };
   }

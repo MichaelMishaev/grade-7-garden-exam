@@ -62,7 +62,7 @@
   </style>
   <script src="content-api.js?v=3" defer></script>
   <script src="numeric-answer.js?v=1" defer></script>
-  <script src="physics-exam.js?v=1" defer></script>
+  <script src="physics-exam.js?v=2" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -90,7 +90,7 @@
         <li>שאלות בחירה ושאלות חישוב נבדקות מיד. כתבו מספר בלבד, בלי יחידה; אפשר נקודה או פסיק עשרוני (5.7 או 5,7).</li>
         <li>בתשובות כתובות מופיעים פתרון לדוגמה ורשימה לבדיקה עצמית.</li>
         <li>אפשר לתקן ולבדוק שוב. בסיכום מוצגים גם התשובות הנוכחיות וגם הנכונות בבדיקה הראשונה.</li>
-        <li>התשובות אינן נשלחות למורה ואינן נשמרות בשרת. הטיוטה נשמרת רק בלשונית הזאת.</li>
+        <li>בסיום אפשר לשלוח את התשובות למורה בדוא״ל. הטיוטה נשמרת בלשונית הזאת עד השליחה.</li>
       </ul>
       <button id="begin" class="primary-button" type="button">מתחילים</button>
     </section>
@@ -116,7 +116,7 @@
       </div>
       <button id="finish" class="secondary-button" type="button">סיום וסיכום</button>
       <p class="chapter-credit">הוכן על ידי שרית שרת</p>
-      <p class="note">בדיקה עצמית. התשובות אינן נשלחות למורה.</p>
+      <p class="note">בדיקה עצמית. בסיום ניתן לשלוח את התשובות למורה.</p>
     </section>
 
     <section id="results" class="stage result-panel" aria-labelledby="results-title" hidden>
@@ -125,6 +125,11 @@
       <p id="score-note"></p>
       <div id="result-list"></div>
       <div class="result-actions">
+        <label for="student-name">שם התלמיד או התלמידה</label>
+        <input id="student-name" class="answer" maxlength="120" autocomplete="name">
+        <button id="send" class="primary-button" type="button">שליחת התשובות למורה</button>
+        <p>השם והתשובות יישלחו בדוא״ל למורה באמצעות Resend.</p>
+        <p id="send-status" role="status" aria-live="polite"></p>
         <button id="back-to-questions" class="secondary-button" type="button">חזרה לשאלות</button>
         <button id="retry" class="primary-button" type="button">מתחילים מחדש</button>
         <a class="secondary-button" href="subject.html?subject=physics">לגרסאות במדעים</a>

@@ -25,3 +25,8 @@ test('auto-grading only applies to graded questions', () => {
   assert.equal(autoCorrect(rows[0], 'כל דבר'), null);
   assert.equal(autoCorrect(null, 'א'), null);
 });
+
+ test('recognises physics prompts rendered as plain text', () => {
+  const physics = [{ id: 'p1', exam_id: 'physics-v1-assessment', prompt: 'שאלה<br><br>המשך' }];
+  assert.equal(matchExam(physics, [{ question: 'שאלה  המשך' }]).examId, 'physics-v1-assessment');
+});

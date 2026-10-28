@@ -54,9 +54,11 @@ export function createApp({ env = process.env, sendFetch = fetch, db = createDb(
       payload = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     } catch { return json(400, { error: 'Invalid JSON' }); }
     const validText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
-    if (!payload || !validText(payload.name, 120) || !Array.isArray(payload.answers) || payload.answers.length !== 20 ||
+    const physics = payload?.exam === 'physics-v1-assessment';
+    const expectedAnswers = physics ? 27 : 20;
+    if (!payload || (payload.exam !== undefined && !physics) || !validText(payload.name, 120) || !Array.isArray(payload.answers) || payload.answers.length !== expectedAnswers ||
         !payload.answers.every(item => item && validText(item.question, 1000) && validText(item.answer, 3000))) {
-      return json(400, { error: 'Name and all 20 answers are required' });
+      return json(400, { error: 'Name and all exam answers are required' });
     }
     const validTime = value => typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
     const timed = validTime(payload.startedAt) && validTime(payload.finishedAt) && Date.parse(payload.finishedAt) >= Date.parse(payload.startedAt);
@@ -92,9 +94,9 @@ export function createApp({ env = process.env, sendFetch = fetch, db = createDb(
         body: JSON.stringify({
           from: env.RESEND_FROM_EMAIL,
           to: ['345287@gmail.com'],
-          subject: 'תשובות למבחן הבנת הנקרא - כיתה ז׳',
+          subject: physics ? 'תשובות למשימת הערכה במדידות - כיתה ז׳' : 'תשובות למבחן הבנת הנקרא - כיתה ז׳',
           text: `שם התלמיד/ה: ${name}\n${timeLines(times)}${score ? scoreLine(score) + '\n' : ''}\n` + answers.map((item, i) => `${i + 1}. ${item.correct === true ? '✓ ' : item.correct === false ? '✕ ' : ''}${item.question}\n${item.answer}`).join('\n\n'),
-          html: renderExamEmail({ name, answers, score, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
+          html: renderExamEmail({ name, answers, score, title: physics ? 'תשובות למשימת הערכה במדידות' : undefined, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
         }),
         signal: AbortSignal.timeout(15000)
       });
