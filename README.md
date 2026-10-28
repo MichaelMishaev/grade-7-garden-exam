@@ -4,7 +4,7 @@ PrepX is a study hub for exam preparation for students in class ז׳2 (Grade 7, 
 
 **קהל היעד:** תלמידי כיתה ז׳2 בבית הספר שי עגנון, נתניה.
 
-A mobile-first RTL study hub. Students choose a subject on the home page, then a separate version of its exam. The Hebrew exam for 29.10 has one available version; Physics opens a version list that is empty until its material is provided. Three short Hebrew practice quizzes cover facts versus opinions, question words, and instruction words.
+A mobile-first RTL study hub. Students choose a subject on the home page, then a separate version of its exam. The Hebrew exam for 29.10 has one available version. Physics has no exam version yet, but it shows study materials (a PDF summary and an external practice site) and four practice quizzes on measurement. Three short Hebrew practice quizzes cover facts versus opinions, question words, and instruction words.
 
 ## Run locally
 
@@ -12,21 +12,21 @@ A mobile-first RTL study hub. Students choose a subject on the home page, then a
 npm start
 ```
 
-The server listens on `PORT` or port 3000 and serves only static HTML, CSS, JavaScript, SVG, and PNG files. Open `http://localhost:3000/`.
+The server listens on `PORT` or port 3000. It serves `/api/submit-exam` and static HTML, CSS, JavaScript, SVG, PNG, and PDF files only. Open `http://localhost:3000/`.
 
 ## Pages
 
 - `index.html`: compact subject selector.
 - `subject.html?subject=hebrew` and `?subject=physics`: exam version lists. Add further versions to the `subjects` data in this page.
 - `garden-exam.html`: original 20-question reading exam, with review and email submission.
-- `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short practice quizzes with immediate Hebrew and English feedback.
+- `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short Hebrew practice quizzes with immediate Hebrew and English feedback. `?quiz=physics-basics`, `physics-units`, `physics-precision`, `physics-pole`: physics quizzes with Hebrew feedback. Practice is scored out of 100 with 0–3 stars, and the best full-round score is kept in `localStorage` (`prepx-best-<quiz>`) and shown on the subject page. Scoring rules are in `QUESTION-RULES.md`.
 - `thanks.html`: confirmation after the full exam is submitted.
 
-The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are not stored on the app server or written to its logs; Resend processes the email content. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser.
+The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are not stored on the app server or written to its logs; Resend processes the email content. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser and send nothing.
 
 Railway requires `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_ORIGIN=https://hitech.agnon.online`, and `NODE_ENV=production`. Keep the API key in Railway variables, never in browser code or Git. GitHub Pages submits to the Railway endpoint using an explicitly allowed origin. Identical submissions use Resend's idempotency key (24-hour window). The server accepts at most 100 valid submission attempts per hour per running instance; this in-memory limit resets on restart.
 
-Run the focused server checks with `node --test server.test.mjs`.
+Run the checks with `node --test quiz-core.test.mjs server.test.mjs` (scoring logic and the submission API; Resend is mocked).
 
 On 2026-10-28, a synthetic submission from the live exam reached `thanks.html`; Resend reported it delivered to the teacher address, with the test marker and all 20 answer sections present (email ID `01a182f9-659f-765f-b663-2ad92e7a5267`).
 
@@ -46,7 +46,7 @@ Pushing to `main` on GitHub deploys the site. There is no manual deploy step.
 - Project `grade-7-exam-study`, service `web`, environment `production`, region `europe-west4`, 1 replica.
 - Source: GitHub repo above, branch `main`. Built with Railpack; start command `npm start` (runs `server.mjs`).
 - Health check: `GET /` must return 200 before a new deployment replaces the old one.
-- No environment variables are set; Railway supplies `PORT`.
+- Railway supplies `PORT`; the email variables listed above must be set as Railway variables.
 - The custom domain uses Cloudflare DNS, with Railway handling hosting and TLS.
 - To roll back, redeploy an earlier deployment from the Railway dashboard.
 

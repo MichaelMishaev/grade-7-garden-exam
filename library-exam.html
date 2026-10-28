@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff"><title>גרסה 2 · הספרייה בהפסקה | PrepX</title>
+<style>
+    :root { font-family: Arial, "Noto Sans Hebrew", sans-serif; color: #273541; background: #fff; font-synthesis: none; --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 300px; }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(100% - 32px, 760px); margin: 0 auto; padding: 24px 0 48px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 34px; }
+    .brand { color: #1587c2; font-size: 15px; font-weight: 800; letter-spacing: .01em; text-decoration: none; }
+    .brand:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .time { color: #6c7e73; font-size: 13px; }
+    h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.16; letter-spacing: -.035em; margin: 0 0 14px; }
+    .intro { color: #53675b; font-size: 17px; line-height: 1.65; margin: 0 0 28px; }
+    .card { background: #fff; border: 2px solid #e5e9ec; border-radius: 22px; box-shadow: 0 4px 0 #d9dfe3; }
+    .reading { padding: clamp(22px, 5vw, 36px); }
+    .reading h2 { font-size: clamp(24px, 4.8vw, 31px); line-height: 1.3; margin: 0 0 10px; }
+    .byline { font-size: 14px; color: #67766d; margin: 0 0 24px; line-height: 1.7; }
+    .reading p:not(.byline) { font-size: 18px; line-height: 1.95; margin: 0 0 17px; }
+    .reading p:last-child { margin-bottom: 0; }
+    .name-box { margin-top: 26px; }
+    label { display: block; font-weight: 700; margin-bottom: 9px; }
+    input[type=text], textarea { width: 100%; border: 2px solid #dce3e7; border-radius: 13px; background: white; color: #273541; padding: 14px 16px; outline: none; }
+    input[type=text]:focus, textarea:focus { border-color: #58cc02; box-shadow: 0 0 0 4px #e9fbdc; }
+    input[type=text] { min-height: 50px; }
+    textarea { min-height: 148px; resize: vertical; line-height: 1.7; font-size: 17px; }
+    input::placeholder, textarea::placeholder { color: #819388; }
+    .field-note, .privacy { color: #64776b; font-size: 13px; line-height: 1.5; }
+    .field-note { margin: 7px 0 0; }
+    .actions { display: flex; gap: 10px; margin-top: 25px; }
+    .button { border: 2px solid transparent; border-radius: 13px; padding: 14px 22px; min-height: 52px; font-weight: 800; font-size: 16px; transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out); }
+    .button:active { transform: translateY(3px); box-shadow: 0 1px 0 #d9dfe3; }
+    .primary { background: #58cc02; border-color: #58cc02; color: white; box-shadow: 0 4px 0 #46a302; }
+    .primary:active { box-shadow: 0 1px 0 #46a302; }
+    .secondary { background: #fff; border-color: #e5e9ec; color: #273541; box-shadow: 0 4px 0 #d9dfe3; }
+    .button:focus-visible, summary:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .stage { display: none; }
+    .stage.active { display: block; animation: stage-in 220ms var(--ease-out) both; }
+    .progress-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin: 3px 0 11px; font-weight: 700; font-size: 14px; }
+    .progress-row span:last-child { color: #64776b; }
+    .bar { height: 12px; background: #e5e9ec; border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
+    .bar > span { display: block; height: 100%; background: #58cc02; transition: width 220ms var(--ease-out); }
+    details { background: #edf4ed; border-radius: 14px; margin-bottom: 20px; }
+    summary { padding: 16px 18px; font-weight: 800; cursor: pointer; }
+    details .reading { border-top: 1px solid #d4e3d4; padding: 20px; }
+    details .reading h2 { font-size: 21px; }
+    details .reading p:not(.byline) { font-size: 16px; line-height: 1.8; }
+    .question-card { padding: clamp(22px, 5vw, 34px); }
+    .question-number { display: block; color: #46a302; font-weight: 800; margin-bottom: 13px; font-size: 14px; }
+    .question-title { font-size: clamp(22px, 4.7vw, 27px); line-height: 1.45; margin: 0 0 25px; }
+    .error { color: #aa3535; font-size: 14px; font-weight: 700; min-height: 20px; margin: 9px 0 0; }
+    .review-title { font-size: 30px; margin: 0 0 12px; }
+    .review-list { display: grid; gap: 10px; margin-top: 22px; }
+    .review-item { text-align: right; width: 100%; display: block; border: 2px solid #e5e9ec; background: #fff; border-radius: 13px; padding: 14px 17px; color: inherit; }
+    .review-item:hover { border-color: #5a9e6d; }
+    .review-item strong { display: block; font-size: 14px; line-height: 1.5; }
+    .review-item span { display: block; margin-top: 4px; color: #586d60; font-size: 14px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .review-actions { margin-top: 26px; }
+    .privacy { margin: 14px 0 0; }
+    .footer { margin-top: 32px; text-align: center; color: #718477; font-size: 13px; }
+    @media (max-width: 560px) { .shell { width: min(100% - 28px, 760px); padding-top: 17px; } header { margin-bottom: 26px; } .time { font-size: 12px; } .actions { flex-direction: column; } .actions .button { width: 100%; } .reading p:not(.byline) { font-size: 17px; } }
+    @keyframes stage-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (hover: hover) and (pointer: fine) { .primary:hover { background: #61d70a; } .secondary:hover, .review-item:hover { border-color: #b8c4ca; } }
+    @media (prefers-reduced-motion: reduce) { .stage.active { animation: stage-fade 200ms ease both; } .button { transition: none; } .button:active { transform: none; } .bar > span { transition: none; } }
+    @keyframes stage-fade { from { opacity: 0; } to { opacity: 1; } }
+  
+[hidden] { display: none !important; }
+.stage.active { animation: none; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 13px; margin: 10px 0; border: 2px solid #e5e9ec; border-radius: 13px; cursor: pointer; line-height: 1.5; }
+.choice:has(input:checked) { border-color: #46a302; background: #e9fbdc; }
+.choice input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #46a302; }
+.choice:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
+.flag { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 18px 0 0; }
+.flag input { width: 22px; height: 22px; accent-color: #46a302; }
+.review-item { min-height: 48px; }
+.result-detail { padding: 18px; margin-top: 14px; line-height: 1.7; }
+.result-detail h2 { font-size: 19px; margin-top: 0; }
+.result-detail p { margin: 8px 0; }
+.primary { color: #17330b; }
+a.button { display: inline-flex; align-items: center; text-decoration: none; }
+.actions { flex-wrap: wrap; }
+.topic-list { line-height: 1.9; }
+</style>
+<link rel="stylesheet" href="branding.css?v=1">
+<script src="quiz-core.js?v=1" defer></script><script src="library-exam.js?v=1" defer></script>
+</head>
+<body><main class="shell">
+<a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+<header><a class="brand" href="subject.html?subject=hebrew">→ לגרסאות בעברית</a><span class="time">גרסה 2 · 20 שאלות</span></header>
+<section id="start" class="stage active" aria-labelledby="page-title">
+<h1 id="page-title" tabindex="-1">הספרייה נפתחת גם בהפסקה</h1>
+<p class="intro">מבחן תרגול בעברית · הבנת הנקרא, עובדה ודעה ומילות שאלה והוראה. שאלות בחירה, נכון או לא נכון ותשובות פתוחות. אין הגבלת זמן. סדר השאלות משתנה בתוך כל רמת קושי, מהקל לקשה.</p>
+<article id="article" class="card reading">
+<h2>הספרייה נפתחת גם בהפסקה</h2>
+<p class="byline">מאת: נועה לוי | אתר בית הספר „שקד” | 22.10.2026<br><em>טקסט מקורי ובדיוני שנכתב לצורך התרגול.</em></p>
+<p>בתחילת אוקטובר החלה ספריית בית הספר „שקד” להיפתח גם בהפסקה הגדולה, בימים שני ורביעי. השינוי הוצע במועצת התלמידים בעקבות בקשות של תלמידים שחיפשו מקום שקט לקריאה. עד אז הספרייה הייתה פתוחה לתלמידים רק בתום יום הלימודים.</p>
+<p>לפני תחילת הניסוי ערכה הספרנית סקר בקרב 60 תלמידי שכבת ז׳. 42 מהם אמרו שירצו לבקר בספרייה בהפסקה. הספרנית הדגישה שהסקר מבטא את רצונם של המשיבים, אך אינו מוכיח שכולם יגיעו בפועל.</p>
+<p>במהלך חודש הניסיון סייעו בכל יום פתיחה שני מתנדבים ממועצת התלמידים. הם סידרו ספרים ועזרו למבקרים למצוא את המדף המתאים. כדי לשמור על השקט נקבע שאפשר לקרוא ולשאול ספרים, אבל אסור לאכול בספרייה. בחצר המשיכו להתקיים משחקים כרגיל.</p>
+<p>בשבוע הראשון נרשמו 18 ביקורים, ובשבוע השני נרשמו 27 ביקורים. הספרנית ספרה ביקורים ולא תלמידים שונים: תלמיד שביקר פעמיים נספר פעמיים. מאיה, תלמידת כיתה ז׳, אמרה: „לדעתי, הקריאה בהפסקה נעימה יותר מכל משחק”. יואב הציע להוסיף ספרי קומיקס למדפים, כדי למשוך קוראים נוספים.</p>
+<p>בסוף אוקטובר תבדוק מועצת התלמידים את מספר הביקורים ואת חוות הדעת של המבקרים. לאחר מכן תחליט הנהלת בית הספר אם להמשיך בפתיחה בהפסקות. בינתיים לא הוחלט לפתוח את הספרייה בכל ימות השבוע.</p>
+</article>
+<div class="name-box"><label for="student-name">שם התלמיד או התלמידה</label><input id="student-name" type="text" maxlength="100" autocomplete="name"><p class="privacy">הטיוטה נשמרת בלשונית זו. שליחה למורה מתבצעת רק בלחיצה על כפתור השליחה בסיום.</p><p id="name-error" class="error" role="alert"></p></div>
+<div class="actions"><button id="begin" class="button primary" type="button">מתחילים לענות</button></div>
+</section>
+<section id="question-stage" class="stage" aria-labelledby="question-title">
+<div class="progress-row"><span id="counter"></span><span id="answered"></span></div>
+<div id="progress-bar" class="bar" role="progressbar" aria-label="התקדמות במבחן" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><span id="progress"></span></div>
+<details><summary>פתיחת הטקסט לקריאה חוזרת</summary><div id="article-copy" class="reading"></div></details>
+<div class="card question-card"><span id="question-topic" class="question-number"></span><h2 id="question-title" class="question-title" tabindex="-1"></h2>
+<div id="choices" role="group" aria-labelledby="question-title"></div>
+<div id="open-answer" hidden><label for="answer">התשובה שלי — תיבדק בידי המורה</label><textarea id="answer" maxlength="3000"></textarea></div>
+<label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label></div>
+<div class="actions"><button id="previous" class="button secondary" type="button">לשאלה הקודמת</button><button id="next" class="button primary" type="button">לשאלה הבאה</button><button id="review-button" class="button secondary" type="button">סקירת התשובות</button></div>
+</section>
+<section id="review" class="stage" aria-labelledby="review-title"><h1 id="review-title" tabindex="-1">בודקים לפני הסיום</h1><p id="review-status" class="intro"></p><div id="review-list" class="review-list"></div><p id="review-error" class="error" role="alert"></p><div class="actions"><button id="back-to-questions" class="button secondary" type="button">חזרה לשאלות</button><button id="finish" class="button primary" type="button">סיום ובדיקת המבחן</button></div></section>
+<section id="results" class="stage" aria-labelledby="results-title"><h1 id="results-title" tabindex="-1">סיימתם את המבחן!</h1><p id="score" class="intro"></p><p>זהו ציון חלקי לתרגול. התשובות הפתוחות ממתינות לבדיקת המורה.</p><ul id="topics" class="topic-list"></ul><div id="explanations"></div><div class="actions"><button id="send" class="button primary" type="button">שליחת כל התשובות למורה</button><button id="retry" class="button secondary" type="button">מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div><p id="send-status" class="privacy" role="status"></p><p class="privacy">בלחיצה על שליחה, השם וכל 20 התשובות נשלחים בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה.</p></section>
+<footer class="footer">בהצלחה בלמידה!</footer>
+</main></body></html>

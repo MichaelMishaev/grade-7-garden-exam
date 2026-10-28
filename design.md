@@ -41,6 +41,8 @@ Keep new artwork coherent with these assets: simple silhouettes, saturated color
 - **Practice row:** use a compact lesson number, topic title, short description, and obvious action. The entire row is a link.
 - **Question screen:** show one question, large answer targets, a visible progress bar, and a clear next button after answering.
 - **Feedback:** green for correct and warm coral for incorrect; state the result in words and explain it in Hebrew and English. Color and animation must not be the only signals.
+- **Practice result:** show 0–3 stars (★/☆ with a text label), the score out of 100, and an encouraging Hebrew and English message. A low score (below 50) uses amber rather than red. Offer "practice again", plus "mistakes only" when there are misses. Confetti appears only for 90 and above and never under reduced motion.
+- **Best-score badge:** on the subject page, a practice row the student has completed shows its saved best score with stars, for example "★★☆ · 80".
 - **Empty state:** say what is unavailable and direct the student toward available study material or another subject.
 - **Full exam:** allow a return to the reading passage, show question progress, make validation errors specific, and let the student review and edit before sending.
 
@@ -63,6 +65,7 @@ Use short entrance and press animations to make actions feel responsive. Current
 - `subject.css`: subject, version, and topic-list styles.
 - `practice.css`: short quiz, progress, answer, and feedback styles.
 - `branding.css`: PrepX logo sizing and focus state.
+- `quiz-core.js`: shared scoring, stars and feedback tiers (rules in `QUESTION-RULES.md`).
 - `garden-exam.html`: full exam's page-specific styles and flow.
 
 Reference patterns: [Duolingo selection rows](https://mobbin.com/screens/ed5fd27f-19fb-48a9-ae0f-4481e5b7671a), [lesson path](https://mobbin.com/screens/a13f2a69-17ab-48d1-b6bd-9b64b5cd426e), and [answer feedback](https://mobbin.com/screens/ef9d6413-1e91-4f2c-8317-25d63ceee5bf). Use them for interaction ideas, not for copying their artwork or layout verbatim.
