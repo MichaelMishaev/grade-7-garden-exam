@@ -3,16 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f8f4">
+  <meta name="theme-color" content="#ffffff">
   <title>התשובות נשלחו</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f7f8f4; color: #19382e; font-family: Arial, "Noto Sans Hebrew", sans-serif; }
-    main { width: min(100%, 470px); padding: 38px 30px; background: #fff; border: 1px solid #dce5db; border-radius: 22px; text-align: center; box-shadow: 0 14px 35px rgba(24,60,44,.055); }
-    .mark { display: inline-grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #e2f2e7; color: #267449; font-size: 35px; font-weight: bold; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #fff; color: #273541; font-family: Arial, "Noto Sans Hebrew", sans-serif; }
+    main { width: min(100%, 470px); padding: 38px 30px; background: #fff; border: 2px solid #e5e9ec; border-radius: 22px; text-align: center; box-shadow: 0 4px 0 #d9dfe3; }
+    .mark { display: inline-grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #e9fbdc; color: #46a302; font-size: 35px; font-weight: bold; animation: pop-in 240ms cubic-bezier(0.23, 1, 0.32, 1) both; }
     h1 { font-size: 30px; margin: 24px 0 12px; }
-    p { color: #53675b; line-height: 1.7; font-size: 17px; margin: 0; }
-    a { display: inline-block; margin-top: 24px; padding: 13px 20px; border-radius: 12px; background: #267449; color: white; text-decoration: none; font-weight: 700; }
+    p { color: #687987; line-height: 1.7; font-size: 17px; margin: 0; }
+    a { display: inline-block; margin-top: 24px; padding: 13px 20px; border-radius: 12px; background: #58cc02; box-shadow: 0 4px 0 #46a302; color: white; text-decoration: none; font-weight: 800; transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
+    a:active { transform: translateY(3px); box-shadow: 0 1px 0 #46a302; }
+    @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .mark { animation: fade-in 200ms ease both; } a { transition: none; } a:active { transform: none; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     a:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
   </style>
 </head>
