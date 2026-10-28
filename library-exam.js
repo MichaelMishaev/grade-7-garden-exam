@@ -1,27 +1,36 @@
 (() => {
   const questions = [
-    { id: 'library-01', type: 'mcq', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'באילו ימים הספרייה נפתחת בהפסקה הגדולה?', choices: ['שני ורביעי', 'ראשון ושלישי', 'בכל ימות השבוע', 'רק ביום שישי'], correct: 0, explanation: { he: 'בפסקה הראשונה נאמר שהספרייה נפתחת בהפסקה בימים שני ורביעי.' } },
-    { id: 'library-02', type: 'mcq', topic: 'תעודת הזהות של הטקסט', difficulty: 'easy', prompt: 'מי כתבה את הטקסט?', choices: ['נועה לוי', 'מאיה', 'הספרנית', 'מועצת התלמידים'], correct: 0, explanation: { he: 'שם הכותבת, נועה לוי, מופיע בשורת הפרטים שמתחת לכותרת.' } },
-    { id: 'library-03', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'בסקר השתתפו 60 תלמידי שכבת ז׳.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'בפסקה השנייה מצוין שהסקר נערך בקרב 60 תלמידי שכבת ז׳.' } },
-    { id: 'library-04', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'מותר לאכול בספרייה במהלך ההפסקה.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'כדי לשמור על השקט נקבע שמותר לקרוא ולשאול ספרים, אך אסור לאכול בספרייה.' } },
-    { id: 'library-05', type: 'mcq', topic: 'מילות שאלה', difficulty: 'easy', prompt: 'איזו מילת שאלה מתאימה לבירור מספר התלמידים שהשתתפו בסקר?', choices: ['כמה', 'מתי', 'היכן', 'מדוע'], correct: 0, explanation: { he: 'המילה „כמה” מבקשת מידע על מספר או כמות.' } },
-    { id: 'library-06', type: 'mcq', topic: 'עובדה ודעה', difficulty: 'easy', prompt: 'איזו מילה בדברי מאיה מסמנת במפורש הבעת דעה?', choices: ['לדעתי', 'הקריאה', 'בהפסקה', 'משחק'], correct: 0, explanation: { he: 'מאיה פותחת במילה „לדעתי”, המציגה את העדפתה האישית.' } },
-    { id: 'library-07', type: 'truefalse', topic: 'עובדה ודעה', difficulty: 'easy', prompt: 'המשפט „בשבוע הראשון נרשמו 18 ביקורים” הוא עובדה שניתן לבדוק ברישומים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'זהו נתון מספרי שאפשר לאמת בעזרת רישומי הביקורים.' } },
-    { id: 'library-08', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'לפני הניסוי הייתה הספרייה פתוחה לתלמידים רק בתום יום הלימודים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'הפסקה הראשונה משווה בין זמני הפתיחה לפני השינוי ובמהלכו.' } },
-    { id: 'library-09', type: 'mcq', topic: 'הבנת הנקרא', difficulty: 'medium', prompt: 'מדוע הוצע לפתוח את הספרייה גם בהפסקה?', choices: ['תלמידים חיפשו מקום שקט לקריאה', 'המשחקים בחצר בוטלו', 'כל התלמידים ביקשו להפסיק ללמוד', 'הספרייה נסגרה בתום הלימודים'], correct: 0, explanation: { he: 'ההצעה באה בעקבות בקשות של תלמידים למקום שקט לקריאה; המשחקים בחצר נמשכו כרגיל.' } },
-    { id: 'library-10', type: 'mcq', topic: 'כותרות', difficulty: 'medium', prompt: 'איזו כותרת חלופית מביעה עמדה חיובית, בשונה מהכותרת המידעית של הטקסט?', choices: ['פתיחת הספרייה בהפסקה — רעיון נפלא!', 'הספרייה נפתחת בימים שני ורביעי', 'מועצת התלמידים בודקת את הביקורים', 'ניסוי בספריית בית הספר'], correct: 0, explanation: { he: 'הצירוף „רעיון נפלא” מביע הערכה חיובית. יתר הכותרות מציגות מידע בלי הערכה כזאת.' } },
-    { id: 'library-11', type: 'mcq', topic: 'מילות הוראה', difficulty: 'medium', prompt: 'מה נדרש בהוראה „נמקו מדוע דברי מאיה הם דעה”?', choices: ['לציין שזו העדפה אישית ולהסביר מדוע אינה עובדה מוסכמת', 'להעתיק את מספר הביקורים בלבד', 'לכתוב רק „דעה” בלי הסבר', 'לשנות את שם הכותבת'], correct: 0, explanation: { he: '„נמקו” דורש לתת סיבה לקביעה, ולא רק לציין את הקביעה עצמה.' } },
-    { id: 'library-12', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'medium', prompt: 'מהסקר אפשר להסיק בוודאות שכל 42 התלמידים שהביעו רצון לבקר אכן ביקרו בספרייה.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'הספרנית הבחינה בין הבעת רצון בסקר לבין ביקור בפועל.' } },
-    { id: 'library-13', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'medium', prompt: 'הנתון „27 ביקורים” מוכיח שבשבוע השני הגיעו 27 תלמידים שונים.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'נספרו ביקורים, ותלמיד שביקר פעמיים נספר פעמיים. לכן אי אפשר לקבוע כמה תלמידים שונים הגיעו.' } },
-    { id: 'library-14', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'medium', prompt: 'בעת פרסום הטקסט כבר הוחלט לפתוח את הספרייה בכל ימות השבוע.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'בסוף הטקסט נאמר שטרם הוחלט על פתיחה בכל ימות השבוע.' } },
-    { id: 'library-15', type: 'open', topic: 'מילות שאלה', difficulty: 'medium', prompt: 'נסחו שאלה מלאה שמתחילה במילה „מתי” והתשובה עליה נמצאת בפסקה האחרונה.' },
-    { id: 'library-16', type: 'open', topic: 'מילות הוראה', difficulty: 'medium', prompt: 'ציינו שני תפקידים של המתנדבים, לפי הטקסט. כתבו את שני התפקידים בקצרה.' },
-    { id: 'library-17', type: 'mcq', topic: 'הסקת מסקנות', difficulty: 'hard', prompt: 'מהי המסקנה המבוססת ביותר מהעלייה מ־18 ביקורים ל־27 ביקורים?', choices: ['נרשמו יותר ביקורים בשבוע השני, אך אין לדעת כמה תלמידים שונים הגיעו', 'בדיוק תשעה תלמידים חדשים הגיעו לספרייה', 'כל תלמידי השכבה מעדיפים קריאה על משחק', 'הניסוי מוכיח שחייבים לפתוח בכל יום'], correct: 0, explanation: { he: 'מספר הביקורים עלה בתשעה. מכיוון שנספרו ביקורים ולא אנשים שונים, אין בסיס לשאר המסקנות.' } },
-    { id: 'library-18', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'hard', prompt: 'מספר הביקורים וחוות הדעת יכולים לסייע בהחלטה אם להמשיך בניסוי, אך אינם מוכיחים לבדם שכל תלמידי בית הספר מרוצים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'הנתונים נוגעים לביקורים ולחוות הדעת שנאספו. אין בטקסט מידע על דעתם של כל תלמידי בית הספר.' } },
-    { id: 'library-19', type: 'open', topic: 'עובדה ודעה', difficulty: 'hard', prompt: 'העתיקו מן הטקסט עובדה אחת ודעה אחת. הסבירו כיצד אפשר לבדוק את העובדה ומדוע הדעה היא עמדה אישית.' },
-    { id: 'library-20', type: 'open', topic: 'כתיבת טיעון', difficulty: 'hard', prompt: 'האם לדעתכם כדאי להמשיך לפתוח את הספרייה בהפסקה? כתבו עמדה, נימוק המבוסס על פרט מהטקסט והצעה אחת להמשך.' }
+    { id: 'library-01', type: 'mcq', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'באילו ימים הספרייה נפתחת בהפסקה הגדולה?', choices: ['שני ורביעי', 'ראשון ושלישי', 'בכל ימות השבוע', 'רק ביום שישי'], correct: 0, explanation: { he: 'בפסקה הראשונה נאמר שהספרייה נפתחת בהפסקה בימים שני ורביעי.' }, ref: { id: 'library-passage', part: 'פסקה 1' } },
+    { id: 'library-02', type: 'mcq', topic: 'תעודת הזהות של הטקסט', difficulty: 'easy', prompt: 'מי כתבה את הטקסט?', choices: ['נועה לוי', 'מאיה', 'הספרנית', 'מועצת התלמידים'], correct: 0, explanation: { he: 'שם הכותבת, נועה לוי, מופיע בשורת הפרטים שמתחת לכותרת.' }, ref: { id: 'library-passage', part: 'הכותרת ושורת הפרטים' } },
+    { id: 'library-03', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'בסקר השתתפו 60 תלמידי שכבת ז׳.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'בפסקה השנייה מצוין שהסקר נערך בקרב 60 תלמידי שכבת ז׳.' }, ref: { id: 'library-passage', part: 'פסקה 2' } },
+    { id: 'library-04', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'מותר לאכול בספרייה במהלך ההפסקה.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'כדי לשמור על השקט נקבע שמותר לקרוא ולשאול ספרים, אך אסור לאכול בספרייה.' }, ref: { id: 'library-passage', part: 'פסקה 3' } },
+    { id: 'library-05', type: 'mcq', topic: 'מילות שאלה', difficulty: 'easy', prompt: 'איזו מילת שאלה מתאימה לבירור מספר התלמידים שהשתתפו בסקר?', choices: ['כמה', 'מתי', 'היכן', 'מדוע'], correct: 0, explanation: { he: 'המילה „כמה” מבקשת מידע על מספר או כמות.' }, ref: { id: 'library-passage', part: 'פסקה 2' } },
+    { id: 'library-06', type: 'mcq', topic: 'עובדה ודעה', difficulty: 'easy', prompt: 'איזו מילה בדברי מאיה מסמנת במפורש הבעת דעה?', choices: ['לדעתי', 'הקריאה', 'בהפסקה', 'משחק'], correct: 0, explanation: { he: 'מאיה פותחת במילה „לדעתי”, המציגה את העדפתה האישית.' }, ref: { id: 'library-passage', part: 'פסקה 4' } },
+    { id: 'library-07', type: 'truefalse', topic: 'עובדה ודעה', difficulty: 'easy', prompt: 'המשפט „בשבוע הראשון נרשמו 18 ביקורים” הוא עובדה שניתן לבדוק ברישומים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'זהו נתון מספרי שאפשר לאמת בעזרת רישומי הביקורים.' }, ref: { id: 'library-passage', part: 'פסקה 4' } },
+    { id: 'library-08', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'easy', prompt: 'לפני הניסוי הייתה הספרייה פתוחה לתלמידים רק בתום יום הלימודים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'הפסקה הראשונה משווה בין זמני הפתיחה לפני השינוי ובמהלכו.' }, ref: { id: 'library-passage', part: 'פסקה 1' } },
+    { id: 'library-09', type: 'mcq', topic: 'הבנת הנקרא', difficulty: 'medium', prompt: 'מדוע הוצע לפתוח את הספרייה גם בהפסקה?', choices: ['תלמידים חיפשו מקום שקט לקריאה', 'המשחקים בחצר בוטלו', 'כל התלמידים ביקשו להפסיק ללמוד', 'הספרייה נסגרה בתום הלימודים'], correct: 0, explanation: { he: 'ההצעה באה בעקבות בקשות של תלמידים למקום שקט לקריאה; המשחקים בחצר נמשכו כרגיל.' }, ref: { id: 'library-passage', part: 'פסקה 1' } },
+    { id: 'library-10', type: 'mcq', topic: 'כותרות', difficulty: 'medium', prompt: 'איזו כותרת חלופית מביעה עמדה חיובית, בשונה מהכותרת המידעית של הטקסט?', choices: ['פתיחת הספרייה בהפסקה — רעיון נפלא!', 'הספרייה נפתחת בימים שני ורביעי', 'מועצת התלמידים בודקת את הביקורים', 'ניסוי בספריית בית הספר'], correct: 0, explanation: { he: 'הצירוף „רעיון נפלא” מביע הערכה חיובית. יתר הכותרות מציגות מידע בלי הערכה כזאת.' }, ref: { id: 'library-passage', part: 'הכותרת ושורת הפרטים' } },
+    { id: 'library-11', type: 'mcq', topic: 'מילות הוראה', difficulty: 'medium', prompt: 'מה נדרש בהוראה „נמקו מדוע דברי מאיה הם דעה”?', choices: ['לציין שזו העדפה אישית ולהסביר מדוע אינה עובדה מוסכמת', 'להעתיק את מספר הביקורים בלבד', 'לכתוב רק „דעה” בלי הסבר', 'לשנות את שם הכותבת'], correct: 0, explanation: { he: '„נמקו” דורש לתת סיבה לקביעה, ולא רק לציין את הקביעה עצמה.' }, ref: { id: 'library-passage', part: 'פסקה 4' } },
+    { id: 'library-12', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'medium', prompt: 'מהסקר אפשר להסיק בוודאות שכל 42 התלמידים שהביעו רצון לבקר אכן ביקרו בספרייה.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'הספרנית הבחינה בין הבעת רצון בסקר לבין ביקור בפועל.' }, ref: { id: 'library-passage', part: 'פסקה 2' } },
+    { id: 'library-13', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'medium', prompt: 'הנתון „27 ביקורים” מוכיח שבשבוע השני הגיעו 27 תלמידים שונים.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'נספרו ביקורים, ותלמיד שביקר פעמיים נספר פעמיים. לכן אי אפשר לקבוע כמה תלמידים שונים הגיעו.' }, ref: { id: 'library-passage', part: 'פסקה 4' } },
+    { id: 'library-14', type: 'truefalse', topic: 'הבנת הנקרא', difficulty: 'medium', prompt: 'בעת פרסום הטקסט כבר הוחלט לפתוח את הספרייה בכל ימות השבוע.', choices: ['נכון', 'לא נכון'], correct: 1, explanation: { he: 'בסוף הטקסט נאמר שטרם הוחלט על פתיחה בכל ימות השבוע.' }, ref: { id: 'library-passage', part: 'פסקה 5' } },
+    { id: 'library-15', type: 'open', topic: 'מילות שאלה', difficulty: 'medium', prompt: 'נסחו שאלה מלאה שמתחילה במילה „מתי” והתשובה עליה נמצאת בפסקה האחרונה.', ref: { id: 'library-passage', part: 'פסקה 5' } },
+    { id: 'library-16', type: 'open', topic: 'מילות הוראה', difficulty: 'medium', prompt: 'ציינו שני תפקידים של המתנדבים, לפי הטקסט. כתבו את שני התפקידים בקצרה.', ref: { id: 'library-passage', part: 'פסקה 3' } },
+    { id: 'library-17', type: 'mcq', topic: 'הסקת מסקנות', difficulty: 'hard', prompt: 'מהי המסקנה המבוססת ביותר מהעלייה מ־18 ביקורים ל־27 ביקורים?', choices: ['נרשמו יותר ביקורים בשבוע השני, אך אין לדעת כמה תלמידים שונים הגיעו', 'בדיוק תשעה תלמידים חדשים הגיעו לספרייה', 'כל תלמידי השכבה מעדיפים קריאה על משחק', 'הניסוי מוכיח שחייבים לפתוח בכל יום'], correct: 0, explanation: { he: 'מספר הביקורים עלה בתשעה. מכיוון שנספרו ביקורים ולא אנשים שונים, אין בסיס לשאר המסקנות.' }, ref: { id: 'library-passage', part: 'פסקה 4' } },
+    { id: 'library-18', type: 'truefalse', topic: 'הסקת מסקנות', difficulty: 'hard', prompt: 'מספר הביקורים וחוות הדעת יכולים לסייע בהחלטה אם להמשיך בניסוי, אך אינם מוכיחים לבדם שכל תלמידי בית הספר מרוצים.', choices: ['נכון', 'לא נכון'], correct: 0, explanation: { he: 'הנתונים נוגעים לביקורים ולחוות הדעת שנאספו. אין בטקסט מידע על דעתם של כל תלמידי בית הספר.' }, ref: { id: 'library-passage', part: 'פסקה 5' } },
+    { id: 'library-19', type: 'open', topic: 'עובדה ודעה', difficulty: 'hard', prompt: 'העתיקו מן הטקסט עובדה אחת ודעה אחת. הסבירו כיצד אפשר לבדוק את העובדה ומדוע הדעה היא עמדה אישית.', ref: { id: 'library-passage', part: 'הטקסט כולו' } },
+    { id: 'library-20', type: 'open', topic: 'כתיבת טיעון', difficulty: 'hard', prompt: 'האם לדעתכם כדאי להמשיך לפתוח את הספרייה בהפסקה? כתבו עמדה, נימוק המבוסס על פרט מהטקסט והצעה אחת להמשך.', ref: { id: 'library-passage', part: 'הטקסט כולו' } }
   ];
   const $ = id => document.getElementById(id);
+  // Questions come from GET /api/exams/hebrew-v2-library only when identical to the inline array above
+  // (drafts are keyed by question id and the server recognises the exam by the prompts); otherwise inline is used.
+  const inlineQuestions = questions;
+  const contentApi = window.ContentApi;
+  (contentApi && contentApi.useApi()
+    ? contentApi.loadContent('exams/hebrew-v2-library', null, { valid: exam => contentApi.examFromApi(exam, inlineQuestions) !== null })
+      .then(exam => (exam && contentApi.examFromApi(exam, inlineQuestions)) || inlineQuestions, () => inlineQuestions)
+    : Promise.resolve(inlineQuestions)
+  ).then(questions => {
   const storageKey = 'library-exam-draft-v1';
   let saved = {};
   try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) {}
@@ -42,7 +51,7 @@
   let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
   let sending = false;
   let lastScore = { earned: 0, pending: 0 };
-  $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
+  if (!$('student-name').value) $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
   $('article-copy').innerHTML = $('article').innerHTML;
   const answered = q => q.type === 'open' ? typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0 : Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length;
   const answerText = q => !answered(q) ? 'לא נכתבה תשובה' : q.type === 'open' ? answers[q.id].trim() : q.choices[answers[q.id]];
@@ -110,7 +119,12 @@
       const title = document.createElement('h2'); title.textContent = `${i + 1}. ${q.prompt}`;
       const answer = document.createElement('p'); answer.textContent = `התשובה שלי: ${answerText(q)}`;
       const feedback = document.createElement('p'); feedback.textContent = q.type === 'open' ? '✎ ממתינה לבדיקת המורה' : `${fractions[q.id] ? '✓ תשובה נכונה' : '✕ תשובה שגויה'} · התשובה הנכונה: ${q.choices[q.correct]}. ${q.explanation.he}`;
-      card.append(title, answer, feedback); $('explanations').append(card);
+      card.append(title, answer, feedback);
+      if (q.ref?.part) {
+        const source = document.createElement('p'); source.className = 'source-line';
+        source.textContent = `מקור: ${q.ref.part} בטקסט`; card.append(source);
+      }
+      $('explanations').append(card);
     });
     show('results', 'results-title');
   }
@@ -149,4 +163,5 @@
     } finally { sending = false; $('retry').disabled = false; }
   });
   if (finished && ordered.every(answered)) results();
+  });
 })();

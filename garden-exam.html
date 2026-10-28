@@ -122,6 +122,7 @@
 
     <footer class="footer">בהצלחה!</footer>
   </main>
+  <script src="content-api.js?v=3"></script>
   <script>
     const questions = [
       'מהו הנושא המרכזי של הטקסט?',
@@ -145,6 +146,15 @@
       'בשאלה 3 מופיעה ההוראה „נמקו”. האם מספיק לכתוב רק „כותרת מידעית”? הסבירו.',
       'הביעו את דעתכם: האם כדאי לקיים פעילויות לימודיות בגינה? כתבו עמדה ונימוק אחד.'
     ];
+    // Questions come from GET /api/exams/hebrew-v1-garden only when identical to the inline array above
+    // (drafts are index-keyed and the server recognises the exam by these strings); otherwise the inline array is used.
+    const inlineQuestions = questions;
+    const contentApi = window.ContentApi;
+    (contentApi && contentApi.useApi()
+      ? contentApi.loadContent('exams/hebrew-v1-garden', null, { valid: exam => contentApi.examFromApi(exam, inlineQuestions) !== null })
+        .then(exam => (exam && contentApi.examFromApi(exam, inlineQuestions)) || inlineQuestions, () => inlineQuestions)
+      : Promise.resolve(inlineQuestions)
+    ).then(questions => {
     const storageKey = 'garden-exam-draft-v1';
     let saved = {};
     try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) { saved = {}; }
@@ -152,7 +162,7 @@
     let startedAt = typeof saved.startedAt === 'string' ? saved.startedAt : '';
     let current = 0;
     const byId = id => document.getElementById(id);
-    byId('student-name').value = saved.name || '';
+    if (!byId('student-name').value) byId('student-name').value = saved.name || '';
     byId('article-copy').innerHTML = byId('article').innerHTML;
     function persist() {
       try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, answers, startedAt })); } catch (_) {}
@@ -253,6 +263,7 @@
       } finally {
         clearTimeout(timeout);
       }
+    });
     });
   </script>
 </body>

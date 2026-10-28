@@ -11,7 +11,7 @@ export async function seed(sql, content = extractContent()) {
       for (const row of rows) {
         const before = await tx`SELECT * FROM ${tx(table)} WHERE id = ${row.id}`;
         const values = Object.fromEntries(columns.map((c) => [c, row[c] ?? null]));
-        for (const c of ['choices', 'correct']) if (c in values && values[c] !== null) values[c] = tx.json(values[c]);
+        for (const c of ['choices', 'correct', 'parts']) if (c in values && values[c] !== null) values[c] = tx.json(values[c]);
         if (!before.length) {
           await tx`INSERT INTO ${tx(table)} ${tx(values, columns)}`;
           inserted++;
@@ -30,8 +30,11 @@ export async function seed(sql, content = extractContent()) {
     await upsert('passages', content.passages, ['id', 'title', 'body_html', 'source_file']);
     await upsert('exams', content.exams, ['id', 'subject_id', 'title', 'detail', 'date_label', 'href', 'passage_id', 'question_count', 'sort_order']);
     await upsert('quizzes', content.quizzes, ['id', 'subject_id', 'exam_id', 'title', 'description', 'list_title', 'list_detail', 'sort_order']);
+    await upsert('study_references', content.study_references,
+      ['id', 'subject_id', 'exam_id', 'quiz_id', 'kind', 'title', 'url', 'attribution', 'parts', 'sort_order']);
     await upsert('questions', content.questions,
-      ['id', 'exam_id', 'quiz_id', 'position', 'type', 'topic', 'difficulty', 'prompt', 'choices', 'correct', 'explanation_he', 'explanation_en', 'source_hash'], 'source_hash');
+      ['id', 'exam_id', 'quiz_id', 'position', 'type', 'topic', 'difficulty', 'prompt', 'choices', 'correct', 'explanation_he', 'explanation_en',
+        'reference_id', 'reference_part', 'source_hash'], 'source_hash');
   });
   return report;
 }

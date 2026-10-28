@@ -79,9 +79,17 @@ test('read API matches extracted content', { skip }, async () => {
   assert.equal(exam.questions.length, 20);
   assert.ok(exam.passage_html.includes('<p>'));
   const hebrew = await getJson('/api/subjects/hebrew');
-  assert.equal(hebrew.exams.length, source.exams.length);
+  assert.equal(hebrew.exams.length, source.exams.filter((e) => e.subject_id === 'hebrew').length);
   assert.equal(hebrew.quizzes.length, source.quizzes.filter((q) => q.subject_id === 'hebrew').length);
   assert.equal((await fetch(`${base}/api/quizzes/nope`)).status, 404);
+  const physics = await getJson('/api/exams/physics-v1-assessment');
+  assert.equal(physics.questions.length, 27);
+  assert.deepEqual(physics.references.map((r) => [r.id, r.kind, r.attribution]), [['physics-pdf', 'pdf', 'שרית שרת'], ['physics-site', 'site', 'שרית שרת']]);
+  assert.ok(physics.questions.every((q) => q.ref && physics.references.some((r) => r.id === q.ref.id && r.parts.some((p) => p.part === q.ref.part))));
+  const subject = await getJson('/api/subjects/physics');
+  assert.deepEqual(subject.exams.map((e) => e.id), ['physics-v1-assessment']);
+  assert.equal(subject.exams[0].date_label, '30.12');
+  assert.ok((await getJson('/api/exams/hebrew-v1-garden')).questions.every((q) => q.ref?.id === 'garden-passage'));
 });
 
 test('garden submission is stored, graded-by-shape, emailed, and deduplicated', { skip }, async () => {
@@ -129,11 +137,15 @@ test('unknown questions store with NULL exam_id', { skip }, async () => {
 });
 
 test('static pages are still served', { skip }, async () => {
-  for (const path of ['/', '/practice.html']) {
+  for (const path of ['/', '/practice.html', '/physics-exam.html']) {
     const r = await fetch(base + path);
     assert.equal(r.status, 200, path);
     assert.match(r.headers.get('content-type'), /text\/html/);
   }
+  const pdf = await fetch(`${base}/assets/materials/physics-measurements-grade-7.pdf`, { method: 'HEAD' });
+  assert.equal(pdf.status, 200);
+  assert.equal(pdf.headers.get('content-type'), 'application/pdf');
+  assert.equal((await fetch(`${base}/test-fixtures/sarit-physics7-sections.json`)).status, 404, 'the test fixture is not served');
 });
 
 test('with db flags off nothing is written and the API is absent', { skip }, async () => {

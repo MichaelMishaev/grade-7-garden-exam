@@ -102,3 +102,13 @@
 @media (prefers-reduced-motion: reduce) {
   .subject-page .variant-group .exam-arrow { transition: none; }
 }
+
+/* Each exam version's own study material, next to its start button. */
+.subject-page .variant-references { margin-top: 22px; }
+.subject-page .variant-references p { margin: 0 0 10px; color: #637387; font-size: 14px; line-height: 1.5; }
+.subject-page .reference-link { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 64px; margin-top: 10px; padding: 11px 13px; border: 1px solid #dbe6ee; border-radius: 15px; background: #f7fafc; color: #263541; text-decoration: none; }
+.subject-page .reference-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #d8f1ff; color: #1f7fb8; font-size: 14px; font-weight: 900; }
+.subject-page .reference-copy strong { display: block; font-size: 15px; line-height: 1.4; }
+.subject-page .reference-copy small { display: block; margin-top: 2px; color: #69798a; font-size: 12px; line-height: 1.4; }
+.subject-page .reference-link:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .subject-page .reference-link:hover { border-color: #9fd0ec; background: #fff; } }

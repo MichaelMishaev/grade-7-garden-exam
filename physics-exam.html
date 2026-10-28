@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>משימת הערכה במדידות · מדעים | PrepX</title>
+  <link rel="stylesheet" href="practice.css?v=6">
+  <link rel="stylesheet" href="branding.css?v=1">
+  <style>
+    .stage:focus, .stage h1:focus { outline: none; }
+    .credit { margin: 0 0 22px; padding: 16px 18px; border: 2px solid #d8eaf5; border-radius: 18px; background: #f5fbff; line-height: 1.65; }
+    .credit p { margin: 0 0 8px; }
+    .credit ul { margin: 0; padding: 0 18px 0 0; }
+    .credit li { margin: 4px 0; }
+    .credit a, .source-line a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
+    .note-list { color: #5e7164; font-size: 15px; line-height: 1.7; padding: 0 18px 0 0; }
+    #begin { width: 100%; }
+    .section-details { margin: 0 0 16px; border-radius: 14px; background: #edf4ed; }
+    .section-details summary { min-height: 44px; padding: 12px 16px; font-weight: 800; cursor: pointer; }
+    .section-details p { margin: 0; padding: 0 16px 14px; line-height: 1.7; color: #3f5247; }
+    #question-text { font-size: clamp(19px, 4.4vw, 24px); }
+    .option { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .option input { width: 22px; height: 22px; flex: none; accent-color: #46a302; }
+    .option:has(input:checked) { border-color: #58cc02; background: #f1fde8; }
+    .option:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
+    #answer-area label:not(.option) { display: block; margin: 0 0 8px; font-weight: 800; }
+    #answer-area input.answer { width: min(100%, 220px); min-height: 52px; padding: 12px 14px; border: 2px solid #dce3e7; border-radius: 13px; font: inherit; font-size: 20px; font-weight: 700; text-align: left; }
+    .chapter-credit { margin: 26px 0 0; padding-top: 16px; border-top: 1px solid #e5e9ec; text-align: center; color: #493b80; font-weight: 800; }
+    .result-open span.wrong { color: #b65a50; }
+    /* Same as the teacher's site, so her SVG figures look as she drew them. */
+    .diagram { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto 20px; background: #fafcfd; border-radius: 14px; }
+    .diagram text { font-family: Arial; }
+    #answer-area textarea { display: block; width: 100%; margin-top: 12px; min-height: 110px; padding: 12px 14px; border: 2px solid #dce3e7; border-radius: 13px; font: inherit; font-size: 16px; line-height: 1.6; resize: vertical; }
+    #answer-area input.answer:focus, #answer-area textarea:focus { outline: none; border-color: #58cc02; box-shadow: 0 0 0 4px #e9fbdc; }
+    #check { width: 100%; margin-top: 18px; }
+    .error { min-height: 20px; margin: 8px 0 0; color: #aa3535; font-size: 14px; font-weight: 700; }
+    .feedback.self strong::before { content: '✎'; background: #2c9ddf; }
+    /* her correct title already starts with ✓ */
+    #feedback:not(.incorrect):not(.self) strong::before { display: none; }
+    .response-panel:has(.feedback.self:not([hidden])) { background: #f2f9ff; border-color: #cfe6f6; }
+    .model-answer p { margin: 6px 0; }
+    /* keep each LTR calculation on one line, like the .math inline-block on her site */
+    #feedback bdi, #question-text bdi { display: inline-block; }
+    .self-check { margin: 14px 0 0; padding: 12px 14px; border: 1px solid #cfe0ea; border-radius: 13px; background: #fff; }
+    .self-check legend { padding: 0 6px; font-weight: 800; }
+    .self-check label { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 8px 0; line-height: 1.5; cursor: pointer; }
+    .self-check input { width: 22px; height: 22px; flex: none; margin-top: 1px; accent-color: #2c9ddf; }
+    .small-note { color: #51606a; font-size: 14px; }
+    .source-line { margin-top: 12px !important; padding-top: 10px; border-top: 1px solid rgba(39, 53, 65, .12); color: #4d5f6b; font-size: 14px; }
+    .nav-row { display: flex; gap: 10px; margin-top: 18px; }
+    .nav-row > * { flex: 1; }
+    #finish { width: 100%; margin-top: 10px; }
+    .result-panel { text-align: right; }
+    .result-section h2 { margin: 26px 0 10px; font-size: 19px; }
+    .result-item { margin-bottom: 10px; padding: 0 0 8px; border-bottom: 1px solid #edf1f3; }
+    .result-open { display: block; width: 100%; min-height: 48px; padding: 10px 12px; border: 2px solid #e5e9ec; border-radius: 13px; background: #fff; color: inherit; text-align: right; font: inherit; }
+    .result-open strong { display: block; font-size: 15px; line-height: 1.5; }
+    .result-open span { display: block; margin-top: 3px; color: #46a302; font-size: 14px; font-weight: 800; }
+    .result-item .source-line { margin: 6px 4px 0 !important; padding: 0; border: 0; }
+    @media (max-width: 560px) { .nav-row { flex-direction: column-reverse; } }
+  </style>
+  <script src="content-api.js?v=3" defer></script>
+  <script src="numeric-answer.js?v=1" defer></script>
+  <script src="physics-exam.js?v=1" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="back-link" href="subject.html?subject=physics">← לגרסאות במדעים</a>
+      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+    </header>
+
+    <section id="start" class="stage" aria-labelledby="page-title">
+      <div class="intro-row">
+        <div>
+          <h1 id="page-title" tabindex="-1">משימת הערכה במדידות</h1>
+          <p class="subheading">מדעים · כיתה ז׳ · 27 שאלות בארבעה פרקים: יחידות וסדרי גודל, המרות יחידות, מודדים כמו פיזיקאים, מיישמים ומתכננים.</p>
+        </div>
+        <span class="practice-label">בדיקה עצמית</span>
+      </div>
+      <div class="credit">
+        <p><strong>המשימה וחומר הלימוד הוכנו על ידי המורה שרית שרת.</strong> השאלות לקוחות מאתר התרגול שלה, וכל שאלה מפנה לחלק בחומר הלימוד שעליו היא מבוססת.</p>
+        <ul>
+          <li><a href="assets/materials/physics-measurements-grade-7.pdf" target="_blank" rel="noopener">סיכום נושא מדידות (PDF, 6 עמודים)</a></li>
+          <li><a href="https://physics7-measurement-sarit.sarityarongaya.chatgpt.site/" target="_blank" rel="noopener">אתר התרגול „מתרגלים פיזיקה ז׳”</a> · נפתח באתר חיצוני</li>
+        </ul>
+      </div>
+      <ul class="note-list">
+        <li>שאלות בחירה ושאלות חישוב נבדקות מיד. כתבו מספר בלבד, בלי יחידה; אפשר נקודה או פסיק עשרוני (5.7 או 5,7).</li>
+        <li>בתשובות כתובות מופיעים פתרון לדוגמה ורשימה לבדיקה עצמית.</li>
+        <li>אפשר לתקן ולבדוק שוב. בסיכום מוצגים גם התשובות הנוכחיות וגם הנכונות בבדיקה הראשונה.</li>
+        <li>התשובות אינן נשלחות למורה ואינן נשמרות בשרת. הטיוטה נשמרת רק בלשונית הזאת.</li>
+      </ul>
+      <button id="begin" class="primary-button" type="button">מתחילים</button>
+    </section>
+
+    <section id="question-stage" class="stage" aria-labelledby="question-text" hidden>
+      <div class="progress-header"><span id="counter"></span><span id="section-name"></span></div>
+      <div id="progress-track" class="progress-track" role="progressbar" aria-label="התקדמות במשימה" aria-valuemin="1" aria-valuemax="27" aria-valuenow="1"><span id="progress-fill"></span></div>
+      <details id="section-details" class="section-details"><summary>על הפרק</summary><p id="section-intro"></p></details>
+      <div class="question-panel">
+        <span id="question-index" class="question-index"></span>
+        <h2 id="question-text" tabindex="-1"></h2>
+        <div id="figure" hidden></div>
+        <div id="answer-area"></div>
+        <button id="check" class="primary-button" type="button">בדיקת תשובה</button>
+        <p id="check-error" class="error" role="alert"></p>
+      </div>
+      <div class="response-panel">
+        <div id="feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
+      </div>
+      <div class="nav-row">
+        <button id="previous" class="secondary-button" type="button">לשאלה הקודמת</button>
+        <button id="next" class="secondary-button" type="button">לשאלה הבאה</button>
+      </div>
+      <button id="finish" class="secondary-button" type="button">סיום וסיכום</button>
+      <p class="chapter-credit">הוכן על ידי שרית שרת</p>
+      <p class="note">בדיקה עצמית. התשובות אינן נשלחות למורה.</p>
+    </section>
+
+    <section id="results" class="stage result-panel" aria-labelledby="results-title" hidden>
+      <h1 id="results-title" tabindex="-1">סיכום המשימה</h1>
+      <p id="score" class="score"></p>
+      <p id="score-note"></p>
+      <div id="result-list"></div>
+      <div class="result-actions">
+        <button id="back-to-questions" class="secondary-button" type="button">חזרה לשאלות</button>
+        <button id="retry" class="primary-button" type="button">מתחילים מחדש</button>
+        <a class="secondary-button" href="subject.html?subject=physics">לגרסאות במדעים</a>
+      </div>
+      <p class="note">המשימה וחומר הלימוד: המורה שרית שרת.</p>
+    </section>
+  </main>
+</body>
+</html>

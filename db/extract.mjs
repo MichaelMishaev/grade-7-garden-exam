@@ -15,6 +15,15 @@ const between = (text, start, end, from = 0) => {
 const hash = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const pad = (n) => String(n).padStart(2, '0');
 
+// garden-exam.html keeps its questions as a plain string array (the submit payload), so its references are mapped
+// here by rule: every garden question follows the garden passage, at this part (index = question number - 1).
+const gardenParts = [
+  'הטקסט כולו', 'הכותרת ושורת הפרטים', 'הכותרת ושורת הפרטים', 'הכותרת ושורת הפרטים', 'פסקה 1', 'פסקה 3', 'הטקסט כולו',
+  'פסקה 3', 'פסקה 1', 'פסקה 2', 'פסקה 2', 'פסקה 1', 'פסקה 3', 'פסקה 2', 'פסקה 1', 'פסקה 1', 'הטקסט כולו', null,
+  'הכותרת ושורת הפרטים', 'הטקסט כולו'
+];
+const passageByExam = { 'hebrew-v1-garden': 'garden', 'hebrew-v2-library': 'library' };
+
 export function extractContent(root = defaultRoot) {
   const read = (file) => readFileSync(new URL(file, root), 'utf8');
   const gardenHtml = read('garden-exam.html');
@@ -22,12 +31,13 @@ export function extractContent(root = defaultRoot) {
   const libraryJs = read('library-exam.js');
   const practiceJs = read('practice.js');
   const subjectHtml = read('subject.html');
+  const physicsJs = read('physics-exam.js');
 
   const gardenPrompts = evaluate(between(gardenHtml, 'const questions = [', '];') + '];\nquestions;');
   const libraryQuestions = evaluate(between(libraryJs, 'const questions', 'const $') + '\nquestions;');
+  const physicsQuestions = evaluate(between(physicsJs, 'const questions', 'const sections') + '\nquestions;');
   const quizSource = evaluate(practiceJs.slice(0, practiceJs.indexOf('const byId')) + '\nquizzes;');
   const subjectSource = evaluate(between(subjectHtml, 'const subjects = {', 'const key =') + '\nsubjects;');
-  const physicsRows = evaluate(between(subjectHtml, 'innerHTML = [', '].map(').replace('innerHTML = ', '') + ']');
 
   const article = (html) => /<article[^>]*id="article"[^>]*>([\s\S]*?)<\/article>/.exec(html)[1].trim();
   const passages = [
@@ -40,48 +50,57 @@ export function extractContent(root = defaultRoot) {
     id, title: s.title, description: s.description, art_path: art[id] ?? null, sort_order: i + 1
   }));
 
-  const examIds = ['hebrew-v1-garden', 'hebrew-v2-library'];
-  const passageIds = ['garden', 'library'];
-  const exams = subjectSource.hebrew.variants.map((v, i) => ({
-    id: examIds[i], subject_id: 'hebrew', title: v.title, detail: v.detail, date_label: v.date,
-    href: v.href, passage_id: passageIds[i], question_count: Number.parseInt(v.count, 10), sort_order: i + 1
+  const variants = Object.entries(subjectSource).flatMap(([subjectId, s]) => s.variants.map((v) => ({ subjectId, v })));
+  const exams = variants.map(({ subjectId, v }, i) => ({
+    id: v.id, subject_id: subjectId, title: v.title, detail: v.detail, date_label: v.date ?? null,
+    href: v.href, passage_id: passageByExam[v.id] ?? null, question_count: Number.parseInt(v.count, 10), sort_order: i + 1
   }));
+  const references = variants.flatMap(({ subjectId, v }) => (v.references ?? []).map((r) => ({ ...r, subjectId, examId: v.id })))
+    .map((r, i) => ({
+      id: r.id, subject_id: r.subjectId, exam_id: r.examId, quiz_id: null, kind: r.kind, title: r.title,
+      url: r.url ?? null, attribution: r.attribution ?? null, parts: r.parts ?? null, sort_order: i + 1
+    }));
+  const gardenRef = subjectSource.hebrew.variants.find((v) => v.id === 'hebrew-v1-garden').references[0].id;
 
   const hebrewRows = [...subjectHtml.matchAll(/href="practice\.html\?quiz=([\w-]+)"[\s\S]*?<strong>(.*?)<\/strong><small>(.*?) · \d+ שאלות<\/small>/g)]
     .map(([, id, title, detail]) => ({ id, list_title: title, list_detail: detail }));
-  const physicsList = physicsRows.map(([id, title, detail]) => ({ id, list_title: title, list_detail: detail }));
+  const physicsList = subjectSource.physics.quizzes.map(([id, title, detail]) => ({ id, list_title: title, list_detail: detail }));
   const listing = new Map([...hebrewRows, ...physicsList].map((r) => [r.id, r]));
-  const exam1Quizzes = new Set(subjectSource.hebrew.variants[0].practiceQuizzes);
+  const quizExam = new Map(variants.flatMap(({ v }) => (v.practiceQuizzes ?? []).map((quizId) => [quizId, v.id])));
   const quizzes = Object.entries(quizSource).map(([id, q], i) => ({
     id, subject_id: id.startsWith('physics-') ? 'physics' : 'hebrew',
-    exam_id: exam1Quizzes.has(id) ? examIds[0] : null,
+    exam_id: quizExam.get(id) ?? null,
     title: q.title, description: q.description,
     list_title: listing.get(id)?.list_title ?? null, list_detail: listing.get(id)?.list_detail ?? null,
     sort_order: i + 1
   }));
 
+  const ref = (r) => ({ reference_id: r?.id ?? null, reference_part: r?.part ?? null });
+  const examQuestion = (examId) => (q, i) => ({
+    id: q.id, exam_id: examId, quiz_id: null, position: i + 1, type: q.type,
+    topic: q.topic ?? null, difficulty: q.difficulty ?? null, prompt: q.prompt,
+    choices: q.choices ?? null, correct: q.correct ?? null,
+    explanation_he: q.explanation?.he ?? null, explanation_en: q.explanation?.en ?? null, ...ref(q.ref)
+  });
   const questions = [
     ...gardenPrompts.map((prompt, i) => ({
-      id: `garden-${pad(i + 1)}`, exam_id: examIds[0], quiz_id: null, position: i + 1, type: 'open',
-      topic: null, difficulty: null, prompt, choices: null, correct: null, explanation_he: null, explanation_en: null
+      id: `garden-${pad(i + 1)}`, exam_id: 'hebrew-v1-garden', quiz_id: null, position: i + 1, type: 'open',
+      topic: null, difficulty: null, prompt, choices: null, correct: null, explanation_he: null, explanation_en: null,
+      ...ref({ id: gardenRef, part: gardenParts[i] })
     })),
-    ...libraryQuestions.map((q, i) => ({
-      id: q.id, exam_id: examIds[1], quiz_id: null, position: i + 1, type: q.type,
-      topic: q.topic ?? null, difficulty: q.difficulty ?? null, prompt: q.prompt,
-      choices: q.choices ?? null, correct: q.correct ?? null,
-      explanation_he: q.explanation?.he ?? null, explanation_en: q.explanation?.en ?? null
-    })),
+    ...libraryQuestions.map(examQuestion('hebrew-v2-library')),
+    ...physicsQuestions.map(examQuestion('physics-v1-assessment')),
     ...Object.entries(quizSource).flatMap(([quizId, quiz]) => quiz.questions.map((q, i) => ({
       id: `${quizId}-${pad(i + 1)}`, exam_id: null, quiz_id: quizId, position: i + 1, type: 'mcq',
       topic: null, difficulty: null, prompt: q.text, choices: q.choices, correct: q.correct,
-      explanation_he: q.he ?? null, explanation_en: q.en ?? null
+      explanation_he: q.he ?? null, explanation_en: q.en ?? null, ...ref(q.ref)
     })))
-  ].map((q) => ({ ...q, source_hash: hash([q.id, q.exam_id, q.quiz_id, q.position, q.type, q.topic, q.difficulty, q.prompt, q.choices, q.correct, q.explanation_he, q.explanation_en]) }));
+  ].map((q) => ({ ...q, source_hash: hash([q.id, q.exam_id, q.quiz_id, q.position, q.type, q.topic, q.difficulty, q.prompt, q.choices, q.correct, q.explanation_he, q.explanation_en, q.reference_id, q.reference_part]) }));
 
-  return { subjects, passages, exams, quizzes, questions };
+  return { subjects, passages, exams, quizzes, study_references: references, questions };
 }
 
 // One hash over everything, used as the content version (API ETag) and by verify.mjs.
 export const contentHash = (content) => hash([
-  content.subjects, content.passages, content.exams, content.quizzes, content.questions.map((q) => [q.id, q.source_hash])
+  content.subjects, content.passages, content.exams, content.quizzes, content.study_references, content.questions.map((q) => [q.id, q.source_hash])
 ]);

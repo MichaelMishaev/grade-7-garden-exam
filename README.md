@@ -17,22 +17,23 @@ The server listens on `PORT` or port 3000. It serves `/api/submit-exam` and stat
 ## Pages
 
 - `index.html`: compact subject selector.
-- `subject.html?subject=hebrew` and `?subject=physics`: exam version lists. Add further versions to the `subjects` data in this page.
+- `subject.html?subject=hebrew` and `?subject=physics`: exam version lists. Add further versions to the `subjects` data in this page. Each version lists its own study material under **חומר לימוד** (`references` in the `subjects` data): the reading passage for the Hebrew versions, and the teacher's summary PDF (`assets/materials/physics-measurements-grade-7.pdf`) plus her practice site for physics. Every question names the part it follows (`ref: { id, part }`, e.g. `עמוד 3`, `פסקה 2`).
+- `physics-exam.html` + `physics-exam.js` (+ `numeric-answer.js`): physics version 1, "משימת הערכה במדידות", the 27 tasks of the teacher שרית שרת's practice site, reproduced verbatim (texts, options, answers, explanations, figures, order; checked by `physics-exam.test.mjs` against `test-fixtures/sarit-physics7-sections.json`). Self-graded: nothing is sent or stored on the server. Choice and numeric answers are checked like her site (first comma is a decimal mark, no units, exact to 1e-8); written answers show her model answer and her "בדקו:" list as a self-check. The summary shows current and first-check counts, like her report. Draft in `sessionStorage` under `physics-exam-draft-v1`.
 - `garden-exam.html`: original 20-question reading exam, with review and email submission.
-- `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short Hebrew practice quizzes with immediate Hebrew and English feedback. `?quiz=physics-basics`, `physics-units`, `physics-precision`, `physics-pole`: physics quizzes with Hebrew feedback. Practice is scored out of 100 with 0–3 stars, and the best full-round score is kept in `localStorage` (`prepx-best-<quiz>`) and shown on the subject page. Scoring rules are in `QUESTION-RULES.md`.
+- `practice.html?quiz=facts`, `?quiz=questions`, `?quiz=instructions`: short Hebrew practice quizzes with immediate Hebrew and English feedback. After each answer the feedback shows its source (e.g. "מקור: עמוד 3 בסיכום") with a link to the reference. `?quiz=physics-basics`, `physics-units`, `physics-precision`, `physics-pole`: physics quizzes with Hebrew feedback. Practice is scored out of 100 with 0–3 stars, and the best full-round score is kept in `localStorage` (`prepx-best-<quiz>`) and shown on the subject page. Scoring rules are in `QUESTION-RULES.md`.
 - `thanks.html`: confirmation after the full exam is submitted.
 
 The full exam sends the student's name and all 20 answers to the Railway server at `/api/submit-exam`. The server sends a Hebrew email through Resend to `345287@gmail.com`, from `PrepX <exams@netanya.club>`. Student answers are never written to the server logs; Resend processes the email content. If the optional database is enabled (see [Database](#database)), the name and answers are also saved there, with no automatic deletion. The draft stays in `sessionStorage` until Resend accepts the email, and remains available if submission fails. Practice quizzes run entirely in the browser and send nothing.
 
 Railway requires `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `APP_ORIGIN=https://hitech.agnon.online`, and `NODE_ENV=production`. Keep the API key in Railway variables, never in browser code or Git. GitHub Pages submits to the Railway endpoint using an explicitly allowed origin. Identical submissions use Resend's idempotency key (24-hour window). The server accepts at most 100 valid submission attempts per hour per running instance; this in-memory limit resets on restart.
 
-Run the checks with `node --test *.test.mjs db/*.test.mjs` (scoring logic, the submission API, content extraction and the database layer; Resend is mocked). Tests that need Postgres are skipped unless `TEST_DATABASE_URL` or `E2E_DATABASE_URL` is set (see [Database](#database)).
+Run the checks with `node --test *.test.mjs db/*.test.mjs` (scoring logic, the submission API, content extraction, references, the physics exam against the teacher's original data, the numeric checker and the database layer; Resend is mocked). Tests that need Postgres are skipped unless `TEST_DATABASE_URL` or `E2E_DATABASE_URL` is set (see [Database](#database)).
 
 On 2026-10-28, a synthetic submission from the live exam reached `thanks.html`; Resend reported it delivered to the teacher address, with the test marker and all 20 answer sections present (email ID `01a182f9-659f-765f-b663-2ad92e7a5267`).
 
 ## Database
 
-PostgreSQL holds the exam and quiz content (subjects, exams, quizzes, questions with answers and explanations) and, optionally, student submissions. **It is off by default.** With no `DATABASE_URL` or flags, the server behaves exactly as described above, and the pages use their inline data.
+PostgreSQL holds the exam and quiz content (subjects, exams, quizzes, study references, questions with answers, explanations and their reference part) and, optionally, student submissions. **It is off by default.** With no `DATABASE_URL` or flags, the server behaves exactly as described above, and the pages use their inline data.
 
 | Variable | Effect |
 | --- | --- |
@@ -45,10 +46,17 @@ PostgreSQL holds the exam and quiz content (subjects, exams, quizzes, questions 
 Files:
 
 - `db/migrations/001_init.sql`: the schema. Migrations are additive only; `db/migrate.mjs` refuses `DROP`, `TRUNCATE` and `DELETE`.
-- `db/extract.mjs`: reads the questions and answers out of `garden-exam.html`, `library-exam.js`, `practice.js` and `subject.html`. The files stay the source of truth; nothing is retyped.
+- `db/migrations/002_references.sql`: adds `study_references` (`id, subject_id, exam_id, quiz_id, kind pdf|site|passage, title, url, attribution, parts jsonb [{part, title}], sort_order`; `references` is reserved in SQL) and nullable `questions.reference_id` (FK) + `questions.reference_part`.
+- `db/extract.mjs`: reads the questions and answers out of `garden-exam.html`, `library-exam.js`, `physics-exam.js`, `practice.js` and `subject.html` (exam versions and their `references`). The files stay the source of truth; nothing is retyped. Garden's questions are a plain string array, so their passage parts are mapped by index in `extract.mjs`. `source_hash` includes the reference id and part.
+- Physics exam column shapes (the CHECK on `questions.type` is unchanged): her `choice` → `mcq` (`correct` = index of her answer); `num` → `fill` (`choices` null, `correct` = `{ "value": 325, "tolerance": 1e-8, "unit": "ס״מ" }`; `unit` is informational, read from the prompt, never shown or checked); `text` → `open` (`correct` = her short key text, `explanation_he` = her model answer HTML including "בדקו:"). Prompts and explanations keep her HTML (`<br>`, `<strong>`, `<bdi>`). Figures and chapter intros stay page-only.
 - `db/seed.mjs`: inserts or updates the content (never deletes). `db/verify.mjs` compares the database with the source files and exits 1 on any difference.
 - `db/runtime.mjs`, `db/content.mjs`, `db/submissions.mjs`: the server-side database layer. `postgres` is the only npm dependency; it is loaded lazily, so the server starts without a database.
-- `content-api.js`: loads content from the API and falls back to the inline data on any error. `practice.html` uses it only with `?source=api` or when its `prepx-content-source` meta tag is set to `api` (shipped as `inline`).
+- `content-api.js`: the pages load their content from the API **by default** and fall back to the inline data on any error, a timeout of 1.5 seconds, or a failed validity check, so GitHub Pages, outages and a server with `DB_READ_API` off behave exactly as before. `?source=inline` forces the inline data (debugging).
+  - `practice.html`: quizzes from `/api/quizzes/:id` (same question count required). Its `prepx-content-source` meta tag is shipped as `api`.
+  - `subject.html`: subject texts, exam versions and the physics quiz list from `/api/subjects/:id`, used only when the exam count, hrefs, linked practice quizzes and quiz ids match the inline `subjects` object. The Hebrew practice-quiz rows stay static markup.
+  - `garden-exam.html`, `library-exam.js`, `physics-exam.js`: questions from `/api/exams/:id`, used only when identical to the inline arrays (count, order, ids, prompts, choices, answers, references), because drafts are keyed by index or id and the server recognises the exam by the prompt strings. The reading passage stays inline.
+  - API shapes: every question has `ref: { id, part } | null`; `/api/exams/:id` and each exam in `/api/subjects/:id` have `references: [{ id, kind, title, url, attribution, parts }]`; `/api/quizzes/:id` has the references its questions use. `subject.html` requires the same reference ids and keeps the inline references.
+  - After changing content, edit the page source, then `npm run db:seed` and `npm run db:verify`; otherwise the pages fall back to the inline data until the database matches.
 
 Run it locally with Docker:
 
@@ -60,6 +68,8 @@ E2E_DATABASE_URL=postgres://postgres:dev@localhost:54330/prepx node --test e2e/f
 ```
 
 The integration and end-to-end tests drop and recreate the `public` schema of the database they are given. Point them only at a throwaway database (`TEST_DATABASE_URL` must contain `test` in its name).
+
+Railway rollout checklist: `railway ssh` can land in the previous (still serving) container while the new build is deploying, and that container runs the old `db/` scripts, so migrate prints `applied: []` and the old verify passes without applying anything. So: (1) wait until the new deployment shows SUCCESS and the live page source shows the new build; (2) run `node db/migrate.mjs && node db/seed.mjs && node db/verify.mjs` and confirm `applied: [ '002_references.sql' ]` (first time) and `db matches source` (verify now also fails on unapplied migrations); (3) check `GET /api/exams/physics-v1-assessment` returns 200 with 27 questions and `GET /api/subjects/hebrew` includes `references`.
 
 Railway rollout (not done yet): add a Postgres service, run `db:migrate`, `db:seed` and `db:verify` against it, take a `pg_dump -Fc` backup outside the repo, then set `DATABASE_URL` and the flags on `web`. Unsetting the flags restores the previous behavior.
 

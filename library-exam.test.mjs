@@ -30,3 +30,12 @@ test('teacher-graded answers stay pending and mistakes never subtract points', (
   assert.equal(QuizCore.scoreQuiz(questions, {}).earned, 0);
   assert.equal(QuizCore.scoreQuiz(questions, {}).pending, 25);
 });
+
+test('results source line is plain text and never navigates away from the results screen', async () => {
+  const { readFileSync } = await import('node:fs');
+  const js = readFileSync(new URL('./library-exam.js', import.meta.url), 'utf8');
+  const results = js.slice(js.indexOf('function results()'), js.indexOf("$('student-name').addEventListener"));
+  assert.match(results, /source-line/);
+  assert.doesNotMatch(results, /show\('start'/);
+  assert.doesNotMatch(results, /createElement\('a'\)/);
+});

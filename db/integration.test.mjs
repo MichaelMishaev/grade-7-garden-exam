@@ -16,12 +16,18 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
   const sql = await connect(url);
   try {
     await sql`DROP SCHEMA public CASCADE`; await sql`CREATE SCHEMA public`; // test database only
-    assert.deepEqual(await migrate(sql), ['001_init.sql']);
+    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
-    assert.equal(first.questions.inserted, 102);
+    assert.equal(first.questions.inserted, 129);
+    assert.equal(first.study_references.inserted, 4);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
+    assert.deepEqual(await verify(sql), []);
+    // an unapplied shipped migration (stale container / unmigrated db) is reported by verify
+    await sql`DELETE FROM schema_migrations WHERE version = '002_references.sql'`;
+    assert.ok((await verify(sql)).includes('migration 002_references.sql not applied'));
+    await sql`INSERT INTO schema_migrations (version) VALUES ('002_references.sql')`;
     assert.deepEqual(await verify(sql), []);
 
     const source = extractContent();
@@ -64,5 +70,27 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.ok(exam.passage_html.includes('<p>'));
     assert.deepEqual((await content.getSubject(sql, 'hebrew')).exams.map((e) => e.id), ['hebrew-v1-garden', 'hebrew-v2-library']);
     assert.match(await content.contentVersion(sql), /^[0-9a-f]{32}$/);
+
+    // references: every question points at an existing reference (FK) and the API returns them
+    const [{ missing }] = await sql`SELECT count(*)::int AS missing FROM questions WHERE reference_id IS NULL`;
+    assert.equal(missing, 0);
+    const physics = await content.getExam(sql, 'physics-v1-assessment');
+    assert.equal(physics.questions.length, 27);
+    assert.deepEqual(physics.references.map((r) => r.id), ['physics-pdf', 'physics-site']);
+    assert.equal(physics.references[0].parts.length, 6);
+    assert.deepEqual(physics.questions[11].correct, { value: 325, tolerance: 1e-8, unit: 'ס״מ' });
+    assert.deepEqual(physics.questions[16].ref, { id: 'physics-pdf', part: 'עמוד 4' });
+    assert.deepEqual(quiz.references.map((r) => r.id), ['physics-pdf']);
+    assert.deepEqual(quiz.questions[0].ref, { id: 'physics-pdf', part: 'עמוד 5' });
+    assert.deepEqual((await content.getSubject(sql, 'physics')).exams.map((e) => [e.id, e.references.map((r) => r.id)]),
+      [['physics-v1-assessment', ['physics-pdf', 'physics-site']]]);
+    // a reference change is detected by verify and the content version, and the reseed restores it
+    await sql`UPDATE study_references SET title = title || ' ' WHERE id = 'physics-pdf'`;
+    assert.deepEqual(await verify(sql), ['reference physics-pdf differs from source']);
+    assert.notEqual(await content.contentVersion(sql), before);
+    await seed(sql);
+    assert.deepEqual(await verify(sql), []);
+    // the migration on a database that already has 001 is additive: a dangling reference is refused by the FK
+    await assert.rejects(sql`UPDATE questions SET reference_id = 'nope' WHERE id = 'garden-01'`);
   } finally { await sql.end(); }
 });

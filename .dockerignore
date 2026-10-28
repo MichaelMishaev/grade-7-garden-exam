@@ -4,3 +4,4 @@ output
 .playwright-*
 *.dump
 .env*
+test-fixtures

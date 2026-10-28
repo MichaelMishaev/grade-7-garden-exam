@@ -93,3 +93,5 @@ a:focus-visible, button:focus-visible { outline: 3px solid #173f2b; outline-offs
   .confetti { display: none; }
 }
 @keyframes feedback-fade { from { opacity: 0; } to { opacity: 1; } }
+.source-line { margin-top: 12px !important; padding-top: 10px; border-top: 1px solid rgba(39, 53, 65, .12); color: #4d5f6b; font-size: 14px; }
+.source-line a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
