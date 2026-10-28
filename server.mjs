@@ -16,6 +16,18 @@ const types = {
   '.pdf': 'application/pdf'
 };
 
+// Exams that identify themselves with the payload field `exam`. Every exam uses the same endpoint, Resend account,
+// sender, teacher, limits and origin rules; only the answer count, subject, idempotency prefix and email title differ.
+// A payload WITHOUT `exam` is one of the original Hebrew exams (garden, library) and keeps the original 20-answer
+// rules, subject and idempotency key byte for byte. An unknown `exam` value is rejected.
+const legacyExam = { count: 20, idempotencyPrefix: 'garden-exam', subject: 'תשובות למבחן הבנת הנקרא - כיתה ז׳' };
+export const exams = Object.assign(Object.create(null), {
+  'physics-v1-assessment': {
+    count: 27, idempotencyPrefix: 'physics-exam', subject: 'תשובות למשימת הערכה במדידות - מדעים - כיתה ז׳',
+    title: 'תשובות למשימת הערכה במדידות', subtitle: 'מדעים · כיתה ז׳2 · שי עגנון, נתניה'
+  }
+});
+
 export function createApp({ env = process.env, sendFetch = fetch, db = createDb(env) } = {}) {
   let attempts = [];
   return http.createServer(async (request, response) => {
@@ -54,11 +66,12 @@ export function createApp({ env = process.env, sendFetch = fetch, db = createDb(
       payload = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     } catch { return json(400, { error: 'Invalid JSON' }); }
     const validText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
-    const physics = payload?.exam === 'physics-v1-assessment';
-    const expectedAnswers = physics ? 27 : 20;
-    if (!payload || (payload.exam !== undefined && !physics) || !validText(payload.name, 120) || !Array.isArray(payload.answers) || payload.answers.length !== expectedAnswers ||
+    const examId = payload?.exam;
+    if (examId !== undefined && !(typeof examId === 'string' && Object.hasOwn(exams, examId))) return json(400, { error: 'Unknown exam' });
+    const exam = examId === undefined ? legacyExam : exams[examId];
+    if (!payload || !validText(payload.name, 120) || !Array.isArray(payload.answers) || payload.answers.length !== exam.count ||
         !payload.answers.every(item => item && validText(item.question, 1000) && validText(item.answer, 3000))) {
-      return json(400, { error: 'Name and all exam answers are required' });
+      return json(400, { error: `Name and all ${exam.count} answers are required` });
     }
     const validTime = value => typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
     const timed = validTime(payload.startedAt) && validTime(payload.finishedAt) && Date.parse(payload.finishedAt) >= Date.parse(payload.startedAt);
@@ -76,10 +89,10 @@ export function createApp({ env = process.env, sendFetch = fetch, db = createDb(
     attempts.push(now);
     const name = payload.name.trim();
     const answers = payload.answers.map(item => ({ question: item.question.trim(), answer: item.answer.trim(), correct: typeof item.correct === 'boolean' ? item.correct : undefined }));
-    const key = createHash('sha256').update(JSON.stringify({ name, answers })).digest('hex');
+    const key = createHash('sha256').update(JSON.stringify(examId === undefined ? { name, answers } : { exam: examId, name, answers })).digest('hex');
     // Best effort: a slow or failing database must never block or fail the email.
     // A write that outlives the 2s wait still completes, and the email status is recorded once it does.
-    const storing = db?.flags.write ? db.storeSubmission({ key, name, answers, ...times }) : null;
+    const storing = db?.flags.write ? db.storeSubmission({ key, name, answers, ...times, ...(examId === undefined ? {} : { examId }) }) : null;
     storing?.catch(error => console.error('submission store failed', error?.code ?? error?.name));
     if (storing) {
       let timer;
@@ -90,13 +103,15 @@ export function createApp({ env = process.env, sendFetch = fetch, db = createDb(
     try {
       const result = await sendFetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': `garden-exam/${key}` },
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': `${exam.idempotencyPrefix}/${key}` },
         body: JSON.stringify({
           from: env.RESEND_FROM_EMAIL,
           to: ['345287@gmail.com'],
-          subject: physics ? 'תשובות למשימת הערכה במדידות - כיתה ז׳' : 'תשובות למבחן הבנת הנקרא - כיתה ז׳',
+          subject: exam.subject,
           text: `שם התלמיד/ה: ${name}\n${timeLines(times)}${score ? scoreLine(score) + '\n' : ''}\n` + answers.map((item, i) => `${i + 1}. ${item.correct === true ? '✓ ' : item.correct === false ? '✕ ' : ''}${item.question}\n${item.answer}`).join('\n\n'),
-          html: renderExamEmail({ name, answers, score, title: physics ? 'תשובות למשימת הערכה במדידות' : undefined, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
+          // Table exams label answers without a `correct` mark (written tasks) as waiting for the teacher.
+          html: renderExamEmail({ name, answers, score, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online',
+            ...(exam.title ? { title: exam.title, subtitle: exam.subtitle, markPending: true } : {}) })
         }),
         signal: AbortSignal.timeout(15000)
       });

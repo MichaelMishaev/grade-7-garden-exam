@@ -155,8 +155,9 @@
       });
       const data = await response.json();
       if (!response.ok || data.success !== true) throw new Error('Submission failed');
-      try { sessionStorage.removeItem(storageKey); } catch (_) {}
-      $('send-status').textContent = '✓ שירות הדוא״ל אישר את השליחה. המורה יבדוק את התשובות הפתוחות.';
+      // Every exam ends the same way: draft cleared, result summary stored, thanks.html (like garden and physics).
+      try { sessionStorage.removeItem(storageKey); sessionStorage.setItem('library-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total: 20, score: { earned: lastScore.earned, pending: lastScore.pending } })); } catch (_) {}
+      window.location.assign('thanks.html');
     } catch (_) {
       $('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
       $('send').disabled = false;

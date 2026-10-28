@@ -158,3 +158,26 @@ test('with db flags off nothing is written and the API is absent', { skip }, asy
   assert.equal((await fetch(`${baseOff}/api/health`)).status, 404);
   assert.equal((await fetch(`${baseOff}/api/subjects`)).status, 404);
 });
+
+test('physics submission (exam field, 27 answers) is emailed with its own subject and stored with its exam id', { skip }, async () => {
+  const { plainText } = await import('../db/submissions.mjs');
+  const physicsRows = source.questions.filter((q) => q.exam_id === 'physics-v1-assessment');
+  const body = {
+    exam: 'physics-v1-assessment', name: 'תלמידת פיזיקה',
+    answers: physicsRows.map((q) => ({ question: plainText(q.prompt), answer: q.type === 'mcq' ? q.choices[q.correct] : q.type === 'fill' ? String(q.correct.value) : 'הסבר', ...(q.type === 'open' ? {} : { correct: true }) }))
+  };
+  const calls = resendCalls.length;
+  assert.equal((await post(base, body)).status, 200);
+  assert.equal(resendCalls.length, calls + 1);
+  const sent = JSON.parse(resendCalls.at(-1).init.body);
+  assert.equal(sent.subject, 'תשובות למשימת הערכה במדידות - מדעים - כיתה ז׳');
+  assert.match(resendCalls.at(-1).init.headers['Idempotency-Key'], /^physics-exam\//);
+  const rows = await rowFor('תלמידת פיזיקה');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].exam_id, 'physics-v1-assessment');
+  assert.ok(await eventually(async () => (await rowFor('תלמידת פיזיקה'))[0].email_status === 'accepted'));
+  const [{ n, linked, graded }] = await sql`SELECT count(*)::int AS n, count(question_id)::int AS linked, count(*) FILTER (WHERE auto_correct)::int AS graded
+    FROM submission_answers WHERE submission_id = ${rows[0].id}`;
+  assert.deepEqual({ n, linked, graded }, { n: 27, linked: 27, graded: 20 });
+  assert.equal((await post(base, { ...body, answers: body.answers.slice(1) })).status, 400);
+});

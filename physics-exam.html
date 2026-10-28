@@ -1,141 +1,133 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <title>משימת הערכה במדידות · מדעים | PrepX</title>
-  <link rel="stylesheet" href="practice.css?v=6">
-  <link rel="stylesheet" href="branding.css?v=1">
-  <style>
-    .stage:focus, .stage h1:focus { outline: none; }
-    .credit { margin: 0 0 22px; padding: 16px 18px; border: 2px solid #d8eaf5; border-radius: 18px; background: #f5fbff; line-height: 1.65; }
-    .credit p { margin: 0 0 8px; }
-    .credit ul { margin: 0; padding: 0 18px 0 0; }
-    .credit li { margin: 4px 0; }
-    .credit a, .source-line a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
-    .note-list { color: #5e7164; font-size: 15px; line-height: 1.7; padding: 0 18px 0 0; }
-    #begin { width: 100%; }
-    .section-details { margin: 0 0 16px; border-radius: 14px; background: #edf4ed; }
-    .section-details summary { min-height: 44px; padding: 12px 16px; font-weight: 800; cursor: pointer; }
-    .section-details p { margin: 0; padding: 0 16px 14px; line-height: 1.7; color: #3f5247; }
-    #question-text { font-size: clamp(19px, 4.4vw, 24px); }
-    .option { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .option input { width: 22px; height: 22px; flex: none; accent-color: #46a302; }
-    .option:has(input:checked) { border-color: #58cc02; background: #f1fde8; }
-    .option:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
-    #answer-area label:not(.option) { display: block; margin: 0 0 8px; font-weight: 800; }
-    #answer-area input.answer { width: min(100%, 220px); min-height: 52px; padding: 12px 14px; border: 2px solid #dce3e7; border-radius: 13px; font: inherit; font-size: 20px; font-weight: 700; text-align: left; }
-    .chapter-credit { margin: 26px 0 0; padding-top: 16px; border-top: 1px solid #e5e9ec; text-align: center; color: #493b80; font-weight: 800; }
-    .result-open span.wrong { color: #b65a50; }
-    /* Same as the teacher's site, so her SVG figures look as she drew them. */
-    .diagram { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto 20px; background: #fafcfd; border-radius: 14px; }
-    .diagram text { font-family: Arial; }
-    #answer-area textarea { display: block; width: 100%; margin-top: 12px; min-height: 110px; padding: 12px 14px; border: 2px solid #dce3e7; border-radius: 13px; font: inherit; font-size: 16px; line-height: 1.6; resize: vertical; }
-    #answer-area input.answer:focus, #answer-area textarea:focus { outline: none; border-color: #58cc02; box-shadow: 0 0 0 4px #e9fbdc; }
-    #check { width: 100%; margin-top: 18px; }
-    .error { min-height: 20px; margin: 8px 0 0; color: #aa3535; font-size: 14px; font-weight: 700; }
-    .feedback.self strong::before { content: '✎'; background: #2c9ddf; }
-    /* her correct title already starts with ✓ */
-    #feedback:not(.incorrect):not(.self) strong::before { display: none; }
-    .response-panel:has(.feedback.self:not([hidden])) { background: #f2f9ff; border-color: #cfe6f6; }
-    .model-answer p { margin: 6px 0; }
-    /* keep each LTR calculation on one line, like the .math inline-block on her site */
-    #feedback bdi, #question-text bdi { display: inline-block; }
-    .self-check { margin: 14px 0 0; padding: 12px 14px; border: 1px solid #cfe0ea; border-radius: 13px; background: #fff; }
-    .self-check legend { padding: 0 6px; font-weight: 800; }
-    .self-check label { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 8px 0; line-height: 1.5; cursor: pointer; }
-    .self-check input { width: 22px; height: 22px; flex: none; margin-top: 1px; accent-color: #2c9ddf; }
-    .small-note { color: #51606a; font-size: 14px; }
-    .source-line { margin-top: 12px !important; padding-top: 10px; border-top: 1px solid rgba(39, 53, 65, .12); color: #4d5f6b; font-size: 14px; }
-    .nav-row { display: flex; gap: 10px; margin-top: 18px; }
-    .nav-row > * { flex: 1; }
-    #finish { width: 100%; margin-top: 10px; }
-    .result-panel { text-align: right; }
-    .result-section h2 { margin: 26px 0 10px; font-size: 19px; }
-    .result-item { margin-bottom: 10px; padding: 0 0 8px; border-bottom: 1px solid #edf1f3; }
-    .result-open { display: block; width: 100%; min-height: 48px; padding: 10px 12px; border: 2px solid #e5e9ec; border-radius: 13px; background: #fff; color: inherit; text-align: right; font: inherit; }
-    .result-open strong { display: block; font-size: 15px; line-height: 1.5; }
-    .result-open span { display: block; margin-top: 3px; color: #46a302; font-size: 14px; font-weight: 800; }
-    .result-item .source-line { margin: 6px 4px 0 !important; padding: 0; border: 0; }
-    @media (max-width: 560px) { .nav-row { flex-direction: column-reverse; } }
-  </style>
-  <script src="content-api.js?v=3" defer></script>
-  <script src="numeric-answer.js?v=1" defer></script>
-  <script src="physics-exam.js?v=2" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff"><title>משימת הערכה במדידות · מדעים | PrepX</title>
+<style>
+    :root { font-family: Arial, "Noto Sans Hebrew", sans-serif; color: #273541; background: #fff; font-synthesis: none; --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 300px; }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(100% - 32px, 760px); margin: 0 auto; padding: 24px 0 48px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 34px; }
+    .brand { color: #1587c2; font-size: 15px; font-weight: 800; letter-spacing: .01em; text-decoration: none; }
+    .brand:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .time { color: #6c7e73; font-size: 13px; }
+    h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.16; letter-spacing: -.035em; margin: 0 0 14px; }
+    .intro { color: #53675b; font-size: 17px; line-height: 1.65; margin: 0 0 28px; }
+    .card { background: #fff; border: 2px solid #e5e9ec; border-radius: 22px; box-shadow: 0 4px 0 #d9dfe3; }
+    .reading { padding: clamp(22px, 5vw, 36px); }
+    .reading h2 { font-size: clamp(24px, 4.8vw, 31px); line-height: 1.3; margin: 0 0 10px; }
+    .byline { font-size: 14px; color: #67766d; margin: 0 0 24px; line-height: 1.7; }
+    .reading p:not(.byline) { font-size: 18px; line-height: 1.95; margin: 0 0 17px; }
+    .reading p:last-child { margin-bottom: 0; }
+    .name-box { margin-top: 26px; }
+    label { display: block; font-weight: 700; margin-bottom: 9px; }
+    input[type=text], textarea { width: 100%; border: 2px solid #dce3e7; border-radius: 13px; background: white; color: #273541; padding: 14px 16px; outline: none; }
+    input[type=text]:focus, textarea:focus { border-color: #58cc02; box-shadow: 0 0 0 4px #e9fbdc; }
+    input[type=text] { min-height: 50px; }
+    textarea { min-height: 148px; resize: vertical; line-height: 1.7; font-size: 17px; }
+    input::placeholder, textarea::placeholder { color: #819388; }
+    .field-note, .privacy { color: #64776b; font-size: 13px; line-height: 1.5; }
+    .field-note { margin: 7px 0 0; }
+    .actions { display: flex; gap: 10px; margin-top: 25px; }
+    .button { border: 2px solid transparent; border-radius: 13px; padding: 14px 22px; min-height: 52px; font-weight: 800; font-size: 16px; transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out); }
+    .button:active { transform: translateY(3px); box-shadow: 0 1px 0 #d9dfe3; }
+    .primary { background: #58cc02; border-color: #58cc02; color: white; box-shadow: 0 4px 0 #46a302; }
+    .primary:active { box-shadow: 0 1px 0 #46a302; }
+    .secondary { background: #fff; border-color: #e5e9ec; color: #273541; box-shadow: 0 4px 0 #d9dfe3; }
+    .button:focus-visible, summary:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+    .stage { display: none; }
+    .stage.active { display: block; animation: stage-in 220ms var(--ease-out) both; }
+    .progress-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin: 3px 0 11px; font-weight: 700; font-size: 14px; }
+    .progress-row span:last-child { color: #64776b; }
+    .bar { height: 12px; background: #e5e9ec; border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
+    .bar > span { display: block; height: 100%; background: #58cc02; transition: width 220ms var(--ease-out); }
+    details { background: #edf4ed; border-radius: 14px; margin-bottom: 20px; }
+    summary { padding: 16px 18px; font-weight: 800; cursor: pointer; }
+    details .reading { border-top: 1px solid #d4e3d4; padding: 20px; }
+    details .reading h2 { font-size: 21px; }
+    details .reading p:not(.byline) { font-size: 16px; line-height: 1.8; }
+    .question-card { padding: clamp(22px, 5vw, 34px); }
+    .question-number { display: block; color: #46a302; font-weight: 800; margin-bottom: 13px; font-size: 14px; }
+    .question-title { font-size: clamp(22px, 4.7vw, 27px); line-height: 1.45; margin: 0 0 25px; }
+    .error { color: #aa3535; font-size: 14px; font-weight: 700; min-height: 20px; margin: 9px 0 0; }
+    .review-title { font-size: 30px; margin: 0 0 12px; }
+    .review-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 22px; }
+    .review-item { text-align: right; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; display: block; border: 2px solid #e5e9ec; background: #fff; border-radius: 13px; padding: 14px 17px; color: inherit; }
+    .review-item:hover { border-color: #5a9e6d; }
+    .review-item strong { display: block; font-size: 14px; line-height: 1.5; }
+    .review-item span { display: block; margin-top: 4px; color: #586d60; font-size: 14px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .review-actions { margin-top: 26px; }
+    .privacy { margin: 14px 0 0; }
+    .footer { margin-top: 32px; text-align: center; color: #718477; font-size: 13px; }
+    @media (max-width: 560px) { .shell { width: min(100% - 28px, 760px); padding-top: 17px; } header { margin-bottom: 26px; } .time { font-size: 12px; } .actions { flex-direction: column; } .actions .button { width: 100%; } .reading p:not(.byline) { font-size: 17px; } }
+    @keyframes stage-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (hover: hover) and (pointer: fine) { .primary:hover { background: #61d70a; } .secondary:hover, .review-item:hover { border-color: #b8c4ca; } }
+    @media (prefers-reduced-motion: reduce) { .stage.active { animation: stage-fade 200ms ease both; } .button { transition: none; } .button:active { transform: none; } .bar > span { transition: none; } }
+    @keyframes stage-fade { from { opacity: 0; } to { opacity: 1; } }
+  
+[hidden] { display: none !important; }
+.stage.active { animation: none; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 13px; margin: 10px 0; border: 2px solid #e5e9ec; border-radius: 13px; cursor: pointer; line-height: 1.5; }
+.choice:has(input:checked) { border-color: #46a302; background: #e9fbdc; }
+.choice input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #46a302; }
+.choice:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
+.flag { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 18px 0 0; }
+.flag input { width: 22px; height: 22px; accent-color: #46a302; }
+.review-item { min-height: 48px; }
+.result-detail { padding: 18px; margin-top: 14px; line-height: 1.7; }
+.result-detail h2 { font-size: 19px; margin-top: 0; }
+.result-detail p { margin: 8px 0; }
+.primary { color: #17330b; }
+a.button { display: inline-flex; align-items: center; text-decoration: none; }
+.actions { flex-wrap: wrap; }
+.topic-list { line-height: 1.9; }
+.source-line { color: #586d60; font-size: 14px; }
+</style>
+<style>
+/* Physics content only (the flow and look above are library-exam.html's, verbatim): the teacher's SVG figures,
+   one-line LTR calculations, the numeric answer field and her model answers / self-check lists in the results. */
+.diagram { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto 20px; background: #fafcfd; border-radius: 14px; }
+.diagram text { font-family: Arial; }
+bdi { display: inline-block; }
+#number-answer { max-width: 220px; direction: ltr; text-align: left; font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+.reading ul { font-size: 16px; line-height: 1.8; padding: 0 20px 0 0; margin: 0 0 17px; }
+.reading a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
+.model-answer { color: #3f5247; }
+.self-check { margin: 4px 0 8px; padding: 0 20px 0 0; line-height: 1.7; }
+</style>
+<link rel="stylesheet" href="branding.css?v=1">
+<script src="quiz-core.js?v=2" defer></script><script src="content-api.js?v=3" defer></script><script src="numeric-answer.js?v=1" defer></script><script src="physics-exam.js?v=3" defer></script>
 </head>
-<body>
-  <main class="shell">
-    <header class="topbar">
-      <a class="back-link" href="subject.html?subject=physics">← לגרסאות במדעים</a>
-      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
-    </header>
-
-    <section id="start" class="stage" aria-labelledby="page-title">
-      <div class="intro-row">
-        <div>
-          <h1 id="page-title" tabindex="-1">משימת הערכה במדידות</h1>
-          <p class="subheading">מדעים · כיתה ז׳ · 27 שאלות בארבעה פרקים: יחידות וסדרי גודל, המרות יחידות, מודדים כמו פיזיקאים, מיישמים ומתכננים.</p>
-        </div>
-        <span class="practice-label">בדיקה עצמית</span>
-      </div>
-      <div class="credit">
-        <p><strong>המשימה וחומר הלימוד הוכנו על ידי המורה שרית שרת.</strong> השאלות לקוחות מאתר התרגול שלה, וכל שאלה מפנה לחלק בחומר הלימוד שעליו היא מבוססת.</p>
-        <ul>
-          <li><a href="assets/materials/physics-measurements-grade-7.pdf" target="_blank" rel="noopener">סיכום נושא מדידות (PDF, 6 עמודים)</a></li>
-          <li><a href="https://physics7-measurement-sarit.sarityarongaya.chatgpt.site/" target="_blank" rel="noopener">אתר התרגול „מתרגלים פיזיקה ז׳”</a> · נפתח באתר חיצוני</li>
-        </ul>
-      </div>
-      <ul class="note-list">
-        <li>שאלות בחירה ושאלות חישוב נבדקות מיד. כתבו מספר בלבד, בלי יחידה; אפשר נקודה או פסיק עשרוני (5.7 או 5,7).</li>
-        <li>בתשובות כתובות מופיעים פתרון לדוגמה ורשימה לבדיקה עצמית.</li>
-        <li>אפשר לתקן ולבדוק שוב. בסיכום מוצגים גם התשובות הנוכחיות וגם הנכונות בבדיקה הראשונה.</li>
-        <li>בסיום אפשר לשלוח את התשובות למורה בדוא״ל. הטיוטה נשמרת בלשונית הזאת עד השליחה.</li>
-      </ul>
-      <button id="begin" class="primary-button" type="button">מתחילים</button>
-    </section>
-
-    <section id="question-stage" class="stage" aria-labelledby="question-text" hidden>
-      <div class="progress-header"><span id="counter"></span><span id="section-name"></span></div>
-      <div id="progress-track" class="progress-track" role="progressbar" aria-label="התקדמות במשימה" aria-valuemin="1" aria-valuemax="27" aria-valuenow="1"><span id="progress-fill"></span></div>
-      <details id="section-details" class="section-details"><summary>על הפרק</summary><p id="section-intro"></p></details>
-      <div class="question-panel">
-        <span id="question-index" class="question-index"></span>
-        <h2 id="question-text" tabindex="-1"></h2>
-        <div id="figure" hidden></div>
-        <div id="answer-area"></div>
-        <button id="check" class="primary-button" type="button">בדיקת תשובה</button>
-        <p id="check-error" class="error" role="alert"></p>
-      </div>
-      <div class="response-panel">
-        <div id="feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
-      </div>
-      <div class="nav-row">
-        <button id="previous" class="secondary-button" type="button">לשאלה הקודמת</button>
-        <button id="next" class="secondary-button" type="button">לשאלה הבאה</button>
-      </div>
-      <button id="finish" class="secondary-button" type="button">סיום וסיכום</button>
-      <p class="chapter-credit">הוכן על ידי שרית שרת</p>
-      <p class="note">בדיקה עצמית. בסיום ניתן לשלוח את התשובות למורה.</p>
-    </section>
-
-    <section id="results" class="stage result-panel" aria-labelledby="results-title" hidden>
-      <h1 id="results-title" tabindex="-1">סיכום המשימה</h1>
-      <p id="score" class="score"></p>
-      <p id="score-note"></p>
-      <div id="result-list"></div>
-      <div class="result-actions">
-        <label for="student-name">שם התלמיד או התלמידה</label>
-        <input id="student-name" class="answer" maxlength="120" autocomplete="name">
-        <button id="send" class="primary-button" type="button">שליחת התשובות למורה</button>
-        <p>השם והתשובות יישלחו בדוא״ל למורה באמצעות Resend.</p>
-        <p id="send-status" role="status" aria-live="polite"></p>
-        <button id="back-to-questions" class="secondary-button" type="button">חזרה לשאלות</button>
-        <button id="retry" class="primary-button" type="button">מתחילים מחדש</button>
-        <a class="secondary-button" href="subject.html?subject=physics">לגרסאות במדעים</a>
-      </div>
-      <p class="note">המשימה וחומר הלימוד: המורה שרית שרת.</p>
-    </section>
-  </main>
-</body>
-</html>
+<body><main class="shell">
+<a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+<header><a class="brand" href="subject.html?subject=physics">→ לגרסאות במדעים</a><span class="time">גרסה 1 · 27 שאלות</span></header>
+<section id="start" class="stage active" aria-labelledby="page-title">
+<h1 id="page-title" tabindex="-1">משימת הערכה במדידות</h1>
+<p class="intro">משימת הערכה במדעים · כיתה ז׳ · 27 שאלות בארבעה פרקים: יחידות וסדרי גודל, המרות יחידות, מודדים כמו פיזיקאים, מיישמים ומתכננים. שאלות בחירה, שאלות חישוב ותשובות כתובות. אין הגבלת זמן. בשאלות חישוב כתבו מספר בלבד, בלי יחידה; אפשר נקודה או פסיק עשרוני (5.7 או 5,7).</p>
+<article id="article" class="card reading">
+<h2>חומר לימוד</h2>
+<p class="byline">המשימה וחומר הלימוד הוכנו על ידי המורה שרית שרת<br><em>השאלות לקוחות מאתר התרגול שלה, וכל שאלה מפנה לחלק בחומר הלימוד שעליו היא מבוססת.</em></p>
+<ul><li><a href="assets/materials/physics-measurements-grade-7.pdf" target="_blank" rel="noopener">סיכום נושא מדידות (PDF, 6 עמודים)</a></li><li><a href="https://physics7-measurement-sarit.sarityarongaya.chatgpt.site/" target="_blank" rel="noopener">אתר התרגול „מתרגלים פיזיקה ז׳”</a> · נפתח באתר חיצוני</li></ul>
+</article>
+<div class="name-box"><label for="student-name">שם התלמיד או התלמידה</label><input id="student-name" type="text" maxlength="100" autocomplete="name"><p class="privacy">הטיוטה נשמרת בלשונית זו. שליחה למורה מתבצעת רק בלחיצה על כפתור השליחה בסיום.</p><p id="name-error" class="error" role="alert"></p></div>
+<div class="actions"><button id="begin" class="button primary" type="button">מתחילים לענות</button></div>
+</section>
+<section id="question-stage" class="stage" aria-labelledby="question-title">
+<div class="progress-row"><span id="counter"></span><span id="answered"></span></div>
+<div id="progress-bar" class="bar" role="progressbar" aria-label="התקדמות במבחן" aria-valuemin="0" aria-valuemax="27" aria-valuenow="0"><span id="progress"></span></div>
+<details><summary>פתיחת חומר הלימוד לקריאה חוזרת</summary><div id="article-copy" class="reading"></div></details>
+<div class="card question-card"><span id="question-topic" class="question-number"></span><h2 id="question-title" class="question-title" tabindex="-1"></h2>
+<div id="figure" hidden></div>
+<div id="choices" role="group" aria-labelledby="question-title"></div>
+<div id="open-answer" hidden><label for="answer">התשובה שלי — תיבדק בידי המורה</label><textarea id="answer" maxlength="3000"></textarea></div>
+<div id="number-answer-box" hidden><label for="number-answer">התשובה שלי — מספר בלבד, בלי יחידה</label><input id="number-answer" type="text" inputmode="decimal" maxlength="100" autocomplete="off"><label for="work">דרך החישוב — תיבדק בידי המורה</label><textarea id="work" maxlength="2000"></textarea></div>
+<label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label></div>
+<div class="actions"><button id="previous" class="button secondary" type="button">לשאלה הקודמת</button><button id="next" class="button primary" type="button">לשאלה הבאה</button><button id="review-button" class="button secondary" type="button">סקירת התשובות</button></div>
+</section>
+<section id="review" class="stage" aria-labelledby="review-title"><h1 id="review-title" tabindex="-1">בודקים לפני הסיום</h1><p id="review-status" class="intro"></p><div id="review-list" class="review-list"></div><p id="review-error" class="error" role="alert"></p><div class="actions"><button id="back-to-questions" class="button secondary" type="button">חזרה לשאלות</button><button id="finish" class="button primary" type="button">סיום ובדיקת המבחן</button></div></section>
+<section id="results" class="stage" aria-labelledby="results-title"><h1 id="results-title" tabindex="-1">סיימתם את המבחן!</h1><p id="score" class="intro"></p><p>זהו ציון חלקי לתרגול. התשובות הפתוחות ממתינות לבדיקת המורה.</p><ul id="topics" class="topic-list"></ul><div id="explanations"></div><div class="actions"><button id="send" class="button primary" type="button">שליחת כל התשובות למורה</button><button id="retry" class="button secondary" type="button">מבחן חדש</button><a class="button secondary" href="subject.html?subject=physics">לגרסאות במדעים</a></div><p id="send-status" class="privacy" role="status"></p><p class="privacy">בלחיצה על שליחה, השם וכל 27 התשובות נשלחים בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה.</p></section>
+<footer class="footer">בהצלחה בלמידה!</footer>
+</main></body></html>

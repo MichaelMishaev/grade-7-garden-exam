@@ -94,3 +94,26 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     await assert.rejects(sql`UPDATE questions SET reference_id = 'nope' WHERE id = 'garden-01'`);
   } finally { await sql.end(); }
 });
+
+// Runs after the test above (same file, sequential), on the migrated and seeded test database.
+test('a physics submission is stored with its exam id, question links and server-side numeric grading', { skip: !url && 'TEST_DATABASE_URL not set' }, async () => {
+  const { plainText } = await import('./submissions.mjs');
+  const sql = await connect(url);
+  try {
+    const physics = extractContent().questions.filter((q) => q.exam_id === 'physics-v1-assessment');
+    const answers = physics.map((q, i) => ({
+      question: plainText(q.prompt),
+      answer: q.type === 'mcq' ? q.choices[q.correct] : q.type === 'fill' ? `${i % 2 ? q.correct.value : q.correct.value + 1}\nדרך חישוב: x` : 'הסבר',
+      ...(q.type === 'open' ? {} : { correct: true }) // the client claims all correct: the server must not trust it for numbers
+    }));
+    const id = await storeSubmission(sql, { key: 'p'.repeat(64), name: 'פיזיקה', answers, examId: 'physics-v1-assessment' });
+    assert.equal((await sql`SELECT exam_id FROM submissions WHERE id = ${id}`)[0].exam_id, 'physics-v1-assessment');
+    const rows = await sql`SELECT a.question_id, q.type, a.auto_correct, a.position FROM submission_answers a LEFT JOIN questions q ON q.id = a.question_id
+      WHERE a.submission_id = ${id} ORDER BY a.position`;
+    assert.equal(rows.length, 27);
+    assert.deepEqual(rows.map((r) => r.question_id), physics.map((q) => q.id));
+    assert.ok(rows.filter((r) => r.type === 'mcq').every((r) => r.auto_correct === true));
+    assert.ok(rows.filter((r) => r.type === 'open').every((r) => r.auto_correct === null));
+    assert.deepEqual(rows.filter((r) => r.type === 'fill').map((r) => r.auto_correct), rows.filter((r) => r.type === 'fill').map((r) => (r.position - 1) % 2 === 1));
+  } finally { await sql.end(); }
+});
