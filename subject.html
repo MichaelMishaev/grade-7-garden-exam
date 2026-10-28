@@ -5,17 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <title>גרסאות המבחן | מתכוננים למבחן</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="subject.css?v=1">
 </head>
-<body>
+<body class="subject-page">
   <div class="page">
     <header class="site-header">
       <a class="brand" href="index.html">מתכוננים למבחן</a>
       <span class="grade">כיתה ז׳ · הכנה למבחנים</span>
     </header>
     <main>
-      <a class="back-link" href="index.html">→ לכל המבחנים</a>
+      <a class="back-link" href="index.html"><span aria-hidden="true">→</span> לכל המבחנים</a>
       <section class="intro subject-intro" aria-labelledby="subject-title">
+        <img id="subject-art" class="subject-header-art" src="assets/books.png" alt="" width="112" height="112">
         <h1 id="subject-title"></h1>
         <p id="subject-description"></p>
       </section>
@@ -30,19 +32,22 @@
         </div>
         <div class="quiz-list">
           <a class="quiz-row" href="practice.html?quiz=facts">
-            <span class="quiz-icon" aria-hidden="true">א</span>
-            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small></span>
             <span class="arrow" aria-hidden="true">←</span>
+            <span class="lesson-number" aria-hidden="true">1</span>
+            <span class="quiz-copy"><strong>עובדה או דעה?</strong><small>מזהים מה אפשר לבדוק ומה מביע עמדה · 6 שאלות</small></span>
+            <span class="quiz-icon" aria-hidden="true">א</span>
           </a>
           <a class="quiz-row" href="practice.html?quiz=questions">
-            <span class="quiz-icon" aria-hidden="true">?</span>
-            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small></span>
             <span class="arrow" aria-hidden="true">←</span>
+            <span class="lesson-number" aria-hidden="true">2</span>
+            <span class="quiz-copy"><strong>מילות שאלה</strong><small>בוחרים איך לשאול על זמן, סיבה וכמות · 6 שאלות</small></span>
+            <span class="quiz-icon" aria-hidden="true">?</span>
           </a>
           <a class="quiz-row" href="practice.html?quiz=instructions">
-            <span class="quiz-icon" aria-hidden="true">✓</span>
-            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small></span>
             <span class="arrow" aria-hidden="true">←</span>
+            <span class="lesson-number" aria-hidden="true">3</span>
+            <span class="quiz-copy"><strong>מבינים את ההוראה</strong><small>מתרגלים ציינו, הסבירו, נמקו והעתיקו · 6 שאלות</small></span>
+            <span class="quiz-icon" aria-hidden="true">✓</span>
           </a>
         </div>
       </section>
@@ -55,7 +60,7 @@
         title: 'עברית',
         description: 'מבחן בתאריך 29.10. בחרו גרסה של המבחן או תרגלו נושא אחד.',
         variants: [
-          { title: 'גרסה 1 · הבנת הנקרא', detail: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר · 20 שאלות', href: 'garden-exam.html' }
+          { title: 'גרסה 1 · הבנת הנקרא', detail: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר', date: '29.10', count: '20 שאלות', href: 'garden-exam.html' }
         ]
       },
       physics: {
@@ -69,6 +74,7 @@
     document.title = `${subject.title} · גרסאות המבחן`;
     document.getElementById('subject-title').textContent = subject.title;
     document.getElementById('subject-description').textContent = subject.description;
+    document.getElementById('subject-art').src = subject === subjects.physics ? 'assets/atom.png' : 'assets/books.png';
     const list = document.getElementById('variant-list');
     if (subject.variants.length === 0) {
       const empty = document.createElement('p');
@@ -76,26 +82,38 @@
       empty.textContent = 'אין עדיין גרסאות זמינות למבחן הזה. חזרו לכאן כשהחומר יתווסף.';
       list.append(empty);
     } else {
-      subject.variants.forEach((variant, index) => {
+      subject.variants.forEach(variant => {
         const link = document.createElement('a');
-        link.className = 'exam-card';
+        link.className = 'exam-card variant-card';
         link.href = variant.href;
-        const icon = document.createElement('span');
-        icon.className = 'exam-icon';
-        icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = String(index + 1);
+        const icon = document.createElement('img');
+        icon.className = 'variant-art';
+        icon.src = 'assets/exam-sheet.png';
+        icon.alt = '';
+        icon.width = 58;
+        icon.height = 58;
         const copy = document.createElement('span');
         copy.className = 'exam-copy';
         const title = document.createElement('strong');
         title.textContent = variant.title;
+        const status = document.createElement('em');
+        status.className = 'variant-status';
+        status.textContent = 'זמינה';
         const detail = document.createElement('small');
         detail.textContent = variant.detail;
-        copy.append(title, detail);
+        copy.append(title, status, detail);
         const arrow = document.createElement('span');
         arrow.className = 'exam-arrow';
         arrow.setAttribute('aria-hidden', 'true');
         arrow.textContent = '←';
-        link.append(icon, copy, arrow);
+        const meta = document.createElement('span');
+        meta.className = 'variant-meta';
+        const count = document.createElement('span');
+        count.textContent = variant.count;
+        const date = document.createElement('span');
+        date.textContent = variant.date;
+        meta.append(count, date);
+        link.append(icon, copy, arrow, meta);
         list.append(link);
       });
       document.getElementById('practice-section').hidden = subject !== subjects.hebrew;

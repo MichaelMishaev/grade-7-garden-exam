@@ -26,12 +26,30 @@ h1 { font-size: clamp(36px, 7vw, 52px); line-height: 1.13; letter-spacing: -.035
 .exam-card:first-child { background: var(--green-soft); border-color: #bbed9a; box-shadow: 0 4px 0 #a5db86; }
 .exam-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #d9dfe3; }
 .exam-card:first-child:active { box-shadow: 0 1px 0 #a5db86; }
-.exam-icon { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 15px; background: var(--green); color: white; font-size: 24px; font-weight: 900; box-shadow: 0 3px 0 var(--green-dark); }
-.physics-icon { background: #b875f6; box-shadow: 0 3px 0 #9255ce; }
 .exam-copy { flex: 1; min-width: 0; }
 .exam-copy strong { display: block; font-size: 20px; margin-bottom: 5px; font-weight: 900; }
 .exam-copy small { display: block; color: #576775; font-size: 14px; line-height: 1.4; }
 .exam-arrow { color: var(--green-dark); font-size: 24px; font-weight: 800; }
+.home-page .site-header { justify-content: center; padding: 28px 0 56px; }
+.home-page .grade { display: none; }
+.home-page .brand { position: relative; color: #172838; font-size: 20px; }
+.home-page .brand::before, .home-page .brand::after { content: ""; position: absolute; width: 12px; height: 5px; border-radius: 6px; background: var(--green); top: 2px; }
+.home-page .brand::before { right: -22px; transform: rotate(42deg); }
+.home-page .brand::after { left: -22px; transform: rotate(-42deg); }
+.home-page .intro { max-width: 660px; margin: 0 auto 38px; text-align: center; }
+.home-page h1 { color: #0d2132; font-size: clamp(38px, 7vw, 58px); letter-spacing: -.045em; }
+.home-page .intro p { color: #718193; }
+.home-page .exam-list { gap: 26px; }
+.home-page .exam-card { flex-direction: row-reverse; min-height: 198px; gap: 14px; padding: 22px 28px; border-radius: 25px; border-color: #edf0f2; background: #f7f9fa; box-shadow: 0 7px 0 #dce2e6, 0 12px 24px rgba(20, 38, 50, .06); }
+.home-page .exam-card:first-child { border-color: #a5ec27; background: linear-gradient(145deg, #adf235, #69d708 72%); box-shadow: 0 7px 0 #3ea600, 0 12px 24px rgba(65, 155, 5, .15); }
+.home-page .exam-card:active { transform: translateY(5px); box-shadow: 0 2px 0 #dce2e6; }
+.home-page .exam-card:first-child:active { box-shadow: 0 2px 0 #3ea600; }
+.home-page .subject-art { display: block; flex: 0 0 clamp(104px, 25vw, 145px); width: clamp(104px, 25vw, 145px); height: clamp(104px, 25vw, 145px); object-fit: contain; transition: transform 180ms var(--ease-out); }
+.home-page .exam-copy strong { color: #102434; font-size: clamp(30px, 4vw, 42px); line-height: 1.15; margin-bottom: 14px; }
+.home-page .exam-copy small { color: #253e3b; font-size: 17px; font-weight: 700; line-height: 1.45; }
+.home-page .exam-copy small + small { margin-top: 5px; }
+.home-page .exam-card:nth-child(2) .exam-copy small { color: #566a77; }
+.home-page .exam-arrow { color: #1b3440; font-size: 27px; }
 .back-link { display: inline-block; color: #1587c2; font-weight: 800; margin-bottom: 24px; }
 .subject-intro { margin-bottom: 32px; }
 .subject-section { margin-top: 30px; }
@@ -55,6 +73,7 @@ a:focus-visible { outline: 3px solid #1495d3; outline-offset: 4px; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (hover: hover) and (pointer: fine) {
   .exam-card:hover { transform: translateY(-2px); border-color: #8bdc54; }
+  .home-page .exam-card:hover .subject-art { transform: translateY(-4px) rotate(-3deg); }
   .quiz-row:hover { background: #f6fbf2; }
 }
 @media (max-width: 650px) {
@@ -63,17 +82,28 @@ a:focus-visible { outline: 3px solid #1495d3; outline-offset: 4px; }
   .intro { margin-bottom: 26px; }
   .intro p { font-size: 16px; }
   .exam-card { min-height: 82px; padding: 13px 15px; gap: 12px; }
-  .exam-icon { flex-basis: 42px; height: 42px; }
   .exam-copy strong { font-size: 18px; }
   .exam-copy small { font-size: 13px; }
   .quiz-row { min-height: 88px; padding: 15px; gap: 12px; }
   .quiz-copy strong { font-size: 17px; }
   .quiz-copy small { font-size: 13px; }
+  .home-page .site-header { padding: 28px 0 50px; }
+  .home-page .intro { margin-bottom: 32px; }
+  .home-page h1 { font-size: clamp(38px, 10.5vw, 46px); max-width: 350px; margin: 0 auto 16px; }
+  .home-page .intro p { font-size: 16px; }
+  .home-page .exam-list { gap: 22px; }
+  .home-page .exam-card { min-height: 168px; gap: 9px; padding: 14px; border-radius: 22px; }
+  .home-page .subject-art { flex-basis: clamp(88px, 29vw, 116px); width: clamp(88px, 29vw, 116px); height: clamp(88px, 29vw, 116px); }
+  .home-page .exam-copy strong { font-size: clamp(26px, 8vw, 34px); margin-bottom: 10px; }
+  .home-page .exam-copy small { font-size: 14px; }
+  .home-page .exam-arrow { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .intro { animation: fade-in 200ms ease both; }
   .exam-card { animation: fade-in 200ms ease backwards; }
   .exam-card, .quiz-row { transition: background-color 140ms ease, border-color 140ms ease; }
   .exam-card:active { transform: none; }
+  .home-page .subject-art { transition: none; }
+  .home-page .exam-card:active { transform: none; }
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
