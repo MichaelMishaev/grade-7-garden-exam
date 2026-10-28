@@ -12,6 +12,12 @@
     .mark { display: inline-grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #e9fbdc; color: #46a302; font-size: 35px; font-weight: bold; animation: pop-in 240ms cubic-bezier(0.23, 1, 0.32, 1) both; }
     h1 { font-size: 30px; margin: 24px 0 12px; }
     p { color: #687987; line-height: 1.7; font-size: 17px; margin: 0; }
+    dl { margin: 22px 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    dl div { padding: 12px 8px; border-radius: 14px; background: #e9fbdc; }
+    dl div:first-child, dl div:last-child { grid-column: 1 / -1; }
+    dt { font-size: 13px; color: #5e7164; }
+    dd { margin: 4px 0 0; font-size: 18px; font-weight: bold; color: #273541; }
+    #grade-note { margin-top: 16px; font-size: 15px; }
     a { display: inline-block; margin-top: 24px; padding: 13px 20px; border-radius: 12px; background: #58cc02; box-shadow: 0 4px 0 #46a302; color: white; text-decoration: none; font-weight: 800; transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
     a:active { transform: translateY(3px); box-shadow: 0 1px 0 #46a302; }
     @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -21,5 +27,19 @@
   </style>
   <link rel="stylesheet" href="branding.css?v=1">
 </head>
-<body><main><a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a><span class="mark" aria-hidden="true">✓</span><h1>כל הכבוד, סיימת!</h1><p>הטופס נשלח בהצלחה.</p><a href="index.html">חזרה לכל המבחנים</a></main><script>try { sessionStorage.removeItem('garden-exam-draft-v1'); } catch (_) {}</script></body>
+<body><main><a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a><span class="mark" aria-hidden="true">✓</span><h1>כל הכבוד, סיימת!</h1><p>הטופס נשלח בהצלחה.</p><dl id="summary" hidden></dl><p id="grade-note" hidden>זהו מבחן עם תשובות פתוחות, לכן הציון יינתן לאחר בדיקת המורה.</p><a href="index.html">חזרה לכל המבחנים</a></main><script>
+try { sessionStorage.removeItem('garden-exam-draft-v1'); } catch (_) {}
+try {
+  const r = JSON.parse(sessionStorage.getItem('garden-exam-result-v1'));
+  const start = new Date(r.startedAt), end = new Date(r.finishedAt);
+  if (isNaN(start) || isNaN(end)) throw 0;
+  const date = new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }).format(start);
+  const clock = d => new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit' }).format(d);
+  const minutes = Math.max(1, Math.round((end - start) / 60000));
+  const rows = [['תאריך', date], ['משך המבחן', minutes + ' דקות'], ['התחלה', clock(start)], ['סיום', clock(end)], ['שאלות שנענו', r.total + ' מתוך ' + r.total]];
+  const dl = document.getElementById('summary');
+  rows.forEach(([k, v]) => { const d = document.createElement('div'), t = document.createElement('dt'), x = document.createElement('dd'); t.textContent = k; x.textContent = v; d.append(t, x); dl.append(d); });
+  dl.hidden = false; document.getElementById('grade-note').hidden = false;
+} catch (_) {}
+</script></body>
 </html>

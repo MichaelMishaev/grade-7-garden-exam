@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
-import { renderExamEmail } from './email-template.mjs';
+import { renderExamEmail, timeLines } from './email-template.mjs';
 
 const root = process.cwd();
 const types = {
@@ -57,6 +57,9 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
         !payload.answers.every(item => item && validText(item.question, 1000) && validText(item.answer, 3000))) {
       return json(400, { error: 'Name and all 20 answers are required' });
     }
+    const validTime = value => typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
+    const timed = validTime(payload.startedAt) && validTime(payload.finishedAt) && Date.parse(payload.finishedAt) >= Date.parse(payload.startedAt);
+    const times = timed ? { startedAt: payload.startedAt, finishedAt: payload.finishedAt } : {};
     if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) return json(503, { error: 'Email service unavailable' });
     const now = Date.now();
     attempts = attempts.filter(time => now - time < 3600000);
@@ -76,8 +79,8 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
           from: env.RESEND_FROM_EMAIL,
           to: ['345287@gmail.com'],
           subject: 'תשובות למבחן הבנת הנקרא - כיתה ז׳',
-          text: `שם התלמיד/ה: ${name}\n\n` + answers.map((item, i) => `${i + 1}. ${item.question}\n${item.answer}`).join('\n\n'),
-          html: renderExamEmail({ name, answers, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
+          text: `שם התלמיד/ה: ${name}\n${timeLines(times)}\n` + answers.map((item, i) => `${i + 1}. ${item.question}\n${item.answer}`).join('\n\n'),
+          html: renderExamEmail({ name, answers, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
         }),
         signal: AbortSignal.timeout(15000)
       });
