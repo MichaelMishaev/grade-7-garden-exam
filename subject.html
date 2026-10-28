@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <title>גרסאות המבחן | PrepX</title>
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=8">
   <link rel="stylesheet" href="subject.css?v=4">
   <link rel="stylesheet" href="branding.css?v=1">
 </head>
@@ -70,7 +70,7 @@
     </main>
     <footer>בהצלחה בלמידה!</footer>
   </div>
-  <script src="quiz-core.js?v=1"></script>
+  <script src="quiz-core.js?v=2"></script>
   <script>
     const subjects = {
       hebrew: {
@@ -88,7 +88,7 @@
       }
     };
     const key = new URLSearchParams(location.search).get('subject');
-    const subject = subjects[key] || subjects.hebrew;
+    const subject = Object.hasOwn(subjects, key) ? subjects[key] : subjects.hebrew;
     document.title = `${subject.title} · גרסאות המבחן | PrepX`;
     document.getElementById('subject-title').textContent = subject.title;
     document.getElementById('subject-description').textContent = subject.description;

@@ -37,13 +37,16 @@
   });
   let current = validOrder && Number.isInteger(saved.current) ? Math.max(0, Math.min(19, saved.current)) : 0;
   let finished = validOrder && saved.finished === true;
+  const validStamp = v => typeof v === 'string' && Number.isFinite(Date.parse(v));
+  let startedAt = validOrder && validStamp(saved.startedAt) ? saved.startedAt : '';
+  let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
   let sending = false;
   $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
   $('article-copy').innerHTML = $('article').innerHTML;
   const answered = q => q.type === 'open' ? typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0 : Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length;
   const answerText = q => !answered(q) ? 'לא נכתבה תשובה' : q.type === 'open' ? answers[q.id].trim() : q.choices[answers[q.id]];
   function persist() {
-    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, order, choiceOrders, answers, flags: [...flags], current, finished })); } catch (_) {}
+    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, order, choiceOrders, answers, flags: [...flags], current, finished, startedAt, finishedAt })); } catch (_) {}
   }
   function show(id, focusId) {
     document.querySelectorAll('.stage').forEach(el => el.classList.toggle('active', el.id === id));
@@ -91,6 +94,10 @@
     const fractions = Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, answers[q.id] === q.correct ? 1 : 0]));
     const score = QuizCore.scoreQuiz(questions, fractions);
     $('score').textContent = `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות ממתינות לבדיקה ב־4 שאלות פתוחות.`;
+    if (startedAt && finishedAt) {
+      const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
+      $('score').textContent += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
+    }
     $('topics').replaceChildren(); $('explanations').replaceChildren();
     [...new Set(questions.map(q => q.topic))].forEach(topic => {
       const group = questions.filter(q => q.topic === topic); const graded = group.filter(q => q.type !== 'open');
@@ -109,7 +116,7 @@
   $('student-name').addEventListener('input', persist);
   $('begin').addEventListener('click', () => {
     if (!$('student-name').value.trim()) { $('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.'; $('student-name').focus(); return; }
-    $('name-error').textContent = ''; questionAt(current);
+    $('name-error').textContent = ''; if (!startedAt) startedAt = new Date().toISOString(); persist(); questionAt(current);
   });
   $('answer').addEventListener('input', () => { answers[ordered[current].id] = $('answer').value; persist(); $('answered').textContent = `${ordered.filter(answered).length} תשובות מולאו`; });
   $('flag').addEventListener('change', () => { const id = ordered[current].id; $('flag').checked ? flags.add(id) : flags.delete(id); persist(); });
@@ -119,7 +126,7 @@
   $('back-to-questions').addEventListener('click', () => questionAt(current));
   $('finish').addEventListener('click', () => {
     if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
-    finished = true; persist(); results();
+    finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); results();
   });
   $('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
   $('send').addEventListener('click', async () => {
@@ -129,7 +136,7 @@
     try {
       const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: $('student-name').value.trim(), answers: ordered.map(q => ({ question: `גרסה 2 · הספרייה בהפסקה · ${q.prompt}`, answer: answerText(q) })) }), signal: AbortSignal.timeout(20000)
+        body: JSON.stringify({ name: $('student-name').value.trim(), answers: ordered.map(q => ({ question: `גרסה 2 · הספרייה בהפסקה · ${q.prompt}`, answer: answerText(q) })), ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(20000)
       });
       const data = await response.json();
       if (!response.ok || data.success !== true) throw new Error('Submission failed');

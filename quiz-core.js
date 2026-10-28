@@ -1,7 +1,7 @@
 (function (root) {
   const WEIGHT = { easy: 1, medium: 1.5, hard: 2 };
 
-  const weightOf = q => WEIGHT[q && q.difficulty] || WEIGHT.medium;
+  const weightOf = q => (q && Object.hasOwn(WEIGHT, q.difficulty) ? WEIGHT[q.difficulty] : WEIGHT.medium);
   const clamp01 = n => (Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0);
 
   function scoreQuiz(questions, results) {

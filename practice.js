@@ -243,11 +243,11 @@ const messagesEn = {
 };
 
 function showResult() {
-  const { earned } = scoreQuiz(roundQuestions, results);
+  const { earned, percent } = scoreQuiz(roundQuestions, results);
   const missed = missedQuestions(roundQuestions, results);
   const correctCount = roundQuestions.length - missed.length;
-  const tier = fullRound ? feedbackTier(earned) : 'review';
-  const stars = starsFor(earned);
+  const tier = fullRound ? feedbackTier(percent) : 'review';
+  const stars = starsFor(percent);
   const previousBest = readBest();
   if (fullRound && earned > previousBest) saveBest(earned);
 
