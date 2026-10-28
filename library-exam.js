@@ -41,6 +41,7 @@
   let startedAt = validOrder && validStamp(saved.startedAt) ? saved.startedAt : '';
   let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
   let sending = false;
+  let lastScore = { earned: 0, pending: 0 };
   $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
   $('article-copy').innerHTML = $('article').innerHTML;
   const answered = q => q.type === 'open' ? typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0 : Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length;
@@ -92,7 +93,7 @@
   }
   function results() {
     const fractions = Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, answers[q.id] === q.correct ? 1 : 0]));
-    const score = QuizCore.scoreQuiz(questions, fractions);
+    const score = lastScore = QuizCore.scoreQuiz(questions, fractions);
     $('score').textContent = `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות ממתינות לבדיקה ב־4 שאלות פתוחות.`;
     if (startedAt && finishedAt) {
       const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
@@ -136,7 +137,7 @@
     try {
       const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: $('student-name').value.trim(), answers: ordered.map(q => ({ question: `גרסה 2 · הספרייה בהפסקה · ${q.prompt}`, answer: answerText(q) })), ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(20000)
+        body: JSON.stringify({ name: $('student-name').value.trim(), answers: ordered.map(q => ({ question: `גרסה 2 · הספרייה בהפסקה · ${q.prompt}`, answer: answerText(q), ...(q.type === 'open' ? {} : { correct: answers[q.id] === q.correct }) })), score: { earned: lastScore.earned, pending: lastScore.pending }, ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(20000)
       });
       const data = await response.json();
       if (!response.ok || data.success !== true) throw new Error('Submission failed');

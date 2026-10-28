@@ -80,6 +80,18 @@ test('teacher email is designed HTML with logo and app link', () => withServer(a
   assert.match(calls[0].body.html, /dir="rtl"/);
 }));
 
+test('score and per-answer marks reach the teacher email; bad score is ignored', () => withServer(async ({ submit, calls }) => {
+  const answers = payload.answers.map((item, i) => ({ ...item, ...(i < 2 ? { correct: i === 0 } : {}) }));
+  await submit({ ...payload, answers, score: { earned: 34, pending: 25 } });
+  assert.match(calls[0].body.text, /ציון חלקי: 34 מתוך 75 · 25 נקודות ממתינות/);
+  assert.match(calls[0].body.text, /1\. ✓ /);
+  assert.match(calls[0].body.text, /2\. ✕ /);
+  assert.match(calls[0].body.html, /✓ נכון/);
+  assert.match(calls[0].body.html, /✕ שגוי/);
+  await submit({ ...payload, score: { earned: 90, pending: 50 } });
+  assert.doesNotMatch(calls[1].body.text, /ציון חלקי/);
+}));
+
 test('start, finish and duration reach the teacher email; bad times are ignored', () => withServer(async ({ submit, calls }) => {
   await submit({ ...payload, startedAt: '2026-10-28T10:00:00.000Z', finishedAt: '2026-10-28T10:25:00.000Z' });
   assert.match(calls[0].body.text, /משך: 25 דקות/);

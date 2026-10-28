@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
-import { renderExamEmail, timeLines } from './email-template.mjs';
+import { renderExamEmail, timeLines, scoreLine } from './email-template.mjs';
 
 const root = process.cwd();
 const types = {
@@ -60,6 +60,9 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
     const validTime = value => typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
     const timed = validTime(payload.startedAt) && validTime(payload.finishedAt) && Date.parse(payload.finishedAt) >= Date.parse(payload.startedAt);
     const times = timed ? { startedAt: payload.startedAt, finishedAt: payload.finishedAt } : {};
+    const points = value => Number.isInteger(value) && value >= 0 && value <= 100;
+    const score = points(payload.score?.earned) && points(payload.score?.pending) && payload.score.earned + payload.score.pending <= 100
+      ? { earned: payload.score.earned, pending: payload.score.pending } : undefined;
     if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) return json(503, { error: 'Email service unavailable' });
     const now = Date.now();
     attempts = attempts.filter(time => now - time < 3600000);
@@ -69,7 +72,7 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
     }
     attempts.push(now);
     const name = payload.name.trim();
-    const answers = payload.answers.map(item => ({ question: item.question.trim(), answer: item.answer.trim() }));
+    const answers = payload.answers.map(item => ({ question: item.question.trim(), answer: item.answer.trim(), correct: typeof item.correct === 'boolean' ? item.correct : undefined }));
     const key = createHash('sha256').update(JSON.stringify({ name, answers })).digest('hex');
     try {
       const result = await sendFetch('https://api.resend.com/emails', {
@@ -79,8 +82,8 @@ export function createApp({ env = process.env, sendFetch = fetch } = {}) {
           from: env.RESEND_FROM_EMAIL,
           to: ['345287@gmail.com'],
           subject: 'תשובות למבחן הבנת הנקרא - כיתה ז׳',
-          text: `שם התלמיד/ה: ${name}\n${timeLines(times)}\n` + answers.map((item, i) => `${i + 1}. ${item.question}\n${item.answer}`).join('\n\n'),
-          html: renderExamEmail({ name, answers, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
+          text: `שם התלמיד/ה: ${name}\n${timeLines(times)}${score ? scoreLine(score) + '\n' : ''}\n` + answers.map((item, i) => `${i + 1}. ${item.correct === true ? '✓ ' : item.correct === false ? '✕ ' : ''}${item.question}\n${item.answer}`).join('\n\n'),
+          html: renderExamEmail({ name, answers, score, ...times, origin: env.APP_ORIGIN || 'https://hitech.agnon.online' })
         }),
         signal: AbortSignal.timeout(15000)
       });
