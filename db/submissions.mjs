@@ -34,6 +34,13 @@ export function matchExam(rows, answers, onlyExam) {
 // only when the stored question has no numeric key. Written answers stay null (the teacher grades them).
 export const autoCorrect = (question, answer, clientCorrect) => {
   if (question && (question.type === 'mcq' || question.type === 'truefalse') && Array.isArray(question.choices)) return question.choices[question.correct] === answer;
+  // checkbox: all or nothing. The page sends the selected option texts joined with ' · ' in option order, so the answer is
+  // right only when it equals exactly the key's option texts joined the same way (a missing or an extra option differs).
+  if (question?.type === 'checkbox') {
+    const key = question.correct;
+    if (!Array.isArray(question.choices) || !Array.isArray(key) || !key.length || !key.every((i) => Number.isInteger(i) && i >= 0 && i < question.choices.length)) return null;
+    return [...new Set(key)].sort((a, b) => a - b).map((i) => question.choices[i]).join(' · ') === answer;
+  }
   if (question?.type === 'fill') {
     if (Number.isFinite(question.correct?.value)) return globalThis.NumericAnswer.checkNumber(String(answer).split('\n')[0], question.correct) === true;
     return typeof clientCorrect === 'boolean' ? clientCorrect : null;
@@ -41,13 +48,14 @@ export const autoCorrect = (question, answer, clientCorrect) => {
   return null;
 };
 
-// Stores (or re-counts) a submission before the email is sent. Returns the submission id.
-export async function storeSubmission(sql, { key, name, answers, startedAt, finishedAt, examId: namedExam }) {
+// Stores (or re-counts) a submission before the email is sent. Returns the submission id. `examCode` and `attempt` are
+// what the email showed (null for payloads without `exam`); the attempt is part of the dedupe key, so a retake is a new row.
+export async function storeSubmission(sql, { key, name, answers, startedAt, finishedAt, examId: namedExam, examCode, attempt }) {
   const { examId, matched } = matchExam(await loadExamQuestions(sql), answers, namedExam);
   return sql.begin(async (tx) => {
     const [row] = await tx`
-      INSERT INTO submissions (exam_id, dedupe_key, student_name, started_at, finished_at)
-      VALUES (${examId}, ${key}, ${name}, ${startedAt ?? null}, ${finishedAt ?? null})
+      INSERT INTO submissions (exam_id, dedupe_key, student_name, started_at, finished_at, exam_code, attempt)
+      VALUES (${examId}, ${key}, ${name}, ${startedAt ?? null}, ${finishedAt ?? null}, ${examCode ?? null}, ${attempt ?? null})
       ON CONFLICT (dedupe_key) DO UPDATE SET attempt_count = submissions.attempt_count + 1, last_attempt_at = now()
       RETURNING id, (xmax = 0) AS created`;
     if (row.created) {
@@ -65,4 +73,47 @@ export async function markEmail(sql, id, { status, resendId = null, httpStatus =
   // A concurrent retry that Resend rejected must not overwrite an already accepted email.
   await sql`UPDATE submissions SET email_status = ${status}, resend_id = COALESCE(${resendId}, resend_id), email_http_status = ${httpStatus}
     WHERE id = ${id} AND (email_status <> 'accepted' OR ${status} = 'accepted')`;
+}
+
+// AI grading result of a submission (docs/TESTING.md §9), found by id or by dedupe key. `scores` keeps the reasons
+// ({ [questionId]: { score, max, reason } }); the browser never sees them. A grading that is already 'ok' is never
+// overwritten, so a duplicate send or a late retry cannot change it. Returns true when a row was updated.
+export async function updateAiScores(sql, { id, key, status, scores, total }) {
+  const rows = await sql`
+    UPDATE submissions SET ai_status = ${status}, ai_scores = ${scores ? sql.json(scores) : null}, ai_total = ${total ?? null}, ai_updated_at = now()
+    WHERE (id = ${id ?? null} OR dedupe_key = ${key ?? null}) AND ai_status IS DISTINCT FROM 'ok'
+    RETURNING id`;
+  return rows.length > 0;
+}
+
+// For the retry of the AI grading: the stored row for a dedupe key with the answers as saved (not as the browser
+// claims now). Question ids are the matched ones (null when an answer could not be matched to a question).
+export async function getSubmissionForGrading(sql, key) {
+  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores FROM submissions WHERE dedupe_key = ${key}`;
+  if (!row) return null;
+  const answers = await sql`SELECT position, question_id, question_text, answer_text FROM submission_answers WHERE submission_id = ${row.id} ORDER BY position`;
+  return {
+    id: row.id, examId: row.exam_id, aiStatus: row.ai_status, aiScores: row.ai_scores,
+    answers: answers.map((a) => ({ questionId: a.question_id, question: a.question_text, answer: a.answer_text }))
+  };
+}
+
+// Teacher history (history-api.mjs). The list carries no answer text; the AI scores keep score and max only.
+export async function listSubmissionHistory(sql, { code, name, limit = 50 } = {}) {
+  const codeFilter = code ? sql`AND exam_code = ${code}` : sql``;
+  const nameFilter = name ? sql`AND lower(student_name) = lower(${name})` : sql``;
+  return sql`
+    SELECT id, exam_code, attempt, student_name, started_at, finished_at, first_received_at, email_status, ai_status, ai_total, ai_scores
+    FROM submissions WHERE true ${codeFilter} ${nameFilter} ORDER BY first_received_at DESC, id DESC LIMIT ${limit}`;
+}
+
+// One submission with its answers as saved and the AI score and reason per question.
+export async function getSubmissionDetail(sql, id) {
+  const [row] = await sql`
+    SELECT id, exam_code, attempt, student_name, started_at, finished_at, first_received_at, email_status, ai_status, ai_total, ai_scores
+    FROM submissions WHERE id = ${id}`;
+  if (!row) return null;
+  const answers = await sql`
+    SELECT position, question_id, question_text, answer_text, auto_correct FROM submission_answers WHERE submission_id = ${id} ORDER BY position`;
+  return { ...row, answers };
 }

@@ -28,7 +28,7 @@ export async function seed(sql, content = extractContent()) {
     };
     await upsert('subjects', content.subjects, ['id', 'title', 'description', 'art_path', 'sort_order']);
     await upsert('passages', content.passages, ['id', 'title', 'body_html', 'source_file']);
-    await upsert('exams', content.exams, ['id', 'subject_id', 'title', 'detail', 'date_label', 'href', 'passage_id', 'question_count', 'sort_order']);
+    await upsert('exams', content.exams, ['id', 'code', 'subject_id', 'title', 'detail', 'date_label', 'href', 'passage_id', 'question_count', 'sort_order']);
     await upsert('quizzes', content.quizzes, ['id', 'subject_id', 'exam_id', 'title', 'description', 'list_title', 'list_detail', 'sort_order']);
     await upsert('study_references', content.study_references,
       ['id', 'subject_id', 'exam_id', 'quiz_id', 'kind', 'title', 'url', 'attribution', 'parts', 'sort_order']);

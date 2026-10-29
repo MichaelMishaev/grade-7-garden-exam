@@ -65,17 +65,38 @@
       .then(exam => (exam && contentApi.examFromApi(exam, inlineQuestions)) || inlineQuestions, () => inlineQuestions)
     : Promise.resolve(inlineQuestions)
   ).then(questions => {
-  // Same flow, screens and behaviour as library-exam.js (start → questions → review → results → send → thanks.html);
-  // physics-exam.parity.test.mjs keeps the two pages in step. Differences are content only: the teacher's order (never
-  // shuffled, it is verbatim), numeric answers with working, her figures, model answers and self-check lists.
+  // Same flow, screens and behaviour as library-exam.js (start → questions → review → finish sends and locks → summary);
+  // physics-exam.parity.test.mjs keeps the two pages in step. Differences are content only: numeric answers with
+  // working, her figures, model answers and self-check lists. Every text, option and answer is verbatim; only the
+  // order of the tasks and of the options is shuffled per student (docs/TESTING.md §4).
   const storageKey = 'physics-exam-draft-v1';
   const examId = 'physics-v1-assessment';
+  const refNames = { 'physics-pdf': 'סיכום המורה', 'physics-site': 'אתר התרגול' };
+  // Test details for the teacher's email (docs/TESTING.md §8) and the attempt number for this name (docs/TESTING.md §1).
+  const attemptKey = 'prepx-attempts-v1';
+  const attemptNumber = (id, name) => { try { return (JSON.parse(localStorage.getItem(attemptKey) || '{}')[`${id}/${name.toLowerCase()}`] || 0) + 1; } catch (_) { return 1; } };
+  const countAttempt = (id, name) => { try { const all = JSON.parse(localStorage.getItem(attemptKey) || '{}'); all[`${id}/${name.toLowerCase()}`] = attemptNumber(id, name); localStorage.setItem(attemptKey, JSON.stringify(all)); } catch (_) {} };
+  const answerDetails = q => ({ ...(q.choices ? { options: q.choices } : {}), ...(typeof q.correct === 'number' ? { correctAnswer: q.choices[q.correct] } : Array.isArray(q.correct) ? { correctAnswer: q.correct.map(i => q.choices[i]).join(' · ') } : q.correct && typeof q.correct === 'object' ? { correctAnswer: `${q.correct.value}${q.correct.unit ? ` ${q.correct.unit}` : ''}` } : typeof q.correct === 'string' ? { correctAnswer: q.correct } : {}), ...(q.ref ? { reference: `${refNames[q.ref.id] || q.ref.id}, ${q.ref.part}` } : {}) });
   const total = questions.length;
   const ids = new Set(questions.map(q => q.id));
+  // Checkbox questions (docs/TESTING.md §2): select several, graded all or nothing. The answer is the list of ORIGINAL option indexes, ascending.
+  const checkboxCorrect = (selected, correct) => Array.isArray(selected) && Array.isArray(correct) && new Set(selected).size === selected.length && selected.length === correct.length && correct.every(i => selected.includes(i));
+  const checkboxTexts = (q, list) => list.map(i => q.choices[i]).join(' · ');
+  const validPick = (q, value) => Array.isArray(value) && value.length > 0 && new Set(value).size === value.length && value.every(i => Number.isInteger(i) && i >= 0 && i < q.choices.length);
   let saved = {};
   try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) {}
   const known = obj => obj && typeof obj === 'object' && !Array.isArray(obj) ? Object.fromEntries(Object.entries(obj).filter(([id]) => ids.has(id))) : {};
-  const ordered = questions;
+  const validOrder = Array.isArray(saved.order) && saved.order.length === total && new Set(saved.order).size === total && saved.order.every(id => ids.has(id));
+  // A draft written before the shuffle existed has no order: the student saw the teacher's order and the choices as written,
+  // so keep both instead of reshuffling under the saved answers and position.
+  const legacyDraft = !validOrder && (saved.finished === true || [saved.answers, saved.work].some(obj => obj && typeof obj === 'object' && Object.keys(obj).length));
+  const order = validOrder ? saved.order : legacyDraft ? questions.map(q => q.id) : QuizCore.shuffled(questions).map(q => q.id);
+  const ordered = order.map(id => questions.find(q => q.id === id));
+  const choiceOrders = {};
+  ordered.filter(q => q.choices).forEach(q => {
+    const previous = validOrder && saved.choiceOrders?.[q.id];
+    choiceOrders[q.id] = Array.isArray(previous) && previous.length === q.choices.length && new Set(previous).size === previous.length && previous.every(i => Number.isInteger(i) && i >= 0 && i < q.choices.length) ? previous : legacyDraft ? q.choices.map((_, i) => i) : QuizCore.shuffled(q.choices.map((_, i) => i));
+  });
   const answers = known(saved.answers);
   const work = known(saved.work);
   const flags = new Set(Array.isArray(saved.flags) ? saved.flags.filter(id => ids.has(id)) : []);
@@ -86,6 +107,11 @@
   let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
   let sending = false;
   let lastScore = { earned: 0, pending: 0 };
+  // Locking (docs/TESTING.md §3): a picked choice locks at once; open and numeric answers lock on "אישור".
+  const locked = new Set(Array.isArray(saved.locked) ? saved.locked.filter(id => ids.has(id)) : []);
+  let sent = saved.sent === true;
+  let grading = saved.grading && typeof saved.grading === 'object' ? saved.grading : { status: 'none', scores: {} };
+  let advanceTimer = 0;
   if (!$('student-name').value) $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
   sections.forEach((section, i) => {
     const p = document.createElement('p'); const title = document.createElement('strong');
@@ -93,16 +119,17 @@
   });
   $('article-copy').innerHTML = $('article').innerHTML;
   const sectionOf = q => sections.findIndex(s => s.title === q.topic);
-  const answered = q => q.type === 'mcq' ? Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length : typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0;
-  const isCorrect = q => q.type === 'mcq' ? answers[q.id] === q.correct : NumericAnswer.checkNumber(answers[q.id], q.correct) === true;
+  const answered = q => q.type === 'checkbox' ? validPick(q, answers[q.id]) : q.type === 'mcq' ? Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length : typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0;
+  const isCorrect = q => q.type === 'checkbox' ? checkboxCorrect(answers[q.id], q.correct) : q.type === 'mcq' ? answers[q.id] === q.correct : NumericAnswer.checkNumber(answers[q.id], q.correct) === true;
   // The number is the first line (the server grades it again); the written working follows.
   const answerText = q => {
     if (!answered(q)) return 'לא נכתבה תשובה';
+    if (q.type === 'checkbox') return checkboxTexts(q, answers[q.id]);
     if (q.type === 'mcq') return q.choices[answers[q.id]];
     const steps = q.type === 'fill' && typeof work[q.id] === 'string' ? work[q.id].trim() : '';
     return steps ? `${answers[q.id].trim()}\nדרך חישוב: ${steps}` : answers[q.id].trim();
   };
-  const correctText = q => q.type === 'mcq' ? q.choices[q.correct] : `${q.correct.value}${q.correct.unit ? ` ${q.correct.unit}` : ''}`;
+  const correctText = q => q.type === 'checkbox' ? checkboxTexts(q, q.correct) : q.type === 'mcq' ? q.choices[q.correct] : `${q.correct.value}${q.correct.unit ? ` ${q.correct.unit}` : ''}`;
   // The teacher's "בדקו:" list inside the model answer, shown as a list in the results.
   const checklist = q => {
     const html = q.explanation.he;
@@ -112,9 +139,15 @@
     const items = rest.split(/(?<=\?)\s+|;\s*/).map(s => s.trim()).filter(Boolean);
     return { model: html.slice(0, at).replace(/<br>\s*$/, ''), items };
   };
+  const isLocked = q => q.type === 'mcq' ? answered(q) : q.type === 'checkbox' ? locked.has(q.id) && answered(q) : locked.has(q.id);
   function persist() {
-    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, answers, work, flags: [...flags], current, finished, startedAt, finishedAt })); } catch (_) {}
+    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, order, choiceOrders, answers, work, flags: [...flags], locked: [...locked], current, finished, sent, grading, startedAt, finishedAt })); } catch (_) {}
   }
+  // Visible timer (docs/TESTING.md §6): counts up from the stored start time, so a reload keeps it running.
+  const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  setInterval(() => { if (startedAt && !finished) $('timer').textContent = clock(Date.now() - Date.parse(startedAt)); }, 1000);
+  // After a submitted answer the verdict stays on screen for a moment, then the next question opens.
+  const advance = q => { clearTimeout(advanceTimer); advanceTimer = setTimeout(() => { if (ordered[current] === q) current === total - 1 ? review() : questionAt(current + 1); }, 1500); };
   function show(id, focusId) {
     document.querySelectorAll('.stage').forEach(el => el.classList.toggle('active', el.id === id));
     window.scrollTo(0, 0);
@@ -141,9 +174,54 @@
     $('choice-feedback').classList.toggle('incorrect', !ok);
     $('choice-feedback').hidden = false;
   }
+  function showCheckboxFeedback(q) {
+    const ok = checkboxCorrect(answers[q.id], q.correct);
+    document.querySelectorAll('#choices .choice').forEach(label => {
+      const input = label.querySelector('input'); const i = Number(input.value);
+      input.disabled = true;
+      label.classList.toggle('correct', q.correct.includes(i));
+      label.classList.toggle('incorrect', answers[q.id].includes(i) && !q.correct.includes(i));
+    });
+    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובות הנכונות: ${checkboxTexts(q, q.correct)}. `}${q.explanation.he}`;
+    $('choice-feedback').classList.toggle('incorrect', !ok);
+    $('choice-feedback').hidden = false;
+  }
+  function renderCheckboxes(q) {
+    const picked = validPick(q, answers[q.id]) ? answers[q.id] : [];
+    choiceOrders[q.id].forEach(i => {
+      const label = document.createElement('label'); label.className = 'choice';
+      const box = document.createElement('input'); box.type = 'checkbox'; box.value = i; box.checked = picked.includes(i);
+      const text = document.createElement('span'); text.textContent = q.choices[i];
+      box.disabled = isLocked(q);
+      box.addEventListener('change', () => {
+        if (isLocked(q)) return;
+        const ticked = [...$('choices').querySelectorAll('input:checked')].map(input => Number(input.value)).sort((a, b) => a - b);
+        if (ticked.length) answers[q.id] = ticked; else delete answers[q.id];
+        persist(); countAnswered(); syncConfirm(q);
+      });
+      label.append(box, text); $('choices').append(label);
+    });
+    if (isLocked(q)) showCheckboxFeedback(q);
+  }
+  // "אישור" is for answers typed by hand: it is disabled until something is written and locks the answer.
+  function syncConfirm(q) {
+    $('confirm').hidden = q.type === 'mcq';
+    $('confirm').disabled = isLocked(q) || !answered(q);
+  }
+  function confirmAnswer() {
+    const q = ordered[current];
+    if (q.type === 'mcq' || isLocked(q) || !answered(q)) return;
+    locked.add(q.id); persist(); syncConfirm(q);
+    $('answer').disabled = true; $('number-answer').disabled = true; $('work').disabled = true;
+    if (q.type === 'fill') showNumberFeedback(q);
+    if (q.type === 'checkbox') showCheckboxFeedback(q);
+    advance(q);
+  }
   function questionAt(index) {
+    clearTimeout(advanceTimer);
     current = index;
     const q = ordered[index];
+    if (startedAt && !finished) $('timer').textContent = clock(Date.now() - Date.parse(startedAt));
     $('counter').textContent = `שאלה ${index + 1} מתוך ${total}`;
     countAnswered();
     $('progress').style.width = `${(index + 1) / total * 100}%`;
@@ -153,23 +231,27 @@
     $('figure').innerHTML = figures[q.id] || '';
     $('figure').hidden = !figures[q.id];
     $('choices').replaceChildren(); $('choice-feedback').hidden = true;
-    $('choices').hidden = q.type !== 'mcq';
+    $('choices').hidden = q.type !== 'mcq' && q.type !== 'checkbox';
     $('open-answer').hidden = q.type !== 'open';
     $('number-answer-box').hidden = q.type !== 'fill';
-    if (q.type === 'open') $('answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
+    if (q.type === 'open') { $('answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : ''; $('answer').disabled = isLocked(q); }
     else if (q.type === 'fill') {
       $('number-answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
-      $('number-answer').disabled = false;
-      if (answered(q)) showNumberFeedback(q);
+      $('number-answer').disabled = isLocked(q);
+      if (isLocked(q)) showNumberFeedback(q);
       $('work').value = typeof work[q.id] === 'string' ? work[q.id] : '';
-    } else q.choices.forEach((choice, i) => {
+      $('work').disabled = isLocked(q);
+    } else if (q.type === 'checkbox') renderCheckboxes(q);
+    else choiceOrders[q.id].forEach(i => {
       const label = document.createElement('label'); label.className = 'choice';
       const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'choice'; radio.value = i; radio.checked = answers[q.id] === i;
-      const text = document.createElement('span'); text.textContent = choice;
-      radio.addEventListener('change', () => { answers[q.id] = i; persist(); countAnswered(); showFeedback(q); });
+      const text = document.createElement('span'); text.textContent = q.choices[i];
+      radio.disabled = isLocked(q);
+      radio.addEventListener('change', () => { if (isLocked(q)) return; answers[q.id] = i; persist(); countAnswered(); showFeedback(q); advance(q); });
       label.append(radio, text); $('choices').append(label);
     });
     if (q.type === 'mcq' && answered(q)) showFeedback(q);
+    syncConfirm(q);
     $('flag').checked = flags.has(q.id);
     $('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
     $('next').textContent = index === total - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
@@ -192,7 +274,13 @@
     const fractions = Object.fromEntries(graded.map(q => [q.id, isCorrect(q) ? 1 : 0]));
     const score = lastScore = QuizCore.scoreQuiz(questions, fractions);
     const openCount = questions.length - graded.length;
-    $('score').textContent = `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות ממתינות לבדיקה ב־${openCount} שאלות פתוחות.`;
+    // Final score once the open answers were checked (auto points + the checker's points); otherwise a partial score.
+    const checked = grading.status === 'ok';
+    const aiPoints = checked ? Object.values(grading.scores).reduce((sum, item) => sum + (Number(item.score) || 0), 0) : 0;
+    $('score').textContent = checked ? `ציון: ${Math.round((score.earned + aiPoints) * 10) / 10} מתוך 100.`
+      : `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות מהשאלות הפתוחות (${openCount} שאלות) עדיין לא נבדקו.`;
+    $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
+    if (sent) $('send-status').textContent = '';
     if (startedAt && finishedAt) {
       const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
       $('score').textContent += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
@@ -210,7 +298,7 @@
       const feedback = document.createElement('p');
       card.append(title, answer, feedback);
       if (q.type === 'open') {
-        feedback.textContent = '✎ ממתינה לבדיקת המורה';
+        feedback.textContent = grading.scores[q.id] ? `ניקוד: ${grading.scores[q.id].score} מתוך ${grading.scores[q.id].max}` : '';
         const { model, items } = checklist(q); // the teacher's model answer and her "בדקו:" list, verbatim
         const sample = document.createElement('p'); sample.className = 'model-answer'; sample.innerHTML = model; card.append(sample);
         if (items.length) {
@@ -237,10 +325,11 @@
     if (!$('student-name').value.trim()) { $('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.'; $('student-name').focus(); return; }
     $('name-error').textContent = ''; if (!startedAt) startedAt = new Date().toISOString(); persist(); questionAt(current);
   });
-  $('answer').addEventListener('input', () => { answers[ordered[current].id] = $('answer').value; persist(); countAnswered(); });
-  $('number-answer').addEventListener('input', () => { answers[ordered[current].id] = $('number-answer').value; persist(); countAnswered(); });
-  $('number-answer').addEventListener('change', () => { const q = ordered[current]; if (q.type === 'fill' && answered(q)) showNumberFeedback(q); });
-  $('work').addEventListener('input', () => { work[ordered[current].id] = $('work').value; persist(); });
+  $('answer').addEventListener('input', () => { const q = ordered[current]; if (isLocked(q)) return; answers[q.id] = $('answer').value; persist(); countAnswered(); syncConfirm(q); });
+  $('number-answer').addEventListener('input', () => { const q = ordered[current]; if (isLocked(q)) return; answers[q.id] = $('number-answer').value; persist(); countAnswered(); syncConfirm(q); });
+  $('number-answer').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); confirmAnswer(); } });
+  $('work').addEventListener('input', () => { const q = ordered[current]; if (isLocked(q)) return; work[q.id] = $('work').value; persist(); });
+  $('confirm').addEventListener('click', confirmAnswer);
   $('flag').addEventListener('change', () => { const id = ordered[current].id; $('flag').checked ? flags.add(id) : flags.delete(id); persist(); });
   $('previous').addEventListener('click', () => current === 0 ? show('start', 'page-title') : questionAt(current - 1));
   $('next').addEventListener('click', () => current === total - 1 ? review() : questionAt(current + 1));
@@ -248,29 +337,50 @@
   $('back-to-questions').addEventListener('click', () => questionAt(current));
   $('finish').addEventListener('click', () => {
     if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
-    finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); results();
+    // Finishing sends at once and locks everything (docs/TESTING.md §6): there is no way back to edit.
+    ordered.forEach(q => locked.add(q.id));
+    finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); results(); sendExam();
   });
   $('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
-  // Same endpoint, origin logic, 20s timeout, error text and thanks.html redirect as library-exam.js; `exam` selects
-  // the physics entry of the server's exam table (27 answers, own subject line, same Resend account and teacher).
-  $('send').addEventListener('click', async () => {
-    if (sending) return;
-    sending = true; $('send').disabled = true; $('retry').disabled = true;
+  $('send').addEventListener('click', () => sendExam());
+  // Same endpoint, origin logic, 45s timeout and error text as library-exam.js; `exam` selects the physics entry of
+  // the server's exam table (27 answers, own subject line, same Resend account and teacher).
+  async function sendExam() {
+    if (sending || sent) return;
+    sending = true; $('send').hidden = true; $('retry').disabled = true;
     $('send-status').textContent = 'שולחים…';
     try {
       const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ exam: examId, name: $('student-name').value.trim(), answers: ordered.map(q => ({ question: plainText(q.prompt), answer: answerText(q), ...(q.type === 'open' ? {} : { correct: isCorrect(q) }) })), score: { earned: lastScore.earned, pending: lastScore.pending }, ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(20000)
+        body: JSON.stringify({ exam: examId, name: $('student-name').value.trim(), attempt: attemptNumber(examId, $('student-name').value.trim()), answers: ordered.map(q => ({ questionId: q.id, question: plainText(q.prompt), answer: answerText(q), ...answerDetails(q), ...(q.type === 'open' ? {} : { correct: isCorrect(q) }) })), score: { earned: lastScore.earned, pending: lastScore.pending }, ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(45000)
       });
       const data = await response.json();
       if (!response.ok || data.success !== true) throw new Error('Submission failed');
-      try { sessionStorage.removeItem(storageKey); sessionStorage.setItem('physics-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total, score: { earned: lastScore.earned, pending: lastScore.pending } })); } catch (_) {}
-      window.location.assign('thanks.html');
+      countAttempt(examId, $('student-name').value.trim());
+      // The answers are with the teacher: the draft stays only as a locked, read-only summary (a reload shows it again).
+      sent = true;
+      grading = data.grading && typeof data.grading === 'object' ? { status: data.grading.status, scores: data.grading.scores || {}, submissionRef: typeof data.submissionRef === 'string' ? data.submissionRef : '' } : { status: 'none', scores: {} };
+      try { sessionStorage.setItem('physics-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total, score: { earned: lastScore.earned, pending: lastScore.pending } })); } catch (_) {}
+      persist(); results();
     } catch (_) {
       $('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
-      $('send').disabled = false;
+      $('send').hidden = false;
     } finally { sending = false; $('retry').disabled = false; }
+  }
+  // The open answers could not be checked: ask again without sending anything else (answers are already locked).
+  $('regrade').addEventListener('click', async () => {
+    $('regrade').disabled = true; $('send-status').textContent = 'בודקים את התשובות הפתוחות…';
+    try {
+      const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/grade-open' : '/api/grade-open', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ exam: examId, ...(grading.submissionRef ? { submissionRef: grading.submissionRef } : {}), answers: ordered.filter(q => q.type === 'open').map(q => ({ questionId: q.id, question: plainText(q.prompt), answer: answerText(q) })) }), signal: AbortSignal.timeout(45000)
+      });
+      const data = await response.json();
+      if (!response.ok || data.grading?.status !== 'ok') throw new Error('Grading failed');
+      grading = { status: 'ok', scores: data.grading.scores || {}, submissionRef: grading.submissionRef }; persist(); results();
+    } catch (_) { $('send-status').textContent = 'הבדיקה לא הצליחה. אפשר לנסות שוב.'; }
+    finally { $('regrade').disabled = false; }
   });
-  if (finished && ordered.every(answered) && $('student-name').value.trim()) results();
+  if (finished && ordered.every(answered) && $('student-name').value.trim()) { results(); if (!sent) sendExam(); }
   });
 })();

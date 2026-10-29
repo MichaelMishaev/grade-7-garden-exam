@@ -1,0 +1,42 @@
+:root {
+  font-family: Arial, "Noto Sans Hebrew", sans-serif;
+  color: #273541;
+  background: #fff;
+  font-synthesis: none;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 300px; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+.shell { width: min(100% - 32px, 760px); margin: 0 auto; padding: 20px 0 48px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 0; }
+h2 { font-size: 20px; margin: 0 0 6px; }
+.hint, .status { color: #687987; font-size: 15px; line-height: 1.6; margin: 0 0 12px; }
+.error { color: #b65a50; font-weight: 700; min-height: 1.4em; margin: 8px 0 0; }
+.link-button { min-height: 44px; padding: 0 10px; border: 0; background: none; color: #1587c2; font-weight: 800; text-decoration: underline; }
+.primary-button { min-height: 48px; padding: 0 22px; border: 0; border-radius: 13px; background: #46a302; color: #fff; font-weight: 800; transition: transform 160ms var(--ease-out); }
+.primary-button:active { transform: scale(0.97); }
+label { display: block; margin: 12px 0 6px; color: #5e7164; font-size: 14px; font-weight: 700; }
+input, select { width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid #dce3e7; border-radius: 13px; color: #273541; background: #fff; font-size: 16px; }
+form .primary-button { margin-top: 14px; width: 100%; }
+:is(input, select, button):focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+.tabs button { flex: 1; min-height: 48px; border: 2px solid #dce3e7; border-radius: 13px; background: #fff; font-weight: 800; color: #5e7164; }
+.tabs button[aria-selected="true"] { border-color: #46a302; background: #e9fbdc; color: #273541; }
+.cards { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 10px; }
+.card { padding: 14px 16px; border: 2px solid #e5e9ec; border-radius: 14px; background: #fff; }
+.card h3 { margin: 0 0 6px; font-size: 17px; overflow-wrap: anywhere; }
+.card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 15px; }
+.card dt { color: #687987; }
+.card dd { margin: 0; overflow-wrap: anywhere; }
+.card .link-button { padding: 0; margin-top: 6px; }
+.answers { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.answers li { padding: 10px 12px; border-radius: 10px; background: #f5f8f6; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
+.section-title { font-size: 17px; margin: 18px 0 8px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .primary-button { transition: none; }
+  .primary-button:active { transform: none; }
+}

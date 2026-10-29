@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex">
+  <title>היסטוריה למורה | PrepX</title>
+  <link rel="stylesheet" href="history.css?v=1">
+  <script src="history.js?v=1" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <h1>היסטוריה למורה</h1>
+      <button type="button" class="link-button" id="logout" hidden>יציאה</button>
+    </header>
+
+    <section id="login" aria-labelledby="login-title">
+      <h2 id="login-title">כניסת מורה</h2>
+      <p class="hint">הקוד נשמר רק בלשונית הזו ונמחק ביציאה.</p>
+      <form id="login-form" autocomplete="off">
+        <label for="token">קוד מורה</label>
+        <input id="token" type="password" autocomplete="off" required>
+        <button type="submit" class="primary-button">כניסה</button>
+      </form>
+      <p class="error" id="login-error" role="alert"></p>
+    </section>
+
+    <section id="app" hidden>
+      <div class="tabs" role="tablist" aria-label="סוג היסטוריה">
+        <button type="button" role="tab" id="tab-practice" aria-selected="true" aria-controls="panel">תרגול</button>
+        <button type="button" role="tab" id="tab-exams" aria-selected="false" aria-controls="panel">מבחנים</button>
+      </div>
+      <form id="filters" class="filters">
+        <label for="filter-name">שם תלמיד/ה</label>
+        <input id="filter-name" type="search" autocomplete="off" maxlength="120">
+        <label for="filter-code" id="filter-code-label">קוד תרגול</label>
+        <select id="filter-code"></select>
+        <button type="submit" class="primary-button">סינון</button>
+      </form>
+      <p class="status" id="status" role="status"></p>
+      <div id="panel" role="tabpanel"></div>
+    </section>
+  </main>
+</body>
+</html>

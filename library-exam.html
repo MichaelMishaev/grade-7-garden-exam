@@ -75,7 +75,7 @@
 .choice input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #46a302; }
 .choice:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
 .choice.correct { border-color: #46a302; background: #e9fbdc; }
-.choice.incorrect { border-color: #d64545; background: #fdeaea; }
+.choice.incorrect, .choice.incorrect:has(input:checked) { border-color: #d64545; background: #fdeaea; }
 .choice:has(input:disabled) { cursor: default; }
 .choice-feedback { margin: 14px 0 0; padding: 13px 16px; border-radius: 13px; line-height: 1.6; background: #e9fbdc; color: #1f4d0a; }
 .choice-feedback.incorrect { background: #fdeaea; color: #7a1f1f; }
@@ -90,16 +90,24 @@ a.button { display: inline-flex; align-items: center; text-decoration: none; }
 .actions { flex-wrap: wrap; }
 .topic-list { line-height: 1.9; }
 .source-line { color: #586d60; font-size: 14px; }
+#timer { font-variant-numeric: tabular-nums; color: #273541; }
+.confirm-row { margin-top: 14px; }
+.confirm-row .button { min-height: 48px; width: 100%; }
+.button:disabled { opacity: .5; cursor: not-allowed; }
+.done-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin: 0 0 18px; border-radius: 18px; background: #e9fbdc; border: 2px solid #46a302; color: #1f4d0a; }
+.done-banner strong { display: block; font-size: 18px; }
+.done-banner span:not(.done-mark) { display: block; margin-top: 2px; font-size: 14px; }
+.done-mark { flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #46a302; color: #fff; font-size: 24px; font-weight: 700; }
 </style>
 <link rel="stylesheet" href="branding.css?v=1">
-<script src="quiz-core.js?v=2" defer></script><script src="content-api.js?v=3" defer></script><script src="library-exam.js?v=9" defer></script>
+<script src="quiz-core.js?v=3" defer></script><script src="content-api.js?v=3" defer></script><script src="library-exam.js?v=14" defer></script>
 </head>
 <body><main class="shell">
 <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
 <header><a class="brand" href="subject.html?subject=hebrew">→ לגרסאות בעברית</a><span class="time">גרסה 2 · 20 שאלות</span></header>
 <section id="start" class="stage active" aria-labelledby="page-title">
 <h1 id="page-title" tabindex="-1">הספרייה נפתחת גם בהפסקה</h1>
-<p class="intro">מבחן תרגול בעברית · הבנת הנקרא, עובדה ודעה ומילות שאלה והוראה. שאלות בחירה, נכון או לא נכון ותשובות פתוחות. אין הגבלת זמן. סדר השאלות משתנה בתוך כל רמת קושי, מהקל לקשה.</p>
+<p class="intro">מבחן תרגול בעברית · הבנת הנקרא, עובדה ודעה ומילות שאלה והוראה. שאלות בחירה, נכון או לא נכון ותשובות פתוחות. אין הגבלת זמן, אבל השעון רץ. סדר השאלות והתשובות משתנה מתלמיד לתלמיד. אחרי כל תשובה רואים אם היא נכונה, וממשיכים אוטומטית לשאלה הבאה. אפשר לחזור לשאלות קודמות לעיון, אבל אי אפשר לשנות תשובה שנשלחה.</p>
 <article id="article" class="card reading">
 <h2>הספרייה נפתחת גם בהפסקה</h2>
 <p class="byline">מאת: נועה לוי | אתר בית הספר „שקד” | 22.10.2026<br><em>טקסט מקורי ובדיוני שנכתב לצורך התרגול.</em></p>
@@ -109,21 +117,22 @@ a.button { display: inline-flex; align-items: center; text-decoration: none; }
 <p>בשבוע הראשון נרשמו 18 ביקורים, ובשבוע השני נרשמו 27 ביקורים. הספרנית ספרה ביקורים ולא תלמידים שונים: תלמיד שביקר פעמיים נספר פעמיים. מאיה, תלמידת כיתה ז׳, אמרה: „לדעתי, הקריאה בהפסקה נעימה יותר מכל משחק”. יואב הציע להוסיף ספרי קומיקס למדפים, כדי למשוך קוראים נוספים.</p>
 <p>בסוף אוקטובר תבדוק מועצת התלמידים את מספר הביקורים ואת חוות הדעת של המבקרים. לאחר מכן תחליט הנהלת בית הספר אם להמשיך בפתיחה בהפסקות. בינתיים לא הוחלט לפתוח את הספרייה בכל ימות השבוע.</p>
 </article>
-<div class="name-box"><label for="student-name">שם התלמיד או התלמידה</label><input id="student-name" type="text" maxlength="100" autocomplete="name"><p class="privacy">הטיוטה נשמרת בלשונית זו. שליחה למורה מתבצעת רק בלחיצה על כפתור השליחה בסיום.</p><p id="name-error" class="error" role="alert"></p></div>
+<div class="name-box"><label for="student-name">שם התלמיד או התלמידה</label><input id="student-name" type="text" maxlength="100" autocomplete="name"><p class="privacy">הטיוטה נשמרת בלשונית זו. בסיום המבחן השם והתשובות נשלחים למורה אוטומטית. ייתכן שהתשובות הפתוחות ייבדקו בשירות בינה מלאכותית.</p><p id="name-error" class="error" role="alert"></p></div>
 <div class="actions"><button id="begin" class="button primary" type="button">מתחילים לענות</button></div>
 </section>
 <section id="question-stage" class="stage" aria-labelledby="question-title">
-<div class="progress-row"><span id="counter"></span><span id="answered"></span></div>
+<div class="progress-row"><span id="counter"></span><span id="timer" role="timer" aria-label="זמן שעבר">00:00</span><span id="answered"></span></div>
 <div id="progress-bar" class="bar" role="progressbar" aria-label="התקדמות במבחן" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><span id="progress"></span></div>
 <details><summary>פתיחת הטקסט לקריאה חוזרת</summary><div id="article-copy" class="reading"></div></details>
 <div class="card question-card"><span id="question-topic" class="question-number"></span><h2 id="question-title" class="question-title" tabindex="-1"></h2>
 <div id="choices" role="group" aria-labelledby="question-title"></div>
 <p id="choice-feedback" class="choice-feedback" role="status" hidden></p>
 <div id="open-answer" hidden><label for="answer">התשובה שלי — תיבדק בידי המורה</label><textarea id="answer" maxlength="3000"></textarea></div>
+<div class="confirm-row"><button id="confirm" class="button primary" type="button" hidden>אישור</button></div>
 <label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label></div>
 <div class="actions"><button id="previous" class="button secondary" type="button">לשאלה הקודמת</button><button id="next" class="button primary" type="button">לשאלה הבאה</button><button id="review-button" class="button secondary" type="button">סקירת התשובות</button></div>
 </section>
 <section id="review" class="stage" aria-labelledby="review-title"><h1 id="review-title" tabindex="-1">בודקים לפני הסיום</h1><p id="review-status" class="intro"></p><div id="review-list" class="review-list"></div><p id="review-error" class="error" role="alert"></p><div class="actions"><button id="back-to-questions" class="button secondary" type="button">חזרה לשאלות</button><button id="finish" class="button primary" type="button">סיום ובדיקת המבחן</button></div></section>
-<section id="results" class="stage" aria-labelledby="results-title"><h1 id="results-title" tabindex="-1">סיימתם את המבחן!</h1><p id="score" class="intro"></p><p>זהו ציון חלקי לתרגול. התשובות הפתוחות ממתינות לבדיקת המורה.</p><ul id="topics" class="topic-list"></ul><div id="explanations"></div><div class="actions"><button id="send" class="button primary" type="button">שליחת כל התשובות למורה</button><button id="retry" class="button secondary" type="button">מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div><p id="send-status" class="privacy" role="status"></p><p class="privacy">בלחיצה על שליחה, השם וכל 20 התשובות נשלחים בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה.</p></section>
+<section id="results" class="stage" aria-labelledby="results-title"><div id="done-banner" class="done-banner" role="status" hidden><span class="done-mark" aria-hidden="true">✓</span><div><strong>סיימתם! התשובות נשלחו למורה.</strong><span>אי אפשר לשנות תשובות אחרי הסיום. כל הכבוד על המאמץ!</span></div></div><h1 id="results-title" tabindex="-1">סיימתם את המבחן!</h1><p id="score" class="intro"></p><ul id="topics" class="topic-list"></ul><div id="explanations"></div><div class="actions"><button id="send" class="button primary" type="button" hidden>ניסיון שליחה חוזר</button><button id="regrade" class="button primary" type="button" hidden>בדיקה חוזרת של התשובות הפתוחות</button><button id="retry" class="button secondary" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div><p id="send-status" class="privacy" role="status"></p><p class="privacy">עם הסיום, השם וכל 20 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend. ייתכן שהתשובות הפתוחות ייבדקו בשירות בינה מלאכותית. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה.</p></section>
 <footer class="footer">בהצלחה בלמידה!</footer>
 </main></body></html>

@@ -1,0 +1,134 @@
+{
+  "name": "דנה ישנה",
+  "order": [
+    "library-08",
+    "library-07",
+    "library-06",
+    "library-05",
+    "library-04",
+    "library-03",
+    "library-02",
+    "library-01",
+    "library-11",
+    "library-12",
+    "library-13",
+    "library-14",
+    "library-15",
+    "library-16",
+    "library-09",
+    "library-10",
+    "library-19",
+    "library-20",
+    "library-17",
+    "library-18"
+  ],
+  "choiceOrders": {
+    "library-01": [
+      1,
+      2,
+      3,
+      0
+    ],
+    "library-02": [
+      2,
+      3,
+      0,
+      1
+    ],
+    "library-03": [
+      0,
+      1
+    ],
+    "library-04": [
+      1,
+      0
+    ],
+    "library-05": [
+      2,
+      3,
+      0,
+      1
+    ],
+    "library-06": [
+      3,
+      0,
+      1,
+      2
+    ],
+    "library-07": [
+      0,
+      1
+    ],
+    "library-08": [
+      1,
+      0
+    ],
+    "library-09": [
+      3,
+      0,
+      1,
+      2
+    ],
+    "library-10": [
+      1,
+      2,
+      3,
+      0
+    ],
+    "library-11": [
+      2,
+      3,
+      0,
+      1
+    ],
+    "library-12": [
+      1,
+      0
+    ],
+    "library-13": [
+      0,
+      1
+    ],
+    "library-14": [
+      1,
+      0
+    ],
+    "library-17": [
+      3,
+      0,
+      1,
+      2
+    ],
+    "library-18": [
+      1,
+      0
+    ]
+  },
+  "answers": {
+    "library-08": 1,
+    "library-07": 0,
+    "library-06": 3,
+    "library-05": 0,
+    "library-04": 1,
+    "library-03": 0,
+    "library-02": 3,
+    "library-01": 0,
+    "library-11": 1,
+    "library-12": 0,
+    "library-13": 1,
+    "library-14": 0,
+    "library-15": "תשובה פתוחה ישנה לשאלה library-15",
+    "library-16": "תשובה פתוחה ישנה לשאלה library-16",
+    "library-09": 3,
+    "library-10": 0,
+    "library-19": "תשובה פתוחה ישנה לשאלה library-19",
+    "library-20": "תשובה פתוחה ישנה לשאלה library-20",
+    "library-17": 3,
+    "library-18": 0
+  },
+  "flags": [],
+  "current": 19,
+  "finished": true,
+  "startedAt": "2026-10-29T08:00:00.000Z",
+  "finishedAt": "2026-10-29T08:31:00.000Z"
+}

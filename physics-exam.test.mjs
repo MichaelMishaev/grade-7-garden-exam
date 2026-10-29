@@ -14,7 +14,7 @@ const slice = (start, end) => source.slice(source.indexOf(start), source.indexOf
 const questions = plain(runInNewContext(slice('const questions', 'const sections') + '\nquestions;'));
 const sections = plain(runInNewContext(slice('const sections', 'const $') + '\nsections;'));
 const figures = plain(runInNewContext(slice('const figures = {', '// Questions come from') + '\nfigures;'));
-const checklist = runInNewContext(slice('const checklist = q => {', 'function show(') + '\nchecklist;');
+const checklist = runInNewContext(slice('const checklist = q => {', 'const isLocked =') + '\nchecklist;');
 const tasks = fixture.sections.flatMap((s, si) => s.qs.map((t) => ({ si, t })));
 
 test('fixture is the teacher data with attribution', () => {

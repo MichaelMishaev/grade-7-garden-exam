@@ -1,0 +1,27 @@
+{
+  "name": "דנה ישנה",
+  "answers": {
+    "physics-exam-01": 0,
+    "physics-exam-02": 1,
+    "physics-exam-03": 2,
+    "physics-exam-04": 3,
+    "physics-exam-05": 0,
+    "physics-exam-06": "תשובה פתוחה ישנה לשאלה physics-exam-06",
+    "physics-exam-07": 0,
+    "physics-exam-08": 3,
+    "physics-exam-09": 0,
+    "physics-exam-10": 1,
+    "physics-exam-11": "תשובה פתוחה ישנה לשאלה physics-exam-11",
+    "physics-exam-12": "325"
+  },
+  "work": {
+    "physics-exam-12": "3.25 מטר כפול 100"
+  },
+  "flags": [
+    "physics-exam-05"
+  ],
+  "current": 12,
+  "finished": false,
+  "startedAt": "2026-10-29T08:00:00.000Z",
+  "finishedAt": ""
+}

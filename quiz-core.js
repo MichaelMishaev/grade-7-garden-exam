@@ -51,7 +51,9 @@
     return {
       ...question,
       choices: order.map(i => question.choices[i]),
-      correct: order.indexOf(question.correct)
+      correct: order.indexOf(question.correct),
+      // original index of each displayed choice, so a pick can be reported against the unshuffled question
+      order
     };
   }
 

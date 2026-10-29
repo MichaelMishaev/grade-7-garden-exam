@@ -5,3 +5,7 @@ submission-success.png
 backups/
 *.dump
 node_modules/
+
+# Private AI-grading rubrics (see open-rubrics.schema.md); never commit
+open-rubrics.private.json
+*.private.json

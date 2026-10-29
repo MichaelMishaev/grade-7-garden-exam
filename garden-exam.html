@@ -16,7 +16,7 @@
     header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 34px; }
     .brand { color: #1587c2; font-size: 15px; font-weight: 800; letter-spacing: .01em; text-decoration: none; }
     .brand:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
-    .time { color: #6c7e73; font-size: 13px; }
+    .time { color: #586d60; font-size: 13px; }
     h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.16; letter-spacing: -.035em; margin: 0 0 14px; }
     .intro { color: #53675b; font-size: 17px; line-height: 1.65; margin: 0 0 28px; }
     .card { background: #fff; border: 2px solid #e5e9ec; border-radius: 22px; box-shadow: 0 4px 0 #d9dfe3; }
@@ -71,6 +71,25 @@
     @media (hover: hover) and (pointer: fine) { .primary:hover { background: #61d70a; } .secondary:hover, .review-item:hover { border-color: #b8c4ca; } }
     @media (prefers-reduced-motion: reduce) { .stage.active { animation: stage-fade 200ms ease both; } .button { transition: none; } .button:active { transform: none; } .bar > span { transition: none; } }
     @keyframes stage-fade { from { opacity: 0; } to { opacity: 1; } }
+    .actions { flex-wrap: wrap; }
+    a.button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+    .primary { color: #17330b; }
+    .button:disabled { opacity: .5; cursor: not-allowed; }
+    .confirm-row { margin-top: 14px; }
+    .confirm-row .button { min-height: 48px; width: 100%; }
+    .flag { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 18px 0 0; font-weight: 400; }
+    .flag input { width: 22px; height: 22px; accent-color: #46a302; }
+    .review-item { min-height: 48px; }
+    #timer { font-variant-numeric: tabular-nums; color: #273541; direction: ltr; }
+    textarea:disabled { background: #f4f6f7; color: #3d4d57; }
+    h1:focus, h2:focus { outline: none; }
+    .result-detail { padding: 18px; margin-top: 14px; line-height: 1.7; }
+    .result-detail h2 { font-size: 19px; margin-top: 0; }
+    .result-detail p { margin: 8px 0; white-space: pre-wrap; }
+    .done-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin: 0 0 18px; border-radius: 18px; background: #e9fbdc; border: 2px solid #46a302; color: #1f4d0a; }
+    .done-banner strong { display: block; font-size: 18px; }
+    .done-banner span:not(.done-mark) { display: block; margin-top: 2px; font-size: 14px; }
+    .done-mark { flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #46a302; color: #fff; font-size: 24px; font-weight: 700; }
   </style>
   <link rel="stylesheet" href="branding.css?v=1">
 </head>
@@ -79,8 +98,8 @@
     <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
     <header><a class="brand" href="subject.html?subject=hebrew">← לגרסאות בעברית</a><span class="time">מבחן בעברית 29.10 · 20 שאלות</span></header>
     <section id="start" class="stage active" aria-labelledby="page-title">
-      <h1 id="page-title">קוראים, חושבים ועונים</h1>
-      <p class="intro">קראו את הטקסט וענו על כל השאלות. אפשר לחזור לטקסט ולשנות תשובות לפני השליחה.</p>
+      <h1 id="page-title" tabindex="-1">קוראים, חושבים ועונים</h1>
+      <p class="intro">קראו את הטקסט וענו על כל השאלות. כל תשובה ננעלת אחרי לחיצה על ״אישור״, ואחרי הסיום אי אפשר לשנות.</p>
       <article class="card reading" id="article">
         <h2>תלמידי כיתה ז׳ הקימו גינה בבית הספר</h2>
         <p class="byline">מאת: יעל כהן | פורסם באתר בית הספר „אופק” | 20.10.2026<br><em>טקסט שנכתב לצורך התרגול.</em></p>
@@ -92,36 +111,49 @@
         <label for="student-name">שם התלמיד או התלמידה</label>
         <input id="student-name" type="text" autocomplete="name" placeholder="כתבו את השם כאן" maxlength="100">
         <p class="field-note">השם יעזור לזהות למי שייכות התשובות.</p>
+        <p class="privacy">הטיוטה נשמרת בלשונית זו. בסיום המבחן השם והתשובות נשלחים למורה אוטומטית.</p>
         <p class="error" id="name-error" role="alert"></p>
       </div>
       <div class="actions"><button class="button primary" id="begin" type="button">מתחילים לענות</button></div>
     </section>
 
-    <section id="question-stage" class="stage" aria-live="polite">
-      <div class="progress-row"><span id="counter"></span><span class="timer" id="timer" role="timer" aria-label="זמן שחלף" title="זמן שחלף">00:00</span><span id="answered"></span></div>
-      <div class="bar" aria-hidden="true"><span id="progress"></span></div>
+    <section id="question-stage" class="stage" aria-labelledby="question-title">
+      <div class="progress-row"><span id="counter"></span><span class="timer" id="timer" role="timer" aria-label="זמן שחלף">00:00</span><span id="answered"></span></div>
+      <div class="bar" id="progress-bar" role="progressbar" aria-label="התקדמות במבחן" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><span id="progress"></span></div>
       <details><summary>פתיחת הטקסט לקריאה חוזרת</summary><div class="reading" id="article-copy"></div></details>
       <div class="card question-card">
         <span class="question-number" id="question-number"></span>
-        <h2 class="question-title" id="question-title"></h2>
+        <h2 class="question-title" id="question-title" tabindex="-1"></h2>
         <label for="answer">התשובה שלי</label>
-        <textarea id="answer" placeholder="כתבו כאן את התשובה" spellcheck="true"></textarea>
+        <textarea id="answer" placeholder="כתבו כאן את התשובה" spellcheck="true" maxlength="3000"></textarea>
+        <div class="confirm-row"><button class="button primary" id="confirm" type="button" disabled>אישור</button></div>
+        <label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label>
         <p class="error" id="answer-error" role="alert"></p>
       </div>
-      <div class="actions"><button class="button secondary" id="previous" type="button">לשאלה הקודמת</button><button class="button primary" id="next" type="button">לשאלה הבאה</button></div>
+      <div class="actions"><button class="button secondary" id="previous" type="button">לשאלה הקודמת</button><button class="button primary" id="next" type="button">לשאלה הבאה</button><button class="button secondary" id="review-button" type="button">סקירת התשובות</button></div>
     </section>
 
     <section id="review" class="stage" aria-labelledby="review-title">
-      <h1 class="review-title" id="review-title">בודקים לפני ששולחים</h1>
-      <p class="intro">כל 20 התשובות יישלחו יחד. לחצו על תשובה כדי לערוך אותה.</p>
+      <h1 class="review-title" id="review-title" tabindex="-1">בודקים לפני הסיום</h1>
+      <p class="intro" id="review-status"></p>
       <div class="review-list" id="review-list"></div>
-      <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="send" type="button">שליחת כל התשובות</button></div>
-      <p class="error" id="send-error" role="alert"></p>
-      <p class="privacy">התשובות והשם יישלחו בדוא״ל למורה באמצעות שירות הדוא״ל Resend.</p>
+      <p class="error" id="review-error" role="alert"></p>
+      <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="finish" type="button">סיום ושליחה למורה</button></div>
+    </section>
+
+    <section id="results" class="stage" aria-labelledby="results-title">
+      <div id="done-banner" class="done-banner" role="status" hidden><span class="done-mark" aria-hidden="true">✓</span><div><strong>סיימתם! התשובות נשלחו למורה.</strong><span>אי אפשר לשנות תשובות אחרי הסיום. כל הכבוד על המאמץ!</span></div></div>
+      <h1 class="review-title" id="results-title" tabindex="-1">סיימתם את המבחן!</h1>
+      <p class="intro" id="score"></p>
+      <div id="explanations"></div>
+      <div class="actions"><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
+      <p class="privacy" id="send-status" role="status"></p>
+      <p class="privacy">עם הסיום, השם וכל 20 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה. אלה שאלות פתוחות, והמורה בודקת אותן.</p>
     </section>
 
     <footer class="footer">בהצלחה!</footer>
   </main>
+  <script src="quiz-core.js?v=3"></script>
   <script src="content-api.js?v=3"></script>
   <script>
     const questions = [
@@ -156,46 +188,119 @@
       : Promise.resolve(inlineQuestions)
     ).then(questions => {
     const storageKey = 'garden-exam-draft-v1';
+    const examId = 'hebrew-v1-garden';
+    const total = questions.length;
+    const byId = id => document.getElementById(id);
     let saved = {};
     try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) { saved = {}; }
-    let answers = Array.isArray(saved.answers) ? saved.answers.slice(0, questions.length) : [];
-    let startedAt = typeof saved.startedAt === 'string' ? saved.startedAt : '';
-    let current = 0;
-    const byId = id => document.getElementById(id);
-    if (!byId('student-name').value) byId('student-name').value = saved.name || '';
+    // docs/TESTING.md §4: the questions are shuffled per student; the order (original indexes) is kept in the draft.
+    const validOrder = Array.isArray(saved.order) && saved.order.length === total && new Set(saved.order).size === total && saved.order.every(i => Number.isInteger(i) && i >= 0 && i < total);
+    // answers, flags and locked are keyed by the original question index
+    const answers = Array.isArray(saved.answers) ? saved.answers.slice(0, total).map(a => typeof a === 'string' ? a : '') : [];
+    // A draft written before the shuffle existed has answers but no order: the student saw the questions in the original
+    // order, so keep it (and the first unanswered question) instead of reshuffling under them.
+    const legacyDraft = !validOrder && answers.some(a => a.trim());
+    const order = validOrder ? saved.order : legacyDraft ? questions.map((_, i) => i) : QuizCore.shuffled(questions.map((_, i) => i));
+    const flags = new Set(validOrder && Array.isArray(saved.flags) ? saved.flags.filter(i => Number.isInteger(i)) : []);
+    const locked = new Set(validOrder && Array.isArray(saved.locked) ? saved.locked.filter(i => Number.isInteger(i) && i >= 0 && i < total) : []);
+    const validStamp = v => typeof v === 'string' && Number.isFinite(Date.parse(v));
+    let startedAt = validStamp(saved.startedAt) ? saved.startedAt : '';
+    let finished = validOrder && saved.finished === true;
+    let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
+    let sent = validOrder && saved.sent === true;
+    let sending = false;
+    const firstOpen = answers.findIndex((a, i) => i >= total || !(a || '').trim());
+    let current = validOrder && Number.isInteger(saved.current) ? Math.max(0, Math.min(total - 1, saved.current)) : legacyDraft ? Math.max(0, Math.min(total - 1, firstOpen === -1 ? answers.length < total ? answers.length : total - 1 : firstOpen)) : 0;
+    let advanceTimer = 0;
+    if (!byId('student-name').value) byId('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
     byId('article-copy').innerHTML = byId('article').innerHTML;
+    const answered = i => typeof answers[i] === 'string' && answers[i].trim().length > 0;
+    const answerText = i => answered(i) ? answers[i].trim() : 'לא נכתבה תשובה';
+    const answeredCount = () => questions.filter((_, i) => answered(i)).length;
     function persist() {
-      try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, answers, startedAt })); } catch (_) {}
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, order, answers, flags: [...flags], locked: [...locked], current, finished, sent, startedAt, finishedAt })); } catch (_) {}
     }
-    function show(id) {
+    function show(id, focusId) {
       document.querySelectorAll('.stage').forEach(stage => stage.classList.toggle('active', stage.id === id));
       window.scrollTo(0, 0);
+      if (focusId) byId(focusId).focus({ preventScroll: true });
     }
-    function saveCurrent() { answers[current] = byId('answer').value; persist(); }
-    function showQuestion(index) {
-      current = index;
-      byId('counter').textContent = `שאלה ${index + 1} מתוך ${questions.length}`;
-      byId('answered').textContent = `${answers.filter(answer => answer && answer.trim()).length} תשובות מולאו`;
-      byId('progress').style.width = `${((index + 1) / questions.length) * 100}%`;
-      byId('question-number').textContent = `שאלה ${index + 1}`;
+    // Visible timer (docs/TESTING.md §6): counts up from the stored start time, so a reload keeps it running.
+    const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+    setInterval(() => { if (startedAt && !finished) byId('timer').textContent = clock(Date.now() - Date.parse(startedAt)); }, 1000);
+    // "אישור" locks the typed answer; the next question opens after a short pause.
+    const advance = index => { clearTimeout(advanceTimer); advanceTimer = setTimeout(() => { if (order[current] === index) current === total - 1 ? review() : questionAt(current + 1); }, 1500); };
+    function syncConfirm(index) { byId('confirm').disabled = locked.has(index) || !answered(index); }
+    function confirmAnswer() {
+      const index = order[current];
+      if (locked.has(index) || !answered(index)) return;
+      locked.add(index); persist(); syncConfirm(index); byId('answer').disabled = true; advance(index);
+    }
+    function questionAt(position) {
+      clearTimeout(advanceTimer);
+      current = position;
+      const index = order[position];
+      if (startedAt && !finished) byId('timer').textContent = clock(Date.now() - Date.parse(startedAt));
+      byId('counter').textContent = `שאלה ${position + 1} מתוך ${total}`;
+      byId('answered').textContent = `${answeredCount()} תשובות מולאו`;
+      byId('progress').style.width = `${((position + 1) / total) * 100}%`;
+      byId('progress-bar').setAttribute('aria-valuenow', position + 1);
+      byId('question-number').textContent = `שאלה ${position + 1}`;
       byId('question-title').textContent = questions[index];
       byId('answer').value = answers[index] || '';
+      byId('answer').disabled = locked.has(index);
       byId('answer-error').textContent = '';
-      byId('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
-      byId('next').textContent = index === questions.length - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
-      show('question-stage');
+      byId('flag').checked = flags.has(index);
+      syncConfirm(index);
+      byId('previous').textContent = position === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
+      byId('next').textContent = position === total - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
+      persist(); show('question-stage', 'question-title');
     }
-    let tick = null;
-    function renderTimer() {
-      const secs = Math.max(0, Math.floor((Date.now() - Date.parse(startedAt)) / 1000));
-      const pad = n => String(n).padStart(2, '0');
-      byId('timer').textContent = (secs >= 3600 ? Math.floor(secs / 3600) + ':' : '') + pad(Math.floor(secs / 60) % 60) + ':' + pad(secs % 60);
+    function review() {
+      const missing = questions.filter((_, i) => !answered(i)).length;
+      byId('review-status').textContent = `${missing} שאלות ללא תשובה · ${flags.size} שאלות מסומנות לבדיקה. אפשר ללחוץ על כל שאלה כדי לחזור אליה.`;
+      byId('review-error').textContent = '';
+      const list = byId('review-list');
+      list.replaceChildren();
+      order.forEach((index, position) => {
+        const item = document.createElement('button');
+        item.type = 'button'; item.className = 'review-item';
+        const title = document.createElement('strong'); title.textContent = `${position + 1}. ${questions[index]}${flags.has(index) ? ' · ⚑ לבדיקה חוזרת' : ''}`;
+        const summary = document.createElement('span'); summary.textContent = answerText(index);
+        item.append(title, summary);
+        item.addEventListener('click', () => questionAt(position));
+        list.append(item);
+      });
+      show('review', 'review-title');
     }
-    function startTimer() { if (tick || !startedAt) return; renderTimer(); tick = setInterval(renderTimer, 1000); }
-    function stopTimer() { clearInterval(tick); tick = null; }
-    if (startedAt && answers.some(a => a && a.trim())) startTimer();
+    function results() {
+      byId('done-banner').hidden = !sent; byId('retry').hidden = !sent;
+      if (sent) byId('send-status').textContent = '';
+      let text = 'אלה שאלות פתוחות, ולכן הציון יינתן לאחר בדיקת המורה.';
+      if (startedAt && finishedAt) {
+        const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
+        text += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
+      }
+      byId('score').textContent = text;
+      byId('explanations').replaceChildren();
+      order.forEach((index, position) => {
+        const card = document.createElement('article'); card.className = 'card result-detail';
+        const title = document.createElement('h2'); title.textContent = `${position + 1}. ${questions[index]}`;
+        const answer = document.createElement('p'); answer.textContent = `התשובה שלי: ${answerText(index)}`;
+        card.append(title, answer);
+        byId('explanations').append(card);
+      });
+      show('results', 'results-title');
+    }
     byId('student-name').addEventListener('input', persist);
-    byId('answer').addEventListener('input', saveCurrent);
+    byId('answer').addEventListener('input', () => {
+      const index = order[current];
+      if (locked.has(index)) return;
+      answers[index] = byId('answer').value; persist();
+      byId('answered').textContent = `${answeredCount()} תשובות מולאו`; syncConfirm(index);
+    });
+    byId('confirm').addEventListener('click', confirmAnswer);
+    byId('flag').addEventListener('change', () => { const index = order[current]; byId('flag').checked ? flags.add(index) : flags.delete(index); persist(); });
     byId('begin').addEventListener('click', () => {
       if (!byId('student-name').value.trim()) {
         byId('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.';
@@ -205,65 +310,50 @@
       byId('name-error').textContent = '';
       if (!startedAt) startedAt = new Date().toISOString();
       persist();
-      startTimer();
-      showQuestion(0);
+      questionAt(current);
     });
-    byId('previous').addEventListener('click', () => { saveCurrent(); current === 0 ? show('start') : showQuestion(current - 1); });
-    byId('next').addEventListener('click', () => {
-      saveCurrent();
-      if (!answers[current].trim()) {
-        byId('answer-error').textContent = 'יש לכתוב תשובה לפני שממשיכים.';
-        byId('answer').focus();
-        return;
-      }
-      if (current < questions.length - 1) showQuestion(current + 1);
-      else showReview();
+    byId('previous').addEventListener('click', () => current === 0 ? show('start', 'page-title') : questionAt(current - 1));
+    byId('next').addEventListener('click', () => current === total - 1 ? review() : questionAt(current + 1));
+    byId('review-button').addEventListener('click', review);
+    byId('back-to-questions').addEventListener('click', () => questionAt(current));
+    byId('finish').addEventListener('click', () => {
+      const missing = order.findIndex(index => !answered(index));
+      if (missing !== -1) { byId('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
+      // Finishing sends at once and locks everything (docs/TESTING.md §6): there is no way back to edit.
+      order.forEach(index => locked.add(index));
+      finished = true; if (!finishedAt) finishedAt = new Date().toISOString();
+      persist(); results(); sendExam();
     });
-    function showReview() {
-      const list = byId('review-list');
-      list.replaceChildren();
-      questions.forEach((question, index) => {
-        const item = document.createElement('button');
-        item.type = 'button'; item.className = 'review-item';
-        const title = document.createElement('strong'); title.textContent = `${index + 1}. ${question}`;
-        const summary = document.createElement('span'); summary.textContent = answers[index] || 'לא נכתבה תשובה';
-        item.append(title, summary);
-        item.addEventListener('click', () => showQuestion(index));
-        list.append(item);
-      });
-      show('review');
-    }
-    byId('back-to-questions').addEventListener('click', () => showQuestion(questions.length - 1));
-    byId('send').addEventListener('click', async () => {
-      const missing = questions.findIndex((_, index) => !answers[index] || !answers[index].trim());
-      if (missing !== -1) { showQuestion(missing); byId('answer-error').textContent = 'יש לכתוב תשובה לפני השליחה.'; return; }
-      byId('send').disabled = true;
-      byId('send').textContent = 'שולחים…';
-      byId('send-error').textContent = '';
-      const finishedAt = new Date().toISOString();
-      stopTimer();
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
+    byId('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
+    byId('send').addEventListener('click', () => sendExam());
+    // Attempt number for this name (docs/TESTING.md §1); counted only after the email is accepted.
+    const attemptKey = 'prepx-attempts-v1', attemptId = 'hebrew-v1-garden';
+    const attemptNumber = () => { try { return (JSON.parse(localStorage.getItem(attemptKey) || '{}')[`${attemptId}/${byId('student-name').value.trim().toLowerCase()}`] || 0) + 1; } catch (_) { return 1; } };
+    const countAttempt = () => { try { const all = JSON.parse(localStorage.getItem(attemptKey) || '{}'); all[`${attemptId}/${byId('student-name').value.trim().toLowerCase()}`] = attemptNumber(); localStorage.setItem(attemptKey, JSON.stringify(all)); } catch (_) {} };
+    async function sendExam() {
+      if (sending || sent) return;
+      sending = true; byId('send').hidden = true; byId('retry').disabled = true;
+      byId('send-status').textContent = 'שולחים…';
       try {
         const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ name: byId('student-name').value.trim(), answers: questions.map((question, index) => ({ question, answer: answers[index].trim() })), startedAt, finishedAt }),
-          signal: controller.signal
+          body: JSON.stringify({ exam: examId, attempt: attemptNumber(), name: byId('student-name').value.trim(), answers: order.map(index => ({ question: questions[index], answer: answerText(index) })), startedAt, finishedAt }),
+          signal: AbortSignal.timeout(45000)
         });
-        const result = await response.json();
-        if (!response.ok || (result.success !== 'true' && result.success !== true)) throw new Error('Submission failed');
-        try { sessionStorage.removeItem(storageKey); sessionStorage.setItem('garden-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total: questions.length })); } catch (_) {}
-        window.location.assign('thanks.html');
+        const data = await response.json();
+        if (!response.ok || (data.success !== 'true' && data.success !== true)) throw new Error('Submission failed');
+        countAttempt();
+        // The answers are with the teacher: the draft stays only as a locked, read-only summary (a reload shows it again).
+        sent = true;
+        try { sessionStorage.setItem('garden-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total })); } catch (_) {}
+        persist(); results();
       } catch (_) {
-        byId('send-error').textContent = 'לא התקבל אישור לשליחה. התשובות נשמרו כאן. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני שמנסים שוב.';
-        byId('send').disabled = false;
-        startTimer();
-        byId('send').textContent = 'שליחת כל התשובות';
-      } finally {
-        clearTimeout(timeout);
-      }
-    });
+        byId('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
+        byId('send').hidden = false;
+      } finally { sending = false; byId('retry').disabled = false; }
+    }
+    if (finished && questions.every((_, i) => answered(i))) { results(); if (!sent) sendExam(); }
     });
   </script>
 </body>

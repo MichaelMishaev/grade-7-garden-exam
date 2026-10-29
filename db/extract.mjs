@@ -23,6 +23,9 @@ const gardenParts = [
   'הכותרת ושורת הפרטים', 'הטקסט כולו'
 ];
 const passageByExam = { 'hebrew-v1-garden': 'garden', 'hebrew-v2-library': 'library' };
+// Permanent test codes (docs/TESTING.md §1): the single source for exams.code in the database. The `exams` table in
+// server.mjs repeats them for the email; db/exam-codes.test.mjs fails if the two ever differ.
+export const examCodes = { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001' };
 
 export function extractContent(root = defaultRoot) {
   const read = (file) => readFileSync(new URL(file, root), 'utf8');
@@ -52,7 +55,7 @@ export function extractContent(root = defaultRoot) {
 
   const variants = Object.entries(subjectSource).flatMap(([subjectId, s]) => s.variants.map((v) => ({ subjectId, v })));
   const exams = variants.map(({ subjectId, v }, i) => ({
-    id: v.id, subject_id: subjectId, title: v.title, detail: v.detail, date_label: v.date ?? null,
+    id: v.id, code: examCodes[v.id] ?? null, subject_id: subjectId, title: v.title, detail: v.detail, date_label: v.date ?? null,
     href: v.href, passage_id: passageByExam[v.id] ?? null, question_count: Number.parseInt(v.count, 10), sort_order: i + 1
   }));
   const references = variants.flatMap(({ subjectId, v }) => (v.references ?? []).map((r) => ({ ...r, subjectId, examId: v.id })))

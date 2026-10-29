@@ -12,25 +12,33 @@ import { legacyPayloads, renderCalls } from './test-fixtures/legacy-email-inputs
 
 const snapshots = JSON.parse(readFileSync(new URL('./test-fixtures/legacy-email-snapshots.json', import.meta.url), 'utf8'));
 const origin = 'https://hitech.agnon.online';
-const env = { NODE_ENV: 'production', RESEND_API_KEY: 'test-secret', RESEND_FROM_EMAIL: 'PrepX <exams@netanya.club>' };
+const env = { RESEND_RPS: '1000', NODE_ENV: 'production', RESEND_API_KEY: 'test-secret', RESEND_FROM_EMAIL: 'PrepX <exams@netanya.club>' };
 
 const physicsRows = extractContent().questions.filter((q) => q.exam_id === 'physics-v1-assessment');
 // What physics-exam.js sends: plain-text prompt, the answer, and `correct` on choice/numeric tasks.
 const physicsPayload = (name = 'תלמידת פיזיקה <i>') => ({
   exam: 'physics-v1-assessment', name, startedAt: '2026-12-30T08:00:00.000Z', finishedAt: '2026-12-30T08:40:00.000Z',
-  score: { earned: 52, pending: 26 },
-  answers: physicsRows.map((q, i) => ({
-    question: plainText(q.prompt),
-    answer: q.type === 'mcq' ? q.choices[q.correct] : q.type === 'fill' ? `${q.correct.value}\nדרך חישוב: חישוב <b>${i}</b>` : 'הסבר כתוב',
-    ...(q.type === 'open' ? {} : { correct: i % 4 !== 1 })
-  }))
+  score: { earned: 52, pending: 26 }, // ignored by the server: it computes the score itself
+  // An honest page: every 4th task (from the 2nd) is answered wrongly and marked ✕, the others are right and marked ✓.
+  answers: physicsRows.map((q, i) => {
+    const wrong = i % 4 === 1;
+    return {
+      question: plainText(q.prompt),
+      answer: q.type === 'mcq' ? q.choices[wrong ? (q.correct + 1) % q.choices.length : q.correct]
+        : q.type === 'fill' ? `${wrong ? q.correct.value + 1 : q.correct.value}\nדרך חישוב: חישוב <b>${i}</b>` : 'הסבר כתוב',
+      ...(q.type === 'open' ? {} : { correct: !wrong })
+    };
+  })
 });
+// The partial score an honest page would show: QuizCore over the same rows and verdicts.
+const honestScore = (payload) => globalThis.QuizCore.scoreQuiz(physicsRows,
+  Object.fromEntries(physicsRows.map((q, i) => [q.id, payload.answers[i].correct ? 1 : 0])));
 
 async function withServer(run, options = {}) {
   const calls = [];
   const stored = [];
   const db = options.db === null ? null : { flags: { write: true, read: false }, storeSubmission: async (s) => { stored.push(s); return 1; }, markEmail: async () => {} };
-  const server = createApp({ env, db, sendFetch: async (url, config) => {
+  const server = createApp({ sleep: async () => {}, env, db, sendFetch: async (url, config) => {
     calls.push({ url, ...config, body: JSON.parse(config.body) });
     return new Response(JSON.stringify({ id: 'test-email-id' }), { status: 200 });
   }, ...options, ...(options.db === null ? { db: null } : {}) });
@@ -58,9 +66,15 @@ test('renderExamEmail with the original signature is byte-identical to the origi
 
 test('physics: 27 answers are emailed once, with the same Resend key, sender and teacher as garden', () => withServer(async ({ submit, calls }) => {
   assert.equal((await submit(legacyPayloads[0])).status, 200);
-  const response = await submit(physicsPayload());
+  // The finish time is the server's clock, not the page's: a started-40-minutes-ago exam lasts 40 minutes even if the
+  // page claims it finished in 2020 (docs/TESTING.md §6).
+  const response = await submit({ ...physicsPayload(), startedAt: new Date(Date.now() - 40 * 60000).toISOString(), finishedAt: '2020-01-01T00:00:00.000Z' });
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { success: true });
+  // Table exams also report the AI grading outcome; this payload has no open questions, so it is 'none'.
+  // With database writes on it also returns `submissionRef`, the dedupe key (64 hex characters) for /api/grade-open.
+  const body = await response.json();
+  assert.match(body.submissionRef, /^[0-9a-f]{64}$/);
+  assert.deepEqual(body, { success: true, grading: { status: 'none', scores: {} }, submissionRef: body.submissionRef });
   assert.equal(calls.length, 2);
   const [garden, physics] = calls;
   assert.equal(physics.url, 'https://api.resend.com/emails');
@@ -69,17 +83,19 @@ test('physics: 27 answers are emailed once, with the same Resend key, sender and
   assert.equal(physics.body.from, garden.body.from);
   assert.deepEqual(physics.body.to, garden.body.to);
   assert.deepEqual(physics.body.to, ['345287@gmail.com']);
-  assert.equal(physics.body.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳');
+  assert.equal(physics.body.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳ · PHY-001');
   assert.notEqual(physics.body.subject, garden.body.subject);
   const { text, html } = physics.body;
-  assert.match(text, /^שם התלמיד\/ה: תלמידת פיזיקה <i>\n/);
+  assert.match(text, /^מבחן: PHY-001\nשם התלמיד\/ה: תלמידת פיזיקה <i>\n/);
   assert.match(text, /משך: 40 דקות/);
-  assert.match(text, /ציון חלקי: 52 מתוך 74 · 26 נקודות ממתינות לבדיקה בשאלות פתוחות/);
+  const { earned, pending } = honestScore(physicsPayload());
+  assert.match(text, new RegExp(`ציון חלקי: ${earned} מתוך ${100 - pending} · ${pending} נקודות ממתינות לבדיקה בשאלות פתוחות`));
+  assert.doesNotMatch(text, /הדפדפן דיווח/); // an honest page produces no mismatch lines
   assert.match(text, /\n27\. /);
   assert.match(text, /1\. ✓ תלמידים מכינים תערוכה/);
   assert.match(text, /2\. ✕ /);
   assert.match(text, /\n6\. שני תלמידים דיווחו/); // written task: no mark in the text part
-  assert.match(text, /\n325\nדרך חישוב: חישוב <b>11<\/b>/);
+  assert.match(text, /\n   325\n   דרך חישוב: חישוב <b>11<\/b>/); // student text is indented in the plain-text part
   assert.match(html, /<h1[^>]*>תשובות למשימת הערכה במדידות<\/h1>/);
   assert.match(html, /פיזיקה · כיתה ז׳2 · שי עגנון, נתניה/);
   assert.doesNotMatch(html, /הבנת הנקרא/);
@@ -107,13 +123,13 @@ test('physics needs exactly 27 answers; a payload without exam still needs exact
 }));
 
 test('unknown exam values are rejected before anything is sent', () => withServer(async ({ submit, calls }) => {
-  for (const exam of ['nope', '', null, 5, true, ['physics-v1-assessment'], {}, '__proto__', 'constructor', 'toString', 'hasOwnProperty', 'hebrew-v1-garden']) {
+  for (const exam of ['nope', '', null, 5, true, ['physics-v1-assessment'], {}, '__proto__', 'constructor', 'toString', 'hasOwnProperty', 'hebrew-v3-nothing']) {
     const response = await submit({ ...legacyPayloads[1], exam });
     assert.equal(response.status, 400, JSON.stringify(exam));
     assert.deepEqual(await response.json(), { error: 'Unknown exam' });
   }
   assert.equal(calls.length, 0);
-  assert.deepEqual(Object.keys(exams), ['physics-v1-assessment']);
+  assert.deepEqual(Object.keys(exams), ['hebrew-v1-garden', 'hebrew-v2-library', 'physics-v1-assessment']);
 }));
 
 test('physics idempotency key is stable per payload, per student, and never equal to the garden key', () => withServer(async ({ submit, calls }) => {
@@ -134,10 +150,10 @@ test('physics follows the same origin, content-type, size, config and rate-limit
   await withServer(async ({ submit, calls }) => {
     assert.equal((await submit(physicsPayload(), { Origin: 'https://untrusted.example' })).status, 403);
     assert.equal((await submit(physicsPayload(), { 'Content-Type': 'text/plain' })).status, 415);
-    assert.equal((await submit({ ...physicsPayload(), name: 'x'.repeat(100001) })).status, 413);
+    assert.equal((await submit({ ...physicsPayload(), name: 'x'.repeat(250001) })).status, 413);
     assert.equal(calls.length, 0);
-    for (let i = 0; i < 100; i++) assert.equal((await submit(i % 2 ? physicsPayload() : legacyPayloads[1])).status, 200);
-    assert.equal((await submit(physicsPayload())).status, 429); // one shared budget for every exam
+    for (let i = 0; i < 150; i++) assert.equal((await submit(i % 2 ? physicsPayload() : legacyPayloads[1])).status, 200);
+    assert.equal((await submit(physicsPayload())).status, 429); // one shared per-client budget (150 an hour) for every exam
   });
   await withServer(async ({ submit, calls }) => {
     assert.equal((await submit(physicsPayload())).status, 503);
@@ -165,3 +181,61 @@ test('physics email render: title, subtitle, marks, pending labels and escaping'
   assert.match(html, /שאלה 3 · <span style="color:#1587c2;">✎ ממתינה לבדיקת המורה<\/span>/);
   assert.doesNotMatch(renderExamEmail({ name: 'א', origin: 'x', answers: [{ question: 'q', answer: 'a' }] }), /ממתינה/);
 });
+
+// docs/TESTING.md §1, §6, §8: permanent test codes, attempt numbers, and the full email content.
+test('every table exam has a unique permanent code, shown in the subject, the text and the html with the attempt number', () => withServer(async ({ submit, calls }) => {
+  assert.deepEqual(Object.fromEntries(Object.entries(exams).map(([id, e]) => [id, e.code])),
+    { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001' });
+  assert.equal(new Set(Object.values(exams).map((e) => e.code)).size, Object.keys(exams).length);
+  const library = { ...legacyPayloads[1], exam: 'hebrew-v2-library', attempt: 3 };
+  assert.equal((await submit(library)).status, 200);
+  const { subject, text, html } = calls[0].body;
+  assert.match(subject, /· HEB-002 · ניסיון 3$/);
+  assert.match(text, /^מבחן: HEB-002 · ניסיון 3\n/);
+  assert.match(html, />HEB-002 · ניסיון 3</);
+  assert.equal((await submit({ ...library, exam: 'hebrew-v1-garden', attempt: undefined })).status, 200);
+  assert.match(calls[1].body.subject, /· HEB-001$/);
+}, { db: null }));
+
+test('attempt number: a retaken exam with identical answers is emailed again; the same attempt sent twice is not', () => withServer(async ({ submit, calls }) => {
+  const base = { ...legacyPayloads[1], exam: 'hebrew-v2-library' };
+  await submit({ ...base, attempt: 1 }); await submit({ ...base, attempt: 1 }); await submit({ ...base, attempt: 2 });
+  const keys = calls.map((c) => c.headers['Idempotency-Key']);
+  assert.equal(keys[0], keys[1]);
+  assert.notEqual(keys[0], keys[2]);
+  assert.match(keys[0], /^library-exam\/[0-9a-f]{64}$/);
+  for (const attempt of [0, 100, 1.5, '2', null, -1]) assert.equal((await submit({ ...base, attempt })).status, 400, String(attempt));
+}, { db: null }));
+
+test('the email shows every option, the correct answer and the reference of each question, escaped', () => withServer(async ({ submit, calls }) => {
+  const payload = { ...legacyPayloads[1], exam: 'hebrew-v2-library', attempt: 1 };
+  payload.answers[0] = { question: 'שאלה <b>1</b>', answer: 'ב', correct: false, options: ['א', 'ב <i>', 'ג'], correctAnswer: 'א', reference: 'פסקה 2' };
+  assert.equal((await submit(payload)).status, 200);
+  const { text, html } = calls[0].body;
+  // Not a known question: the browser's details are used, the answer is indented, and the email says it was not verified.
+  assert.match(text, /1\. ✕ שאלה <b>1<\/b>\n• א\n• ב <i>\n• ג\nמקור: פסקה 2\n   ב\n⚠ לא זוהתה שאלה[^\n]*\nתשובה נכונה: א/);
+  assert.match(html, /• א<br>• ב &lt;i&gt;<br>• ג/);
+  assert.match(html, /תשובה נכונה: א/);
+  assert.match(html, /מקור: פסקה 2/);
+  assert.doesNotMatch(html, /<i>/);
+  for (const bad of [{ options: 'x' }, { options: Array(13).fill('x') }, { options: [''] }, { correctAnswer: 5 }, { reference: 'x'.repeat(201) }]) {
+    assert.equal((await submit({ ...payload, answers: [{ ...payload.answers[0], ...bad }, ...payload.answers.slice(1)] })).status, 400, JSON.stringify(bad));
+  }
+}, { db: null }));
+
+test('payloads without exam ignore attempt and answer details, so legacy emails stay byte-identical', () => withServer(async ({ submit, calls }) => {
+  const legacy = { ...legacyPayloads[1], attempt: 5, answers: legacyPayloads[1].answers.map((a) => ({ ...a, options: ['x'], correctAnswer: 'y', reference: 'z' })) };
+  await submit(legacy); await submit(legacyPayloads[1]);
+  assert.deepEqual(calls[0].body, calls[1].body);
+  assert.equal(calls[0].headers['Idempotency-Key'], calls[1].headers['Idempotency-Key']);
+}, { db: null }));
+
+test('table exams measure the duration with the server clock; legacy payloads keep both page times', () => withServer(async ({ submit, calls }) => {
+  const start = new Date(Date.now() - 12 * 60000).toISOString();
+  await submit({ ...legacyPayloads[1], exam: 'hebrew-v2-library', startedAt: start, finishedAt: start }); // the page says: instant
+  assert.match(calls[0].body.text, /משך: 12 דקות/);
+  await submit({ ...legacyPayloads[1], exam: 'hebrew-v2-library', name: 'עתיד', startedAt: new Date(Date.now() + 3600000).toISOString() }); // a start in the future
+  assert.doesNotMatch(calls[1].body.text, /משך:/);
+  await submit({ ...legacyPayloads[0], finishedAt: '2026-10-28T10:31:00.000Z' }); // legacy: the page's times as sent
+  assert.match(calls[2].body.text, /משך: 31 דקות/);
+}, { db: null }));

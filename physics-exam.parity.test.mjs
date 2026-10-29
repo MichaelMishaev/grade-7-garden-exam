@@ -34,7 +34,7 @@ test('same stage sections, in the same order, with the same classes and labels',
 
 test('same buttons: ids, classes, types and labels, in the same order', () => {
   assert.deepEqual(buttons(physicsHtml), buttons(libraryHtml));
-  assert.deepEqual(buttons(physicsHtml).map((b) => b[0]), ['begin', 'previous', 'next', 'review-button', 'back-to-questions', 'finish', 'send', 'retry']);
+  assert.deepEqual(buttons(physicsHtml).map((b) => b[0]), ['begin', 'confirm', 'previous', 'next', 'review-button', 'back-to-questions', 'finish', 'send', 'regrade', 'retry']);
   assert.doesNotMatch(physicsHtml, /primary-button|secondary-button|practice\.css/);
 });
 
@@ -55,7 +55,7 @@ test('same review and results screens; results differ only in the answer count a
   assert.equal(section(physicsHtml, 'review'), section(libraryHtml, 'review'));
   const libraryResults = section(libraryHtml, 'results').replace('subject.html?subject=hebrew">לגרסאות בעברית', 'subject.html?subject=physics">לגרסאות בפיזיקה').replace('כל 20 התשובות', 'כל 27 התשובות');
   assert.equal(section(physicsHtml, 'results'), libraryResults);
-  assert.match(section(physicsHtml, 'results'), /השם וכל 27 התשובות נשלחים בדוא״ל למורה באמצעות Resend/);
+  assert.match(section(physicsHtml, 'results'), /השם וכל 27 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend/);
 });
 
 test('same question card structure (progress, study material, topic, title, choices, open answer, flag, actions)', () => {
@@ -79,15 +79,27 @@ test('same behaviour in the scripts: draft, review gate, send, timeout, error te
     "if (!$('student-name').value.trim()) { $('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.'; $('student-name').focus(); return; }",
     "if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }",
     "location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam'",
-    'signal: AbortSignal.timeout(20000)',
+    'signal: AbortSignal.timeout(45000)',
     "if (!response.ok || data.success !== true) throw new Error('Submission failed');",
     "$('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';",
-    "sending = true; $('send').disabled = true; $('retry').disabled = true;",
-    "window.location.assign('thanks.html');",
+    "sending = true; $('send').hidden = true; $('retry').disabled = true;",
+    // docs/TESTING.md §3, §6: radio answers lock and move on, typed answers lock on "אישור", finishing sends and locks
+    "const advance = q => { clearTimeout(advanceTimer); advanceTimer = setTimeout(",
+    "}, 1500); };",
+    "ordered.forEach(q => locked.add(q.id));",
+    "$('confirm').addEventListener('click', confirmAnswer);",
+    // the AI retry names the stored submission so the server grades the saved answers (docs/TESTING.md §9)
+    "...(grading.submissionRef ? { submissionRef: grading.submissionRef } : {})",
+    "const clock = ms =>",
     "$('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });",
     "$('flag').addEventListener('change', () => { const id = ordered[current].id; $('flag').checked ? flags.add(id) : flags.delete(id); persist(); });",
     "${flags.has(q.id) ? ' · ⚑ לבדיקה חוזרת' : ''}",
-    "source.className = 'source-line';"
+    "source.className = 'source-line';",
+    // test details and attempt number for the teacher's email (docs/TESTING.md §1, §8)
+    "const attemptNumber = (id, name) => { try { return (JSON.parse(localStorage.getItem(attemptKey) || '{}')[`${id}/${name.toLowerCase()}`] || 0) + 1; } catch (_) { return 1; } };",
+    "const answerDetails = q =>",
+    "attempt: attemptNumber(examId, $('student-name').value.trim())",
+    "countAttempt(examId, $('student-name').value.trim());"
   ];
   for (const line of same) {
     assert.ok(libraryJs.includes(line), `library: ${line}`);
@@ -125,4 +137,16 @@ test('physics script link carries a version newer than the one first deployed (c
   const html = readFileSync(new URL('./physics-exam.html', import.meta.url), 'utf8');
   const version = Number(/physics-exam\.js\?v=(\d+)/.exec(html)?.[1]);
   assert.ok(version >= 3, `physics-exam.js?v=${version} must be bumped past v=2, which production already serves with the old page structure`);
+});
+
+test('the AI sentence in the privacy lines is conditional (AI grading is off until a key is configured)', () => {
+  for (const [name, html] of [['library', libraryHtml], ['physics', physicsHtml]]) {
+    assert.equal(html.split('ייתכן שהתשובות הפתוחות ייבדקו בשירות בינה מלאכותית').length - 1, 2, `${name}: start and results lines`);
+    assert.doesNotMatch(html, /והתשובות הפתוחות נבדקות בשירות בינה מלאכותית/, name);
+  }
+});
+
+test('shared quiz-core.js link is past the old production v=2 on every page that loads it (stale cache would lack new functions)', () => {
+  const version = (html) => Number(/quiz-core\.js\?v=(\d+)/.exec(html)?.[1]);
+  for (const html of [libraryHtml, physicsHtml, read('garden-exam.html'), read('practice.html')]) assert.ok(version(html) >= 3);
 });

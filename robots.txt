@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /history.html
+Disallow: /api/

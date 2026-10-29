@@ -4,11 +4,11 @@ import { createApp } from './server.mjs';
 
 const origin = 'https://hitech.agnon.online';
 const payload = { name: 'תלמיד בדיקה <script>', answers: Array.from({ length: 20 }, (_, i) => ({ question: `שאלה ${i + 1}`, answer: 'תשובה <img src=x>' })) };
-const env = { NODE_ENV: 'production', RESEND_API_KEY: 'test-secret', RESEND_FROM_EMAIL: 'PrepX <exams@netanya.club>' };
+const env = { RESEND_RPS: '1000', NODE_ENV: 'production', RESEND_API_KEY: 'test-secret', RESEND_FROM_EMAIL: 'PrepX <exams@netanya.club>' };
 
 async function withServer(run, options = {}) {
   const calls = [];
-  const server = createApp({ env, sendFetch: async (url, config) => {
+  const server = createApp({ sleep: async () => {}, env, sendFetch: async (url, config) => {
     calls.push({ url, ...config, body: JSON.parse(config.body) });
     return new Response(JSON.stringify({ id: 'test-email-id' }), { status: 200 });
   }, ...options });
@@ -40,7 +40,7 @@ test('identical retries use the same provider idempotency key', () => withServer
 test('rejects incomplete, oversized, and cross-origin submissions before sending', () => withServer(async ({ submit, calls }) => {
   assert.equal((await submit({ ...payload, answers: payload.answers.slice(1) })).status, 400);
   assert.equal((await submit({ ...payload, name: '' })).status, 400);
-  assert.equal((await submit({ ...payload, name: 'x'.repeat(100001) })).status, 413);
+  assert.equal((await submit({ ...payload, name: 'x'.repeat(250001) })).status, 413);
   assert.equal((await submit(payload, { Origin: 'https://untrusted.example' })).status, 403);
   assert.equal((await submit(payload, { 'Content-Type': 'text/plain' })).status, 415);
   assert.equal(calls.length, 0);
@@ -65,12 +65,12 @@ test('provider failures and missing config never report success or expose secret
   }, { env: {} });
 });
 
-test('bounds email attempts per server instance', () => withServer(async ({ submit, calls }) => {
-  for (let i = 0; i < 100; i++) assert.equal((await submit()).status, 200);
+test('bounds email attempts per client (150 an hour)', () => withServer(async ({ submit, calls }) => {
+  for (let i = 0; i < 150; i++) assert.equal((await submit()).status, 200);
   const response = await submit();
   assert.equal(response.status, 429);
   assert.equal(response.headers.get('Retry-After'), '3600');
-  assert.equal(calls.length, 100);
+  assert.equal(calls.length, 150);
 }));
 
 test('teacher email is designed HTML with logo and app link', () => withServer(async ({ submit, calls }) => {

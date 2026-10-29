@@ -15,6 +15,8 @@ export async function verify(sql, content = extractContent()) {
     const [{ count }] = await sql`SELECT count(*)::int AS count FROM ${sql(table)}`;
     if (count !== content[table].length) problems.push(`${table}: ${count} rows in db, ${content[table].length} in source`);
   }
+  const codes = new Map((await sql`SELECT id, code FROM exams`).map((r) => [r.id, r.code]));
+  for (const e of content.exams) if (codes.get(e.id) !== e.code) problems.push(`exam ${e.id}: code ${codes.get(e.id)} in db, ${e.code} in source`);
   const refs = new Map((await sql`SELECT * FROM study_references`).map((r) => [r.id, r]));
   for (const r of content.study_references) {
     const row = refs.get(r.id);

@@ -16,13 +16,21 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
   const sql = await connect(url);
   try {
     await sql`DROP SCHEMA public CASCADE`; await sql`CREATE SCHEMA public`; // test database only
-    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql']);
+    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
     assert.equal(first.questions.inserted, 129);
     assert.equal(first.study_references.inserted, 4);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
+    assert.deepEqual(await verify(sql), []);
+    assert.deepEqual((await sql`SELECT id, code FROM exams ORDER BY id`).map((r) => [r.id, r.code]),
+      [['hebrew-v1-garden', 'HEB-001'], ['hebrew-v2-library', 'HEB-002'], ['physics-v1-assessment', 'PHY-001']]);
+    // a code is unique, and verify reports a changed one
+    await assert.rejects(sql`UPDATE exams SET code = 'HEB-001' WHERE id = 'hebrew-v2-library'`);
+    await sql`UPDATE exams SET code = 'HEB-009' WHERE id = 'hebrew-v2-library'`;
+    assert.deepEqual(await verify(sql), ['exam hebrew-v2-library: code HEB-009 in db, HEB-002 in source']);
+    await seed(sql);
     assert.deepEqual(await verify(sql), []);
     // an unapplied shipped migration (stale container / unmigrated db) is reported by verify
     await sql`DELETE FROM schema_migrations WHERE version = '002_references.sql'`;
@@ -115,5 +123,91 @@ test('a physics submission is stored with its exam id, question links and server
     assert.ok(rows.filter((r) => r.type === 'mcq').every((r) => r.auto_correct === true));
     assert.ok(rows.filter((r) => r.type === 'open').every((r) => r.auto_correct === null));
     assert.deepEqual(rows.filter((r) => r.type === 'fill').map((r) => r.auto_correct), rows.filter((r) => r.type === 'fill').map((r) => (r.position - 1) % 2 === 1));
+  } finally { await sql.end(); }
+});
+
+// Same file so it runs after the migration test, on the migrated test database (files run in parallel and share one schema).
+test('practice results are stored under the name with their answers and read back newest first', { skip: !url && 'TEST_DATABASE_URL not set' }, async () => {
+  const { storePracticeResult, listPracticeResults } = await import('./practice.mjs');
+  const sql = await connect(url);
+  try {
+    const answers = (right) => Array.from({ length: 6 }, (_, i) => ({ questionId: `facts-0${i + 1}`, choice: i % 2, correct: i < right }));
+    const first = await storePracticeResult(sql, { quizId: 'facts', quizCode: 'PRA-001', name: 'דנה כהן', score: 50, stars: 1, answers: answers(3) });
+    const second = await storePracticeResult(sql, { quizId: 'facts', quizCode: 'PRA-001', name: 'דנה כהן', score: 100, stars: 3, answers: answers(6) });
+    await storePracticeResult(sql, { quizId: 'physics-pole', quizCode: 'PRA-007', name: 'אחר', score: 0, stars: 0, answers: answers(0) });
+    assert.ok(second > first);
+    const history = await listPracticeResults(sql, ' דנה כהן ');
+    assert.deepEqual(history.map((r) => [r.quiz_code, r.score, r.stars]), [['PRA-001', 100, 3], ['PRA-001', 50, 1]]);
+    assert.equal(history[1].answers.length, 6);
+    assert.deepEqual(history[1].answers.map((a) => a.correct), [true, true, true, false, false, false]);
+    assert.deepEqual(history[0].answers[0], { questionId: 'facts-01', choice: 0, correct: true });
+    assert.equal((await listPracticeResults(sql, 'לא קיים')).length, 0);
+    // the schema refuses an out-of-range score, and a failed insert leaves no half-written round behind
+    await assert.rejects(storePracticeResult(sql, { quizId: 'facts', quizCode: 'PRA-001', name: 'x', score: 101, stars: 0, answers: answers(0) }));
+    await assert.rejects(storePracticeResult(sql, { quizId: 'facts', quizCode: 'PRA-001', name: 'x', score: 0, stars: 0, answers: [{ questionId: 'facts-01', choice: null, correct: true }] }));
+    assert.equal((await listPracticeResults(sql, 'x')).length, 0);
+  } finally { await sql.end(); }
+});
+
+// Same file, after the tests above (migrated and seeded database).
+test('exam code, attempt and AI grading are stored; a retake is a new row; an ok grading is never overwritten', { skip: !url && 'TEST_DATABASE_URL not set' }, async () => {
+  const { updateAiScores, getSubmissionForGrading } = await import('./submissions.mjs');
+  const sql = await connect(url);
+  try {
+    const library = extractContent().questions.filter((q) => q.exam_id === 'hebrew-v2-library');
+    const answers = library.map((q) => ({
+      question: `גרסה 2 · הספרייה בהפסקה · ${q.prompt}`, answer: q.type === 'open' ? `פתוחה ${q.id}` : q.choices[q.correct]
+    }));
+    const base = { name: 'ניסיונות', answers, examId: 'hebrew-v2-library', examCode: 'HEB-002' };
+    const first = await storeSubmission(sql, { ...base, key: '1'.repeat(64), attempt: 1 });
+    const retake = await storeSubmission(sql, { ...base, key: '2'.repeat(64), attempt: 2 });
+    assert.notEqual(first, retake);
+    const rows = await sql`SELECT id, exam_code, attempt, ai_status, ai_scores, ai_total FROM submissions WHERE student_name = 'ניסיונות' ORDER BY id`;
+    assert.deepEqual(rows.map((r) => [r.exam_code, r.attempt, r.ai_status, r.ai_scores, r.ai_total]), [['HEB-002', 1, null, null, null], ['HEB-002', 2, null, null, null]]);
+    // payloads without an exam keep NULL code and attempt
+    const legacy = await storeSubmission(sql, { key: '3'.repeat(64), name: 'ישן', answers: answers.map((a, i) => ({ ...a, question: `שאלה ${i}` })) });
+    assert.deepEqual({ ...(await sql`SELECT exam_code, attempt FROM submissions WHERE id = ${legacy}`)[0] }, { exam_code: null, attempt: null });
+
+    // the stored answers come back with their question ids; the open ones are the ones the rubrics know
+    const stored = await getSubmissionForGrading(sql, '1'.repeat(64));
+    assert.deepEqual([stored.id, stored.examId, stored.aiStatus, stored.answers.length], [first, 'hebrew-v2-library', null, 20]);
+    assert.deepEqual(stored.answers.map((a) => a.questionId), library.map((q) => q.id));
+    assert.equal(stored.answers[14].answer, 'פתוחה library-15');
+    assert.equal(await getSubmissionForGrading(sql, '9'.repeat(64)), null);
+
+    assert.equal(await updateAiScores(sql, { id: first, status: 'failed' }), true);
+    assert.deepEqual({ ...(await sql`SELECT ai_status, ai_scores, ai_total FROM submissions WHERE id = ${first}`)[0] }, { ai_status: 'failed', ai_scores: null, ai_total: null });
+    const scores = { 'library-15': { score: 5.36, max: 5.36, reason: 'טוב' }, 'library-16': { score: 2.5, max: 5.36, reason: 'חלקי' } };
+    assert.equal(await updateAiScores(sql, { key: '1'.repeat(64), status: 'ok', scores, total: 7.86 }), true);
+    const [graded] = await sql`SELECT ai_status, ai_scores, ai_total, ai_updated_at FROM submissions WHERE id = ${first}`;
+    assert.deepEqual([graded.ai_status, graded.ai_scores, Number(graded.ai_total)], ['ok', scores, 7.86]);
+    assert.ok(graded.ai_updated_at);
+    // a later failure or second grading cannot replace an ok grading, and the other attempt is untouched
+    assert.equal(await updateAiScores(sql, { id: first, status: 'failed' }), false);
+    assert.equal(await updateAiScores(sql, { id: first, status: 'ok', scores: {}, total: 0 }), false);
+    assert.deepEqual((await getSubmissionForGrading(sql, '1'.repeat(64))).aiScores, scores);
+    assert.equal((await getSubmissionForGrading(sql, '2'.repeat(64))).aiStatus, null);
+    assert.equal(await updateAiScores(sql, { id: 999999999, status: 'ok', scores: {}, total: 0 }), false);
+    await assert.rejects(updateAiScores(sql, { id: retake, status: 'maybe' }));
+  } finally { await sql.end(); }
+});
+
+// Same file, after the tests above (migrated database); the transaction is rolled back.
+test('migration 005: a checkbox question can be stored, an invalid type still fails', { skip: !url && 'TEST_DATABASE_URL not set' }, async () => {
+  const sql = await connect(url);
+  try {
+    const [{ def }] = await sql`SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conname = 'questions_type_check'`;
+    assert.match(def, /checkbox/);
+    const rollback = new Error('rollback');
+    await assert.rejects(sql.begin(async (tx) => {
+      await tx`INSERT INTO subjects (id, title, description, sort_order) VALUES ('zz-cbx', 't', 'd', 99)`;
+      await tx`INSERT INTO exams (id, subject_id, title, detail, href, question_count, sort_order) VALUES ('zz-cbx-exam', 'zz-cbx', 't', 'd', 'x.html', 1, 99)`;
+      await tx`INSERT INTO questions (id, exam_id, position, type, prompt, source_hash) VALUES ('zz-cbx-1', 'zz-cbx-exam', 1, 'checkbox', 'p', 'h')`;
+      await assert.rejects(
+        tx.savepoint((s) => s`INSERT INTO questions (id, exam_id, position, type, prompt, source_hash) VALUES ('zz-cbx-2', 'zz-cbx-exam', 2, 'bogus', 'p', 'h')`),
+        (e) => e.code === '23514'
+      );
+      throw rollback;
+    }), (e) => e === rollback);
   } finally { await sql.end(); }
 });

@@ -1,3 +1,6 @@
+// Permanent test codes PRA-001… for these quizzes live in practice-history.js (QUIZZES): the mapping is fixed in that
+// order (facts, questions, instructions, physics-basics, physics-units, physics-precision, physics-pole) and never
+// renumbered. A new quiz here gets the next free code there (db/extract.test.mjs fails until it does).
 const quizzes = {
   facts: {
     title: 'עובדה או דעה?',
@@ -124,6 +127,7 @@ let selectedQuiz = inlineQuiz;
 const contentSource = new URLSearchParams(location.search).get('source');
 const useApi = contentSource !== 'inline' && (contentSource === 'api'
   || document.querySelector('meta[name="prepx-content-source"]')?.content === 'api');
+const { NAME_KEY, AUTO_ADVANCE_MS, cleanName, buildPayload, endpointFor, reviewItem } = PracticeHistory;
 const { scoreQuiz, starsFor, feedbackTier, shuffled, shuffleChoices, missedQuestions, scheduleReask, streakCelebrates } = QuizCore;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -134,12 +138,64 @@ let position = 0;
 let streak = 0;
 let answered = false;
 let fullRound = true;
+let roundAnswers = [];
+let picks = [];
+let reviewItems = [];
+let view = 0;
+let advanceTimer;
+let posted = false;
 
 const bestKey = `prepx-best-${quizKey}`;
 const readBest = () => { try { const raw = localStorage.getItem(bestKey); return /^\d{1,3}$/.test(raw) && Number(raw) <= 100 ? Number(raw) : 0; } catch { return 0; } };
 const saveBest = value => { try { localStorage.setItem(bestKey, String(value)); } catch { /* storage unavailable */ } };
 
+// Student name (stored once in this browser) and the best-effort history of finished rounds.
+const readName = () => { try { return cleanName(localStorage.getItem(NAME_KEY) || ''); } catch { return ''; } };
+const saveName = name => { try { name ? localStorage.setItem(NAME_KEY, name) : localStorage.removeItem(NAME_KEY); } catch { /* storage unavailable */ } };
+const nameSkipped = () => { try { return sessionStorage.getItem('prepx-name-skipped') === '1'; } catch { return false; } };
+const skipName = () => { try { sessionStorage.setItem('prepx-name-skipped', '1'); } catch { /* storage unavailable */ } };
+
+function renderNameBox() {
+  const name = readName();
+  const known = Boolean(name);
+  byId('name-form').hidden = known || nameSkipped();
+  byId('name-current').hidden = !known;
+  byId('name-current-text').textContent = known ? `מתרגלים בשם: ${name}` : '';
+  byId('name-error').textContent = '';
+  byId('history-note').textContent = known
+    ? 'התוצאה של כל סבב מלא נשמרת בשם הזה, כדי שאפשר יהיה לראות היסטוריה.'
+    : 'בלי שם התוצאה לא נשמרת בהיסטוריה. התרגול עצמו עובד כרגיל.';
+}
+
+byId('name-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const name = cleanName(byId('name-input').value);
+  if (!name) { byId('name-error').textContent = 'כתבו שם (עד 60 תווים).'; byId('name-input').focus(); return; }
+  saveName(name);
+  renderNameBox();
+});
+byId('name-skip').addEventListener('click', () => { skipName(); renderNameBox(); });
+byId('name-change').addEventListener('click', () => {
+  byId('name-input').value = readName();
+  byId('name-current').hidden = true;
+  byId('name-form').hidden = false;
+  byId('name-input').focus();
+});
+
+// Posts one finished full round, once. Never blocks or breaks the quiz: every failure is swallowed.
+function postRound(earned, stars) {
+  if (posted || !fullRound) return;
+  posted = true;
+  const payload = buildPayload({ quizId: quizKey, name: readName(), answers: roundAnswers, score: earned, stars });
+  if (!payload) return;
+  try {
+    fetch(endpointFor(location.hostname), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true })
+      .catch(() => {});
+  } catch { /* history is best effort */ }
+}
+
 async function init() {
+  renderNameBox();
   if (useApi && inlineQuiz && window.ContentApi) {
     const { loadContent, quizFromApi, quizMatches } = ContentApi;
     const data = await loadContent(`quizzes/${quizKey}`, null, { valid: quiz => quizMatches(quiz, inlineQuiz.questions.length) });
@@ -169,6 +225,11 @@ function startRound(questions, full = true) {
   fullRound = full;
   queue = shuffled(questions).map(q => shuffleChoices(q));
   results = {};
+  roundAnswers = [];
+  picks = [];
+  reviewItems = [];
+  clearTimeout(advanceTimer);
+  posted = false;
   position = 0;
   streak = 0;
   byId('result-screen').hidden = true;
@@ -179,18 +240,23 @@ function startRound(questions, full = true) {
   window.scrollTo(0, 0);
 }
 
-function showQuestion() {
-  answered = false;
-  const question = queue[position];
+// Shows the question at queue index `index`. The current question (view === position) is answerable until a choice is
+// clicked; every answered question, including earlier ones the student went back to, is locked and read-only.
+function showQuestion(index = position) {
+  view = index;
+  answered = picks[view] !== undefined;
+  const question = queue[view];
   const total = queue.length;
-  byId('progress-count').textContent = `שאלה ${position + 1} מתוך ${total}`;
-  byId('question-index').textContent = question.reask ? 'שאלה לחזרה' : `שאלה ${position + 1}`;
+  const readOnly = view < position;
+  byId('progress-count').textContent = `שאלה ${view + 1} מתוך ${total}`;
+  byId('question-index').textContent = `${question.reask ? 'שאלה לחזרה' : `שאלה ${view + 1}`}${readOnly ? ' · צפייה בלבד' : ''}`;
   byId('question-text').textContent = question.text;
   byId('feedback').hidden = true;
   byId('feedback').classList.remove('incorrect');
   byId('streak-badge').hidden = true;
-  byId('next-button').hidden = true;
-  byId('next-button').textContent = position === total - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
+  byId('next-button').hidden = !answered;
+  byId('next-button').textContent = view === total - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
+  byId('back-button').hidden = view === 0;
   const progress = Math.round((position / total) * 100);
   byId('progress-fill').style.width = `${progress}%`;
   byId('progress-fill').parentElement.setAttribute('aria-valuenow', String(progress));
@@ -205,20 +271,33 @@ function showQuestion() {
     button.addEventListener('click', () => selectChoice(index));
     choices.append(button);
   });
+  if (answered) showVerdict(question, picks[view], false);
 }
 
 function selectChoice(index) {
-  if (answered) return;
+  if (answered || view !== position) return;
   answered = true;
+  picks[position] = index;
   const question = queue[position];
   const correct = index === question.correct;
   // Only the first attempt counts; a re-asked question is for learning, not score.
   if (!question.reask) {
     results[question.id] = correct ? 1 : 0;
+    roundAnswers.push({ index: Number(question.id.slice(1)), choice: question.order[index], correct });
+    reviewItems.push(reviewItem(question, index));
     streak = correct ? streak + 1 : 0;
     if (!correct) queue = scheduleReask(queue, position, shuffleChoices(question));
   }
+  showVerdict(question, index, true);
+  byId('next-button').hidden = false;
+  byId('next-button').textContent = position === queue.length - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
+  // The verdict and explanation stay on screen for a moment, then the next question opens by itself.
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(advance, AUTO_ADVANCE_MS);
+}
 
+function showVerdict(question, index, fresh) {
+  const correct = index === question.correct;
   [...byId('choices').children].forEach((button, choiceIndex) => {
     button.disabled = true;
     if (choiceIndex === question.correct) button.classList.add('correct');
@@ -231,11 +310,9 @@ function selectChoice(index) {
   showSource(question.ref);
   byId('feedback').classList.toggle('incorrect', !correct);
   byId('feedback').hidden = false;
-  byId('streak-badge').hidden = !(correct && !question.reask && streakCelebrates(streak));
+  byId('streak-badge').hidden = !(fresh && correct && !question.reask && streakCelebrates(streak));
   if (!byId('streak-badge').hidden) byId('streak-badge').textContent = `${streak} ברצף!`;
-  byId('next-button').hidden = false;
-  byId('feedback').focus({ preventScroll: true });
-  byId('next-button').textContent = position === queue.length - 1 ? 'לסיכום התרגול' : 'לשאלה הבאה';
+  if (fresh) byId('feedback').focus({ preventScroll: true });
 }
 
 // "מקור: עמוד 3 בסיכום" with a link to the reference, shown after answering.
@@ -251,16 +328,29 @@ function showSource(ref) {
   else { link.target = '_blank'; link.rel = 'noopener'; }
 }
 
-byId('next-button').addEventListener('click', () => {
-  if (!answered || !selectedQuiz) return;
+// Moves from the current question to the next one (or to the summary after the last).
+function advance() {
+  clearTimeout(advanceTimer);
+  if (!selectedQuiz || picks[position] === undefined) return;
   if (position < queue.length - 1) {
     position++;
-    showQuestion();
+    showQuestion(position);
     byId('question-text').focus({ preventScroll: true });
     window.scrollTo(0, 0);
   } else {
     showResult();
   }
+}
+
+byId('next-button').addEventListener('click', () => {
+  clearTimeout(advanceTimer);
+  if (view < position) { showQuestion(view + 1); byId('question-text').focus({ preventScroll: true }); } else advance();
+});
+
+// Going back is read-only and pauses the automatic advance; "next" returns forward.
+byId('back-button').addEventListener('click', () => {
+  clearTimeout(advanceTimer);
+  if (view > 0) { showQuestion(view - 1); byId('question-text').focus({ preventScroll: true }); }
 });
 
 const messages = {
@@ -285,6 +375,7 @@ function showResult() {
   const stars = starsFor(percent);
   const previousBest = readBest();
   if (fullRound && earned > previousBest) saveBest(earned);
+  postRound(earned, stars);
 
   byId('quiz-screen').hidden = true;
   const panel = byId('result-screen');
@@ -301,11 +392,37 @@ function showResult() {
   const improvement = fullRound && previousBest > 0 && earned > previousBest ? earned - previousBest : 0;
   byId('result-improvement').textContent = improvement ? `שיפרתם ב-${improvement} נקודות מהניסיון הטוב ביותר הקודם!` : '';
   byId('result-improvement').hidden = !improvement;
+  renderReview();
   byId('missed-button').hidden = missed.length === 0;
   byId('missed-button').textContent = `לחזור רק על הטעויות (${missed.length})`;
   if (tier === 'great' && !reducedMotion) launchConfetti();
   window.scrollTo(0, 0);
   byId('result-title').focus();
+}
+
+// Every question of the round with the student's answer, the right answer and the explanation, so the explanations
+// that flashed by during the pause are not lost.
+function renderReview() {
+  const list = byId('review-list');
+  list.replaceChildren();
+  reviewItems.forEach(item => {
+    const li = document.createElement('li');
+    li.className = item.correct ? 'review-item right' : 'review-item wrong';
+    const add = (tag, text, className, dir) => {
+      const el = document.createElement(tag);
+      el.textContent = text;
+      if (className) el.className = className;
+      if (dir) el.dir = dir;
+      li.append(el);
+    };
+    add('strong', item.text);
+    add('p', `${item.correct ? '✓ ענית נכון' : '✕ ענית'}: ${item.picked}`);
+    if (!item.correct) add('p', `התשובה הנכונה: ${item.right}`);
+    add('p', item.he);
+    if (item.en) add('p', item.en, 'english', 'ltr');
+    list.append(li);
+  });
+  byId('review').hidden = reviewItems.length === 0;
 }
 
 function launchConfetti() {

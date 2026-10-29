@@ -6,10 +6,11 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="prepx-content-source" content="api">
   <title>תרגול לקראת המבחן | PrepX</title>
-  <link rel="stylesheet" href="practice.css?v=6">
-  <script src="quiz-core.js?v=2" defer></script>
+  <link rel="stylesheet" href="practice.css?v=8">
+  <script src="quiz-core.js?v=3" defer></script>
+  <script src="practice-history.js?v=2" defer></script>
   <script src="content-api.js?v=3" defer></script>
-  <script src="practice.js?v=11" defer></script>
+  <script src="practice.js?v=13" defer></script>
   <link rel="stylesheet" href="branding.css?v=1">
 </head>
 <body>
@@ -28,12 +29,26 @@
         <span class="practice-label">תרגול קצר</span>
       </div>
 
+      <div class="name-box">
+        <form id="name-form" class="name-form" novalidate hidden>
+          <label for="name-input">איך קוראים לך? השם נשמר במכשיר הזה ונשלח רק עם תוצאות התרגול.</label>
+          <div class="name-row">
+            <input id="name-input" name="name" type="text" maxlength="60" autocomplete="given-name" enterkeyhint="done">
+            <button class="secondary-button" type="submit">שמירה</button>
+          </div>
+          <button id="name-skip" class="link-button" type="button">להמשיך בלי שם</button>
+        </form>
+        <p id="name-current" class="name-current" hidden><span id="name-current-text"></span> <button id="name-change" class="link-button" type="button">שינוי שם</button></p>
+        <p id="name-error" class="name-error" role="alert"></p>
+      </div>
+
       <div class="progress-header">
         <span id="progress-count"></span>
-        <span>בחרו תשובה אחת</span>
+        <span>בחרו תשובה אחת. התשובה ננעלת ועוברים הלאה לבד.</span>
       </div>
       <div class="progress-track" role="progressbar" aria-label="התקדמות בתרגול" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-fill"></span></div>
 
+      <button id="back-button" class="link-button" type="button" hidden>← לשאלה הקודמת (צפייה בלבד)</button>
       <div class="question-panel">
         <span id="question-index" class="question-index"></span>
         <h2 id="question-text" tabindex="-1"></h2>
@@ -49,7 +64,7 @@
         </div>
         <button id="next-button" class="primary-button" type="button" hidden></button>
       </div>
-      <p class="note">זהו תרגול עצמי. התשובות כאן אינן נשלחות למורה.</p>
+      <p class="note">זהו תרגול עצמי. התשובות אינן נשלחות במייל. כשמסיימים סבב מלא ויש שם, נשמרים בהיסטוריה השם, התרגול, הציון ואילו שאלות נענו נכון בניסיון הראשון ואילו לא. <span id="history-note"></span></p>
     </section>
 
     <section id="result-screen" class="result-panel" aria-labelledby="result-title" hidden>
@@ -61,6 +76,10 @@
       <p id="result-improvement" class="improvement" hidden></p>
       <p id="result-message"></p>
       <p id="result-message-en" class="english" dir="ltr"></p>
+      <details id="review" class="review" open hidden>
+        <summary>סקירת השאלות וההסברים</summary>
+        <ol id="review-list" class="review-list"></ol>
+      </details>
       <div class="result-actions">
         <button id="retry-button" class="primary-button" type="button">לתרגל שוב</button>
         <button id="missed-button" class="secondary-button" type="button" hidden></button>

@@ -170,7 +170,7 @@ test('physics submission (exam field, 27 answers) is emailed with its own subjec
   assert.equal((await post(base, body)).status, 200);
   assert.equal(resendCalls.length, calls + 1);
   const sent = JSON.parse(resendCalls.at(-1).init.body);
-  assert.equal(sent.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳');
+  assert.equal(sent.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳ · PHY-001');
   assert.match(resendCalls.at(-1).init.headers['Idempotency-Key'], /^physics-exam\//);
   const rows = await rowFor('תלמידת פיזיקה');
   assert.equal(rows.length, 1);
@@ -180,4 +180,53 @@ test('physics submission (exam field, 27 answers) is emailed with its own subjec
     FROM submission_answers WHERE submission_id = ${rows[0].id}`;
   assert.deepEqual({ n, linked, graded }, { n: 27, linked: 27, graded: 20 });
   assert.equal((await post(base, { ...body, answers: body.answers.slice(1) })).status, 400);
+});
+
+test('library attempt: code and attempt are stored, a failed AI grading is retried from the STORED answers and saved', { skip }, async () => {
+  const { plainText } = await import('../db/submissions.mjs');
+  let aiWorks = false;
+  const seen = [];
+  const aiFetch = async (endpoint, init) => {
+    if (!aiWorks) return new Response('{}', { status: 500 });
+    const document = JSON.parse(JSON.parse(init.body).messages[1].content.split('\n').slice(1).join('\n'));
+    seen.push(document.questions.map((q) => q.studentAnswer));
+    const results = document.questions.map((q) => ({ questionId: q.questionId, score: q.maxScore, reason: 'טוב' }));
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results }) } }] }), { status: 200 });
+  };
+  const env = { DATABASE_URL: url, DB_WRITE_SUBMISSIONS: '1', NODE_ENV: 'development', RESEND_API_KEY: 're_fake', RESEND_FROM_EMAIL: 'x <x@example.invalid>', OPENAI_API_KEY: 'sk-fake' };
+  const app = await listen(createApp({ env, sendFetch: fakeSend, aiFetch, db: createDb(env) }));
+  try {
+    const body = (attempt) => ({
+      exam: 'hebrew-v2-library', name: 'תלמידת ניסיונות', attempt,
+      answers: libraryRows.map((q) => ({ questionId: q.id, question: plainText(q.prompt), answer: q.type === 'open' ? `תשובה שמורה ${q.id}` : q.choices[q.correct], ...(q.type === 'open' ? {} : { correct: true }) }))
+    });
+    const first = await (await post(urlOf(app), body(1))).json();
+    assert.match(first.submissionRef, /^[0-9a-f]{64}$/);
+    assert.equal(first.grading.status, 'failed');
+    const row = () => sql`SELECT * FROM submissions WHERE dedupe_key = ${first.submissionRef}`.then((r) => r[0]);
+    const failed = await eventually(async () => (await row())?.ai_status === 'failed' && row());
+    assert.deepEqual([failed.exam_code, failed.attempt, failed.ai_scores], ['HEB-002', 1, null]);
+    // the same answers as attempt 2 are a new row
+    assert.notEqual((await (await post(urlOf(app), body(2))).json()).submissionRef, first.submissionRef);
+    assert.equal((await rowFor('תלמידת ניסיונות')).length, 2);
+
+    // retry: the browser sends different text, the stored one is graded and saved, and no new email goes out
+    aiWorks = true;
+    const emails = resendCalls.length;
+    const openIds = libraryRows.filter((q) => q.type === 'open').map((q) => q.id);
+    const retry = await fetch(`${urlOf(app)}/api/grade-open`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:3000' },
+      body: JSON.stringify({ exam: 'hebrew-v2-library', submissionRef: first.submissionRef, answers: openIds.map((id) => ({ questionId: id, question: 'ש', answer: 'טקסט מזויף' })) })
+    });
+    assert.equal(retry.status, 200);
+    const graded = (await retry.json()).grading;
+    assert.equal(graded.status, 'ok');
+    assert.deepEqual(Object.keys(graded.scores).sort(), [...openIds].sort());
+    assert.ok(seen[0].every((text) => text.startsWith('תשובה שמורה ')));
+    const saved = await eventually(async () => (await row()).ai_status === 'ok' && row());
+    assert.deepEqual(Object.keys(saved.ai_scores).sort(), [...openIds].sort());
+    assert.equal(saved.ai_scores[openIds[0]].reason, 'טוב');
+    assert.equal(Number(saved.ai_total), Math.round(Object.values(saved.ai_scores).reduce((sum, s) => sum + s.score, 0) * 100) / 100);
+    assert.equal(resendCalls.length, emails);
+  } finally { app.close(); app.closeAllConnections?.(); }
 });
