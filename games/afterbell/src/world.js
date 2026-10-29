@@ -178,6 +178,32 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   const antenna=equipmentBase('antenna',-8,22);box(0,1.12,0,.35,.25,.22,'#2e3e48',antenna);segment([0,1.25,0],[.24,2.05,.02],.018,'#bbc5c1',antenna);box(0,1.14,.12,.19,.1,.025,'#718576',antenna);
   const stations=NPCS.map((n,i)=>{const g=new THREE.Group();g.position.set(n.x+1.2,0,n.z-.9);scene.add(g);box(0,.65,0,.7,1.3,.45,'#4a585d',g);const screen=box(0,1.05,.24,.48,.34,.025,'#a4784e',g,true);box(0,.67,.25,.45,.06,.05,'#7b8988',g);const light=new THREE.PointLight('#e3ae72',0,7,2);light.position.set(n.x,2.5,n.z);scene.add(light);return {g,screen,light};});
   const campus=createCampusEnvironment({scene,box,ball,cyl,mesh,segment,mat,sign,softPool,doorLeaves,doorBlocker,lampFixture});
+  // Cut a sight corridor through foreground scenery, including batched buildings
+  // and tree crowns. The ground and physical collisions remain intact.
+  const sightPlayer={value:new THREE.Vector3()},sightEnabled={value:0};
+  const sceneryMaterials=new Set();
+  scene.traverse(node=>{if(node.isMesh)for(const material of [node.material].flat())sceneryMaterials.add(material);});
+  for(const material of sceneryMaterials){
+    material.onBeforeCompile=shader=>{
+      shader.uniforms.sightPlayer=sightPlayer;
+      shader.uniforms.sightEnabled=sightEnabled;
+      shader.vertexShader='varying vec3 vSightPosition;\n'+shader.vertexShader;
+      shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
+        vSightPosition=(modelMatrix*vec4(transformed,1.0)).xyz;`);
+      shader.fragmentShader='varying vec3 vSightPosition;\nuniform vec3 sightPlayer;\nuniform float sightEnabled;\n'+shader.fragmentShader;
+      shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
+        if(sightEnabled>0.5 && vSightPosition.y>0.22){
+          vec3 sightLine=sightPlayer-cameraPosition;
+          float sightLength=length(sightLine);
+          vec3 sightDirection=sightLine/sightLength;
+          vec3 sightOffset=vSightPosition-cameraPosition;
+          float sightDepth=dot(sightOffset,sightDirection);
+          float sightDistance=length(sightOffset-sightDirection*sightDepth);
+          if(sightDepth>0.0 && sightDepth<sightLength+0.35 && sightDistance<2.6) discard;
+        }`);
+    };
+    material.customProgramCacheKey=()=> 'player-sight-corridor-v1';
+  }
   // Batch immutable scenery by material to keep the richer geometry inexpensive to render.
   scene.updateMatrixWorld(true);const movingScenery=new Set([gate,...seals,...equipment.values(),...stations.map(s=>s.g),...campus.dynamic]),batches=new Map(),originals=[];
   scene.traverse(node=>{if(!node.isMesh)return;let parent=node;while(parent){if(movingScenery.has(parent))return;parent=parent.parent;}if(node.material.transparent)return;const batch=batches.get(node.material)||[];batch.push(node.geometry.clone().applyMatrix4(node.matrixWorld));batches.set(node.material,batch);originals.push(node);});
@@ -223,7 +249,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   const guide={goal:null,endpoint:null,route:[],following:false,arrived:false,blocked:false,anchor:null,lastPlan:-10};
   let walkRoute=[],walkKind=null,lastTrail=-1;
   // One instanced draw call for the whole route; no lights, textures or pulsing.
-  const trail=new THREE.InstancedMesh(new THREE.RingGeometry(.09,.16,8),new THREE.MeshBasicMaterial({color:'#efd09b',transparent:true,opacity:.82,depthWrite:false,side:THREE.DoubleSide}),160);trail.count=0;trail.frustumCulled=false;scene.add(trail);
+  const trail=new THREE.InstancedMesh(new THREE.RingGeometry(.09,.16,8),new THREE.MeshBasicMaterial({color:'#efd09b',transparent:true,opacity:.95,depthWrite:false,depthTest:false,side:THREE.DoubleSide}),160);trail.count=0;trail.frustumCulled=false;trail.renderOrder=2;scene.add(trail);
   const beacon=new THREE.Group();scene.add(beacon);beacon.visible=false;
   const beaconRing=mesh(new THREE.RingGeometry(.56,.63,32),'#e4be7d',0,.16,0,beacon,true);beaconRing.rotation.x=-Math.PI/2;
   const beaconArrow=cone(0,2.8,0,.22,.5,'#e4be7d',beacon,4);beaconArrow.rotation.z=Math.PI;
@@ -298,6 +324,8 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
     if(active&&observing){cameraTarget.set(-17,.6,13);camera.position.set(-9,3.7,18.5);camera.lookAt(cameraTarget);}
     else if(active){const next=new THREE.Vector3(player.position.x,1,player.position.z);cameraTarget.lerp(next,reduced?1:1-Math.exp(-dt*5));const offset=followOffset.clone().multiplyScalar(innerWidth<600?1.2:1);camera.position.copy(cameraTarget).add(offset);camera.lookAt(cameraTarget);}
     else{const mobile=innerWidth<600;cameraTarget.set(mobile?0:7,1,mobile?-7:-2);camera.position.set(mobile?35:38,mobile?25:27,mobile?39:38);camera.lookAt(cameraTarget);}
+    sightEnabled.value=active&&!observing?1:0;
+    sightPlayer.value.copy(player.position).y+=1;
     if(draw)renderer.render(scene,camera);
   }
   let last=performance.now();function loop(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!manual)update(dt);requestAnimationFrame(loop);}requestAnimationFrame(loop);
