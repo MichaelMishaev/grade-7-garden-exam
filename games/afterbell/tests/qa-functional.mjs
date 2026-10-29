@@ -1,3 +1,4 @@
+import { solveFieldCheck } from './field-check-helper.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -61,7 +62,7 @@ try {
   await page.locator('#track-equipment').click();
   await page.evaluate(() => __afterbell.walkTo(-21, -1.2));
   await page.keyboard.press('KeyE');
-  await page.locator('#collect-equipment').click();
+  await solveFieldCheck(page);await page.locator('#collect-equipment').click();
   await page.evaluate(() => __afterbell.walkTo(-13, -7.2));
   await page.keyboard.press('KeyE');
   const pendingQuestion = (await state(page)).question.id;

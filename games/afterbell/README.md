@@ -46,6 +46,16 @@ Open `http://192.168.1.139:4320/` on the phone. The address depends on the compu
 - The gate requires all questions answered and all three systems restored. Completed full rounds update `prepx-best-<quiz>` on the current origin. Separate origins have separate browser storage.
 - No countdown, jump scares, paid features, external AI or public leaderboard. Environmental clues are fictional game content; academic questions are never replaced with invented material.
 
+## Clear next steps and field challenges
+
+The closest unfinished teammate is selected at the start. The objective explicitly changes from meeting that teammate, to locating equipment, to returning it, and finally to the exit. Resuming an adventure prefers unfinished work already started. Players can still choose another station or explore freely.
+
+A warm breadcrumb route and destination beacon show collision-safe approaches. **ללכת איתי** optionally walks the player at normal speed; joystick, keyboard or jump immediately return control. The route avoids obstacles rather than teleporting. **צריך רמז?** explains the current action; a quiet reminder appears after prolonged inactivity. The compact mobile objective includes its instruction and keeps map/journal controls below it.
+
+Each missing item now has a hands-on check before collection: a three-symbol access sequence, a three-step backup connection check, or a radio dial with signal-strength feedback. Incorrect operations give a clue and allow retry. Solved checks survive reload. These are fictional equipment mechanisms; existing academic questions and grading are unchanged.
+
+**משימת צד** offers five tracked challenges: fill the wildlife bowl, discover the locker note, restore path lights, make three basketball shots, and observe the lake. Each has a clue, a selected route and a completion state; players can return to the main mission at any point. Side missions and equipment checks never inflate the academic score.
+
 ## Environment interaction
 
 Twelve optional activities have visible effects and saved state:
@@ -88,9 +98,11 @@ npm run build
 npm audit
 ```
 
-`tests/browser.mjs` exercises desktop and 390×844 touch, real WebGL rendering, movement/jumping, wildlife, pause, dialogue, locked wrong/correct answers, reload, read-only review, equipment collection, all quests in a different order, the exit and a saved result. Dedicated QA scripts cover mobile environmental actions and source/storage failure recovery. It also checks offline and reduced-motion behavior. Screenshots and reports are ignored under `output/`. Test-only positioning exists only in Vite development with `?test=1`; production builds remove that code.
+`tests/browser.mjs` exercises desktop and 390×844 touch, real WebGL rendering, movement/jumping, wildlife, pause, dialogue, locked wrong/correct answers, reload, read-only review, equipment collection, all quests in a different order, the exit and a saved result. Dedicated QA scripts cover mobile environmental actions and source/storage failure recovery. It also checks offline and reduced-motion behavior. `tests/qa-mission.mjs` verifies the objective lifecycle, safe guidance, all field puzzles, five side missions and reload recovery; its route-only mode checks all eleven actual-world destinations. Screenshots and reports are ignored under `output/`. Test-only positioning exists only in Vite development with `?test=1`; production builds remove that code.
 
 Verified locally on 2026-10-29: **16 core/service tests**, **43 full-story browser checks**, **18 functional recovery checks**, **154 mobile checks**, and **18 final mobile visual checks** passed with no browser/page errors in the completed QA runs. The unchanged web-game skill client also passed the final start, movement, jump and rendered-scene smoke check. Screenshots and game state were inspected. The mobile checks use browser emulation at 390×844 and 360×780; physical-device acceptance and production deployment are separate.
+
+Engagement revision verified locally: **101 mission checks**, **36 actual-world route checks**, **43 story/recovery checks**, **217 mobile checks** and **31 small-screen puzzle checks** passed with no uncaught browser errors. The game unit/service suite passed 25 tests; its optional PostgreSQL integration test was not rerun in this client-focused revision. Main-server static integration and existing mocked submission checks passed 11 tests. Game HTML revalidates on reload; previous release assets are retained during the cache transition.
 
 The repository's existing regression suite is run from its root: `node --test *.test.mjs db/*.test.mjs`. Database reset suites need their explicit throwaway-database setup; this game does not change the main database or exam submission contract. Production release still requires the repository's deployment and human-review gates.
 

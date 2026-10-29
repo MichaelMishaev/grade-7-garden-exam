@@ -1,3 +1,4 @@
+import { solveFieldCheck } from './field-check-helper.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -29,7 +30,7 @@ async function station(page,index){
   if(await page.locator('#track-equipment').count()){
     check(`station ${index+1} requires its equipment`,!(await state(page)).question);
     await page.locator('#track-equipment').click();await approach(page,'equipment',index);
-    await page.locator('#collect-equipment').click();
+    await solveFieldCheck(page);await page.locator('#collect-equipment').click();
     check(`equipment ${index+1} is collected`,(await state(page)).equipment[index].collected);
     await approach(page,'npc',index);
   }
@@ -61,7 +62,7 @@ try {
   check('social clue gives constructive feedback',!!(await page.locator('#social-feedback').textContent()));
   await page.locator('.social[data-choice="0"]').click();check('practice waits for collected equipment',await page.locator('#track-equipment').isVisible());
   await page.locator('#track-equipment').click();await approach(page,'equipment',0);await shot(page,'equipment-desktop');
-  await page.locator('#collect-equipment').click();check('equipment updates the world state',(await state(page)).equipment[0].collected);
+  await solveFieldCheck(page);await page.locator('#collect-equipment').click();check('equipment updates the world state',(await state(page)).equipment[0].collected);
   await approach(page,'npc',0);
   const first=await state(page);const chosen=await page.evaluate(()=>{const r=__afterbell.round(),q=r.questions.find(q=>q.id===JSON.parse(render_game_to_text()).question.id);return 1-q.correct;});
   await page.locator(`.answer[data-choice="${chosen}"]`).click();await page.locator('#hold-feedback').click();

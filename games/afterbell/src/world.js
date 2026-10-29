@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { NPCS, EXIT } from './core.js';
 import { createCampusEnvironment, normalizeEnvironment } from './environment.js';
+import { findRoute, clearSegment } from './navigation.js';
 
 export function createWorld(container, { reduced = false, onMove, onInteract, onCollect, onEnvironmentChange }) {
   let seed = 7919;
@@ -219,26 +220,75 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   const fireflies=Array.from({length:12},(_,i)=>{const positions=[[-4,12],[-8,4],[-14,-3],[-9,-12],[4,-10],[10,-2],[18,2],[19,11],[9,21],[-7,20],[-23,-1],[5,-23]];const [x,z]=positions[i];return {x,z,mesh:ball(x,1.1,z,.055,'#c9c693',scene,1,true)};});
   const destination=mesh(new THREE.RingGeometry(.26,.30,24),'#c1c9b4',0,.12,0,scene,true);destination.rotation.x=-Math.PI/2;destination.visible=false;
   const keys=new Set();let joystick={x:0,z:0},target=null,active=false,paused=false,velocityY=0,jumpY=0,worldTime=0,manual=false,environment=normalizeEnvironment(),observing=false,seatedPose=false;
+  const guide={goal:null,endpoint:null,route:[],following:false,arrived:false,blocked:false,anchor:null,lastPlan:-10};
+  let walkRoute=[],walkKind=null,lastTrail=-1;
+  // One instanced draw call for the whole route; no lights, textures or pulsing.
+  const trail=new THREE.InstancedMesh(new THREE.RingGeometry(.09,.16,8),new THREE.MeshBasicMaterial({color:'#efd09b',transparent:true,opacity:.82,depthWrite:false,side:THREE.DoubleSide}),160);trail.count=0;trail.frustumCulled=false;scene.add(trail);
+  const beacon=new THREE.Group();scene.add(beacon);beacon.visible=false;
+  const beaconRing=mesh(new THREE.RingGeometry(.56,.63,32),'#e4be7d',0,.16,0,beacon,true);beaconRing.rotation.x=-Math.PI/2;
+  const beaconArrow=cone(0,2.8,0,.22,.5,'#e4be7d',beacon,4);beaconArrow.rotation.z=Math.PI;
+  const beaconStem=mesh(new THREE.CylinderGeometry(.025,.025,2.3,6),new THREE.MeshBasicMaterial({color:'#e4be7d',transparent:true,opacity:.3,depthWrite:false}),0,1.4,0,beacon);
+  const trailMatrix=new THREE.Matrix4(),trailRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0)),trailScale=new THREE.Vector3(1,1,1);
+  function drawGuide(){
+    trail.count=0;beacon.visible=active&&!!guide.goal;if(!active||!guide.goal)return;
+    const endpoint=guide.endpoint||guide.goal;beacon.position.set(endpoint.x,0,endpoint.z);
+    let previous={x:player.position.x,z:player.position.z},count=0;
+    for(const point of guide.route){const distance=Math.hypot(point.x-previous.x,point.z-previous.z),steps=Math.ceil(distance/.75);for(let i=1;i<=steps&&count<160;i++){const t=i/steps;trailMatrix.compose(new THREE.Vector3(previous.x+(point.x-previous.x)*t,.15,previous.z+(point.z-previous.z)*t),trailRotation,trailScale);trail.setMatrixAt(count++,trailMatrix);}previous=point;}
+    trail.count=count;trail.instanceMatrix.needsUpdate=true;lastTrail=worldTime;
+  }
+  function planGuide(){
+    if(!guide.goal)return;const start={x:player.position.x,z:player.position.z};const path=findRoute(start,guide.goal,blocked);
+    guide.route=path||[];guide.endpoint=path===null?null:(path.at(-1)||start);guide.blocked=path===null;guide.arrived=path!==null&&path.length===0;guide.anchor=start;guide.lastPlan=worldTime;
+    if(guide.following){walkRoute=[...guide.route];walkKind=guide.blocked||guide.arrived?null:'guide';if(!walkKind)guide.following=false;}
+    drawGuide();
+  }
+  function guideTo(x,z){
+    if(!Number.isFinite(x)||!Number.isFinite(z)||Math.abs(x)>27||Math.abs(z)>27)return false;
+    guide.goal={x,z};guide.following=false;walkRoute=[];walkKind=null;target=null;planGuide();return !guide.blocked;
+  }
+  function stopGuide(){guide.following=false;walkRoute=[];walkKind=null;target=null;destination.visible=false;}
+  function followGuide(){
+    if(!active||paused||!guide.goal)return false;standUp();observing=false;planGuide();
+    if(guide.blocked||guide.arrived)return false;guide.following=true;walkKind='guide';walkRoute=[...guide.route];keys.clear();joystick={x:0,z:0};return true;
+  }
+  function guidance(){let remaining=0,p=player.position;for(const next of guide.route){remaining+=Math.hypot(next.x-p.x,next.z-p.z);p=next;}return {following:guide.following,arrived:guide.arrived,blocked:guide.blocked,goal:guide.goal&&{...guide.goal},remaining:+remaining.toFixed(1),route:guide.route.map(p=>({...p})),endpoint:guide.endpoint&&{...guide.endpoint}};}
+  function walkToPoint(point){
+    standUp();observing=false;stopGuide();const path=findRoute({x:player.position.x,z:player.position.z},point,blocked,{radius:.1});
+    if(!path?.length)return;walkRoute=path;walkKind='click';destination.position.set(path.at(-1).x,.12,path.at(-1).z);destination.visible=true;
+  }
+
   const cameraTarget=new THREE.Vector3();
-  function jump(){if(active&&!paused&&jumpY===0){standUp();observing=false;velocityY=5.8;}}
+  function jump(){if(active&&!paused&&jumpY===0){standUp();observing=false;stopGuide();velocityY=5.8;}}
   function standUp(){if(!environment.seated)return;environment.seated=false;player.position.set(-6,0,11.8);onEnvironmentChange?.({seated:false});}
   function applyEnvironment(next,options){environment=next;campus.sync(next,options);if(next.seated){player.position.set(-6,-.35,10.1);player.rotation.y=0;seatedPose=true;}else if(seatedPose){player.position.set(-6,0,11.8);seatedPose=false;}npcMeshes.forEach((n,i)=>{const helped=next.helped.includes(NPCS[i].id);n.g.userData.arms[0].rotation.x=helped?-1.1:0;n.g.userData.arms[1].rotation.x=helped?-.45:0;n.ring.material=mat(helped?'#bbd0ab':NPCS[i].color,true);});}
-  function setActive(value){active=value;target=null;keys.clear();observing=false;}
+  function setActive(value){active=value;stopGuide();keys.clear();observing=false;drawGuide();}
   function setPaused(value){paused=value;keys.clear();joystick={x:0,z:0};target=null;destination.visible=false;}
-  function clearInputs(){keys.clear();joystick={x:0,z:0};}
+  function clearInputs(){keys.clear();joystick={x:0,z:0};stopGuide();}
   window.addEventListener('blur',clearInputs);
   window.addEventListener('keydown',e=>{if(!active||paused||e.target.matches('input,select,textarea'))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Space')jump();if(e.code==='KeyE'&&!e.repeat)onInteract();});
   window.addEventListener('keyup',e=>keys.delete(e.code));
   const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);let pointerStart=null;
   renderer.domElement.addEventListener('pointerdown',e=>{pointerStart={x:e.clientX,y:e.clientY};});
-  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused||!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>10)return;ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);const hit=new THREE.Vector3();if(ray.ray.intersectPlane(plane,hit)&&Math.abs(hit.x)<27&&Math.abs(hit.z)<27){target={x:hit.x,z:hit.z};destination.position.set(hit.x,.12,hit.z);destination.visible=true;}});
+  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused||!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>10)return;ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);const hit=new THREE.Vector3();if(ray.ray.intersectPlane(plane,hit)&&Math.abs(hit.x)<27&&Math.abs(hit.z)<27){walkToPoint({x:hit.x,z:hit.z});}});
   // Lower camera reads as being inside a place, while retaining the same input basis.
   const followOffset=new THREE.Vector3(11.5,12.5,15.55);
   function update(dt,draw=true){
     if(!paused)worldTime+=dt;
     if(active&&!paused){let dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joystick.x;let dz=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+joystick.z;let mx=dx*.806+dz*.592,mz=-dx*.592+dz*.806;
-      if(dx||dz){standUp();observing=false;target=null;destination.visible=false;}else if(target){mx=target.x-player.position.x;mz=target.z-player.position.z;if(Math.hypot(mx,mz)<.2){target=null;destination.visible=false;mx=mz=0;}}
-      if(target){standUp();observing=false;}const len=Math.hypot(mx,mz),moving=len>.05&&!environment.seated&&!observing;if(moving){const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.2:4.5,nx=player.position.x+mx/len*dt*speed,nz=player.position.z+mz/len*dt*speed;if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;if(Math.abs(player.position.x-nx)>.01&&Math.abs(player.position.z-nz)>.01){target=null;destination.visible=false;}player.rotation.y=Math.atan2(mx,mz);}
+      if(dx||dz){standUp();observing=false;stopGuide();}
+      else if(walkKind){
+        while(walkRoute.length&&Math.hypot(walkRoute[0].x-player.position.x,walkRoute[0].z-player.position.z)<.10){walkRoute.shift();if(walkKind==='guide')guide.route.shift();}
+        if(!walkRoute.length){if(walkKind==='guide'){guide.arrived=true;guide.following=false;}walkKind=null;target=null;destination.visible=false;mx=mz=0;drawGuide();}
+        else{target=walkRoute[0];mx=target.x-player.position.x;mz=target.z-player.position.z;}
+      }
+      if(target){standUp();observing=false;}const len=Math.hypot(mx,mz),moving=len>.05&&!environment.seated&&!observing;
+      if(moving){const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.2:4.5,step=target?Math.min(len,dt*speed):dt*speed,nx=player.position.x+mx/len*step,nz=player.position.z+mz/len*step;
+        if(target){if(clearSegment(player.position,{x:nx,z:nz},blocked)){player.position.x=nx;player.position.z=nz;}else{const wasGuide=walkKind==='guide';stopGuide();if(wasGuide){guide.blocked=true;guide.lastPlan=worldTime;}}}
+        else{if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;}
+        player.rotation.y=Math.atan2(mx,mz);
+      }
+      if(guide.goal&&!guide.following&&worldTime-guide.lastPlan>=1&&(!guide.anchor||Math.hypot(player.position.x-guide.anchor.x,player.position.z-guide.anchor.z)>1.1||guide.blocked))planGuide();
+      if(worldTime-lastTrail>.3)drawGuide();
       if(jumpY>0||velocityY>0){velocityY-=14*dt;jumpY=Math.max(0,jumpY+velocityY*dt);if(jumpY===0)velocityY=0;}
       player.position.y=environment.seated?-.35:jumpY+(!reduced&&moving?Math.sin(worldTime*14)*.025:0);
       player.userData.legs.forEach((l,i)=>l.rotation.x=environment.seated?-1.3:!reduced&&moving?Math.sin(worldTime*10+i*Math.PI)*.5:0);player.userData.arms.forEach((a,i)=>a.rotation.x=environment.seated?-.35:!reduced&&moving?Math.sin(worldTime*10+i*Math.PI+Math.PI)*.3:0);
@@ -254,8 +304,8 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setPaused(true);container.dispatchEvent(new CustomEvent('worldlost'));});
   update(0);
-  return {setActive,setPaused,jump,setJoystick(x,z){joystick={x,z};},setPlayer(x,z){if(environment.seated)standUp();observing=false;target=null;player.position.set(x,0,z);cameraTarget.set(x,1,z);},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
-    setEnvironment:applyEnvironment,observe(value){observing=value;target=null;keys.clear();joystick={x:0,z:0};},isObserving:()=>observing,environmentAnimation:()=>campus.animation,performance:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio()}),
+  return {setActive,setPaused,jump,guideTo,followGuide,stopGuide,guidance,setJoystick(x,z){joystick={x,z};if(x||z)stopGuide();},setPlayer(x,z){if(environment.seated)standUp();observing=false;stopGuide();player.position.set(x,0,z);cameraTarget.set(x,1,z);if(guide.goal)planGuide();},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
+    setEnvironment:applyEnvironment,observe(value){observing=value;stopGuide();keys.clear();joystick={x:0,z:0};},isObserving:()=>observing,environmentAnimation:()=>campus.animation,performance:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio()}),
     project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight,visible:p.z<1&&Math.abs(p.x)<1&&Math.abs(p.y)<1};},
     setProgress(round){fireflies.forEach((f,i)=>f.mesh.visible=!round.collected.includes(i));npcMeshes.forEach((n,i)=>n.marker.visible=!round.seals.includes(NPCS[i].id));for(const [id,g]of equipment)g.visible=!(round.items||[]).includes(id);stations.forEach((s,i)=>{const done=round.seals.includes(NPCS[i].id);s.screen.material=mat(done?'#91aa8b':'#a4784e',true);s.light.intensity=done?12:0;});seals.forEach((s,i)=>s.material=mat(round.seals.length>i?'#a7c1a0':'#9f684f',true));leaves.forEach((g,i)=>g.rotation.y=round.seals.length===3?(i===0?-1.35:1.35):0);exitLight.intensity=round.seals.length===3?10:0;},
     advanceTime(ms){manual=true;for(let t=0;t<Math.min(ms,60000);t+=1000/60)update(1/60,false);renderer.render(scene,camera);},resumeRealtime(){manual=false;last=performance.now();},blocked,dispose(){renderer.dispose();}

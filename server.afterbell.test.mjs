@@ -15,6 +15,7 @@ test('same-origin game entry, built assets and isolated history work through the
     assert.equal((await fetch(base+'/afterbell-entry.css?v=1')).status,200);
     const response=await fetch(base+'/games/afterbell/play/index.html');
     assert.equal(response.status,200);
+    assert.equal(response.headers.get('cache-control'),'no-cache');
     const html=await response.text();
     for(const [,asset] of html.matchAll(/(?:src|href)="(\.\/assets\/[^\"]+)"/g)){
       const r=await fetch(new URL(asset,response.url));assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/javascript|css/);

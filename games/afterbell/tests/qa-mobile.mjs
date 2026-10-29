@@ -42,6 +42,82 @@ async function touchDrag(page, cdp, dx, dy, cancel = false) {
   await advance(page, 700);
   await cdp.send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] });
 }
+async function missionControls(page, size, cdp) {
+  await page.waitForTimeout(120);
+  const layout=await page.evaluate(()=>{
+    const box=id=>{const r=document.querySelector(id).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};};
+    return {hud:box('.quest-panel'),journal:box('#journal'),map:box('#map-toggle')};
+  });
+  check(`${size} journal and map stay below the expanded HUD`,layout.journal.y>=layout.hud.bottom+8&&layout.map.y>=layout.hud.bottom+8);
+  check(`${size} journal and map do not overlap`,layout.map.right<=layout.journal.x||layout.journal.right<=layout.map.x);
+  check(`${size} journal aligns with map`,Math.abs(layout.journal.y-layout.map.y)<3);
+  const initial=await state(page);
+  check(`${size} objective identifies the next person or action`,await page.locator('#objective').textContent()===initial.mission.objective.title&&initial.mission.objective.title!=='מחזירים 3 מערכות לפעולה');
+  check(`${size} objective hint is visible`,await page.locator('#quest-sub').isVisible()&&!!await page.locator('#quest-sub').textContent());
+  await targets(page,'.mission-controls button',`${size} mission controls have 44px touch targets`);
+  await page.locator('#mission-hint').tap();
+  check(`${size} hint dialog opens and fits`,(await state(page)).mode==='hint'&&await rectFits(page,'#dialog'));
+  await targets(page,'#dialog button',`${size} hint dialog targets are 44px`);
+  await shot(page,`mission-hint-${size}`);
+  await page.locator('#hint-return').tap();
+  check(`${size} hint returns to exploration`,(await state(page)).mode==='explore');
+  await page.locator('#side-task').tap();
+  check(`${size} five side quests are available`,await page.locator('[data-side-mission]').count()===5);
+  check(`${size} side quest list fits viewport`,await rectFits(page,'#dialog'));
+  await targets(page,'#dialog button',`${size} side quest targets are 44px`);
+  await shot(page,`side-quests-${size}`);
+  await page.locator('[data-side-mission="water"]').tap();
+  check(`${size} side quest updates the destination`,(await state(page)).mission.target.id==='water');
+  await page.locator('#mission-hint').tap();await page.locator('#hint-main').tap();
+  const restored=await state(page);
+  check(`${size} hint can restore the main objective`,restored.mission.target.id===restored.mission.objective.id);
+  await shot(page,`mission-hud-${size}`);
+  if(cdp){
+    const before=(await state(page)).player;
+    await page.locator('#follow-path').tap();await advance(page,600);
+    check(`${size} touch guide starts walking along the route`,(await state(page)).mission.navigation.following&&distance(before,(await state(page)).player)>1);
+    await shot(page,`guided-walk-${size}`);
+    await touchDrag(page,cdp,32,0);
+    check(`${size} manual joystick cancels guide`,!(await state(page)).mission.navigation.following);
+    const manual=(await state(page)).player;await advance(page,500);
+    check(`${size} movement stays stopped after manual override release`,distance(manual,(await state(page)).player)<.01);
+    await page.evaluate(()=>__afterbell.walkTo(0,9));await advance(page,16);
+  }
+}
+async function solveFieldCheck(page) {
+  if(!await page.locator('#collect-equipment').isDisabled())return;
+  const id=(await state(page)).mission.fieldCheck.id;
+  check(`equipment ${id} remains locked before its check`,await page.locator('#collect-equipment').isDisabled());
+  check(`equipment ${id} puzzle fits viewport`,await rectFits(page,'#dialog')&&await page.locator('#dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+  await targets(page,'#dialog button',`equipment ${id} puzzle targets are 44px`);
+  await shot(page,`field-check-${id}-${page.viewportSize().width}`);
+  if(id==='antenna'){
+    await page.locator('#test-signal').tap();
+    check('wrong antenna channel keeps collection locked',await page.locator('#collect-equipment').isDisabled());
+    await page.locator('#channel-down').tap();
+    check('antenna lower channel bound is one',await page.locator('#radio-channel').textContent()==='1');
+    for(let i=0;i<4;i++)await page.locator('#channel-up').tap();
+    check('touch tuner reaches the indicated channel',await page.locator('#radio-channel').textContent()==='5');
+    await page.locator('#test-signal').tap();
+  }else{
+    await page.locator(`[data-operation="${id==='card'?2:0}"]`).tap();
+    check(`wrong ${id} pattern keeps collection locked`,await page.locator('#collect-equipment').isDisabled()&&(await state(page)).mission.fieldCheck.step===0);
+    for(const n of id==='card'?[0,1,2]:[2,0,1])await page.locator(`[data-operation="${n}"]`).tap();
+  }
+  check(`equipment ${id} unlocks after touch puzzle solution`,!await page.locator('#collect-equipment').isDisabled()&&(await state(page)).environmentState.checkedEquipment.includes(id));
+}
+async function positionEnvironment(page, id) {
+  return page.evaluate(id => {
+      const e = JSON.parse(render_game_to_text()).environment.find(x => x.id === id);
+      for (const [dx,dz] of [[0,1.8],[0,.5],[1.7,0],[-1.7,0],[0,-1.7],[0,0]]) {
+        if (__afterbell.world.blocked(e.x+dx,e.z+dz)) continue;
+        __afterbell.walkTo(e.x+dx,e.z+dz);
+        const target=JSON.parse(render_game_to_text()).target;
+        if (target?.type === 'environment' && target.id === id) return true;
+      }
+      return false;
+  }, id);
+}
 async function approach(page, type, index) {
   const positioned = await page.evaluate(({ type, index }) => {
     const s = JSON.parse(render_game_to_text());
@@ -64,7 +140,7 @@ async function station(page, index) {
     check(`station ${index + 1} waits for equipment`, !(await state(page)).question);
     await page.locator('#track-equipment').tap();
     await approach(page, 'equipment', index);
-    await page.locator('#collect-equipment').tap();
+    await solveFieldCheck(page);await page.locator('#collect-equipment').tap();
     check(`equipment ${index + 1} collected by touch`, (await state(page)).equipment[index].collected);
     await approach(page, 'npc', index);
   }
@@ -93,7 +169,20 @@ async function start(page, viewport) {
 
 const browser = await chromium.launch({ headless: true, args: ['--enable-webgl'] });
 try {
-  if (process.env.QA_MOBILE_VISUAL_ONLY === '1') {
+  if (process.env.QA_MOBILE_PUZZLES_ONLY === '1') {
+    const context=await browser.newContext({viewport:{width:360,height:780},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+    const page=await context.newPage();watch(page);
+    await page.route('**/api/afterbell/quizzes/**',route=>route.abort());
+    await start(page,'360x780-puzzles');
+    for(const index of [0,1,2]){
+      await approach(page,'equipment',index);await solveFieldCheck(page);
+      await page.locator('#collect-equipment').tap();
+      check(`360px equipment ${index+1} collects after touch solution`,(await state(page)).equipment[index].collected);
+    }
+    check('360px all three equipment checks are saved',(await state(page)).environmentState.checkedEquipment.length===3);
+    check('360px puzzle run has no browser errors',errors.length===0,errors);
+    await context.close();
+  } else if (process.env.QA_MOBILE_VISUAL_ONLY === '1') {
     for (const viewport of [{width:390,height:844},{width:360,height:780}]) {
       const size=`${viewport.width}x${viewport.height}`;
       const context=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
@@ -142,6 +231,7 @@ try {
   check('reduced motion preference reaches CSS', await page.locator('.vignette').evaluate(el => getComputedStyle(el).transitionDuration === '0s'));
   await targets(page, '#hud button, .topbar button, #joystick', '390px gameplay touch targets are at least 44px');
   const cdp = await context.newCDPSession(page);
+  await missionControls(page,'390x844',cdp);
   const before = (await state(page)).player;
   await touchDrag(page, cdp, 32, 0);
   const afterRelease = (await state(page)).player;
@@ -204,16 +294,7 @@ try {
   const environment = (await state(page)).environment;
   check('twelve optional environment activities are available', environment.length === 12);
   for (const item of environment) {
-    const reached = await page.evaluate(id => {
-      const e = JSON.parse(render_game_to_text()).environment.find(x => x.id === id);
-      for (const [dx,dz] of [[0,1.8],[0,.5],[1.7,0],[-1.7,0],[0,-1.7],[0,0]]) {
-        if (__afterbell.world.blocked(e.x+dx,e.z+dz)) continue;
-        __afterbell.walkTo(e.x+dx,e.z+dz);
-        const target=JSON.parse(render_game_to_text()).target;
-        if (target?.type === 'environment' && target.id === id) return true;
-      }
-      return false;
-    }, item.id);
+    const reached = await positionEnvironment(page, item.id);
     check(`environment ${item.id} has reachable touch action`, reached);
     if (!reached) continue;
     await page.locator('#interact').tap();
@@ -262,6 +343,20 @@ try {
     }
     check(`environment ${item.id} resumes world`, (await state(page)).mode === 'explore');
   }
+  await page.locator('#side-task').tap();
+  check('four side quests complete through environment activities',await page.locator('.side-mission.side-done').count()===4);
+  await page.locator('[data-side-mission="basketball"]').tap();
+  for(let i=0;i<2;i++){
+    check(`basketball repeat ${i+1} has a reachable selected target`,await positionEnvironment(page,'basketball'));
+    await advance(page,16);await page.waitForTimeout(120);
+    check(`basketball repeat ${i+1} selected goal owns the action`,(await state(page)).target?.type==='environment'&&(await state(page)).target?.id==='basketball');
+    await page.locator('#interact').tap();await page.locator('#env-primary[data-environment="basketball"]').tap();await advance(page,2300);
+  }
+  await page.waitForTimeout(120);
+  check('third basketball shot completes fifth side quest',(await state(page)).mission.sideCompleted===5);
+  await page.locator('#side-task').tap();
+  check('all five side quests show completed',await page.locator('.side-mission.side-done').count()===5);
+  await shot(page,'side-quests-complete-390x844');await page.locator('#side-main').tap();
   check('all twelve discoveries are recorded', (await state(page)).environmentState.visited.length === 12);
   check('optional exploration does not answer questions or inflate score', (await state(page)).answered === 0 && (await state(page)).score === 0);
   const environmentBefore = (await state(page)).environmentState;
@@ -319,6 +414,7 @@ try {
   const compact = await small.newPage(); watch(compact);
   await compact.route('**/api/afterbell/quizzes/**', route => route.abort());
   await start(compact, '360x780');
+  await missionControls(compact,'360x780',await small.newCDPSession(compact));
   check('360px gameplay has no horizontal overflow', await noOverflow(compact));
   check('360px HUD fits viewport', await rectFits(compact, '.quest-panel'));
   await targets(compact, '#hud button, .topbar button, #joystick', '360px gameplay targets are at least 44px');
@@ -336,7 +432,7 @@ try {
   console.error('QA execution failed: ' + error.message);
 } finally {
   await browser.close();
-  await writeFile(`${out}/${process.env.QA_MOBILE_VISUAL_ONLY === '1' ? 'visual-report' : 'report'}.json`, JSON.stringify({ checks, failures, errors, screenshots }, null, 2));
+  await writeFile(`${out}/${process.env.QA_MOBILE_PUZZLES_ONLY === '1' ? 'puzzle-report' : process.env.QA_MOBILE_VISUAL_ONLY === '1' ? 'visual-report' : 'report'}.json`, JSON.stringify({ checks, failures, errors, screenshots }, null, 2));
 }
-console.log(JSON.stringify({ passed: checks.filter(x => x.passed).length, failures, errors, report: `${out}/${process.env.QA_MOBILE_VISUAL_ONLY === '1' ? 'visual-report' : 'report'}.json` }, null, 2));
+console.log(JSON.stringify({ passed: checks.filter(x => x.passed).length, failures, errors, report: `${out}/${process.env.QA_MOBILE_PUZZLES_ONLY === '1' ? 'puzzle-report' : process.env.QA_MOBILE_VISUAL_ONLY === '1' ? 'visual-report' : 'report'}.json` }, null, 2));
 if (failures.length) process.exitCode = 1;

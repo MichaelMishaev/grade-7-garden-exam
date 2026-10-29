@@ -18,7 +18,7 @@ export function normalizeEnvironment(input = {}) {
   const s = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
   const count = key => Number.isSafeInteger(s[key]) ? Math.max(0, Math.min(9999, s[key])) : 0;
   const ids = list => Array.isArray(list) ? [...new Set(list.filter(id => ENVIRONMENT.some(e => e.id === id)))] : [];
-  return { visited: ids(s.visited), doorOpen: s.doorOpen === true, lampOn: s.lampOn !== false,
+  return { checkedEquipment: Array.isArray(s.checkedEquipment) ? [...new Set(s.checkedEquipment.filter(id => ['card','fuse','antenna'].includes(id)))] : [], visited: ids(s.visited), doorOpen: s.doorOpen === true, lampOn: s.lampOn !== false,
     lockerOpen: s.lockerOpen === true, waterFilled: s.waterFilled === true, watered: s.watered === true,
     recycled: s.recycled === true, switches: [0,1,2].map(i => Array.isArray(s.switches) && s.switches[i] === true),
     shots: count('shots'), observations: count('observations'), bells: count('bells'),

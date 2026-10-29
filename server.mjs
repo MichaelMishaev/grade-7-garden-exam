@@ -486,7 +486,8 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
 
   try {
     const body = await readFile(file);
-    response.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=300' });
+    const cache = pathname.startsWith('/games/afterbell/play/') && extname(file) === '.html' ? 'no-cache' : 'public, max-age=300';
+    response.writeHead(200, { 'Content-Type': type, 'Cache-Control': cache });
     response.end(request.method === 'HEAD' ? undefined : body);
   } catch {
     response.writeHead(404).end();
