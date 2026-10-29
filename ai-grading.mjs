@@ -93,13 +93,16 @@ export async function gradeOpenAnswers({ examId, items, env = process.env, fetch
   };
   const requested = { count: items.length, byId: Object.fromEntries(records.map(({ item, rubric }) => [item.questionId, rubric.max])) };
 
+  const model = env.OPENAI_MODEL || 'gpt-4.1';
+  // gpt-5+/o-series models only accept the default temperature (a 0 is rejected with a 400).
+  const fixedTemperature = /^(gpt-[5-9]|o\d)/.test(model);
   try {
     const response = await fetchImpl(endpoint, {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.OPENAI_API_KEY.trim()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: env.OPENAI_MODEL || 'gpt-4.1',
-        temperature: 0,
+        model,
+        ...(fixedTemperature ? {} : { temperature: 0 }),
         max_completion_tokens: 4000,
         response_format: { type: 'json_schema', json_schema: schema },
         messages: [

@@ -215,6 +215,16 @@ test('the model can be chosen with OPENAI_MODEL', () => withServer(async ({ subm
   assert.equal(ai.requests[0].body.model, 'gpt-test-model');
 }, { serverEnv: { ...env, OPENAI_MODEL: 'gpt-test-model' } }));
 
+test('gpt-5+/o-series models get no temperature (they reject 0 with a 400); gpt-4.1 keeps temperature 0', async () => {
+  for (const [model, sendsTemperature] of [['gpt-6.1-terra', false], ['gpt-5.5', false], ['o3', false], ['gpt-4.1', true], ['gpt-4o-mini', true]]) {
+    await withServer(async ({ submit, ai }) => {
+      await submit(libraryPayload());
+      assert.equal('temperature' in ai.requests[0].body, sendsTemperature, model);
+      assert.equal(ai.requests[0].body.model, model);
+    }, { serverEnv: { ...env, OPENAI_MODEL: model } });
+  }
+});
+
 test('physics: its open tasks are graded in one request with no shared passage (context is the model answer)', () => withServer(async ({ submit, ai, emails }) => {
   const open = physicsRows.filter(q => q.type === 'open');
   const payload = {
