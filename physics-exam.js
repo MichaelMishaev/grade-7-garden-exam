@@ -134,6 +134,13 @@
     $('choice-feedback').classList.toggle('incorrect', !ok);
     $('choice-feedback').hidden = false;
   }
+  function showNumberFeedback(q) {
+    const ok = isCorrect(q);
+    $('number-answer').disabled = true;
+    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובה הנכונה: ${correctText(q)}. `}${q.explanation.he}`;
+    $('choice-feedback').classList.toggle('incorrect', !ok);
+    $('choice-feedback').hidden = false;
+  }
   function questionAt(index) {
     current = index;
     const q = ordered[index];
@@ -152,6 +159,8 @@
     if (q.type === 'open') $('answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
     else if (q.type === 'fill') {
       $('number-answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
+      $('number-answer').disabled = false;
+      if (answered(q)) showNumberFeedback(q);
       $('work').value = typeof work[q.id] === 'string' ? work[q.id] : '';
     } else q.choices.forEach((choice, i) => {
       const label = document.createElement('label'); label.className = 'choice';
@@ -230,6 +239,7 @@
   });
   $('answer').addEventListener('input', () => { answers[ordered[current].id] = $('answer').value; persist(); countAnswered(); });
   $('number-answer').addEventListener('input', () => { answers[ordered[current].id] = $('number-answer').value; persist(); countAnswered(); });
+  $('number-answer').addEventListener('change', () => { const q = ordered[current]; if (q.type === 'fill' && answered(q)) showNumberFeedback(q); });
   $('work').addEventListener('input', () => { work[ordered[current].id] = $('work').value; persist(); });
   $('flag').addEventListener('change', () => { const id = ordered[current].id; $('flag').checked ? flags.add(id) : flags.delete(id); persist(); });
   $('previous').addEventListener('click', () => current === 0 ? show('start', 'page-title') : questionAt(current - 1));
