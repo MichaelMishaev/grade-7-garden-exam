@@ -121,6 +121,19 @@
     if (focusId) $(focusId).focus({ preventScroll: true });
   }
   const countAnswered = () => { $('answered').textContent = `${ordered.filter(answered).length} תשובות מולאו`; };
+  // Instant feedback: once a choice is picked the question locks, so the shown answer can't be swapped for the right one.
+  function showFeedback(q) {
+    const ok = answers[q.id] === q.correct;
+    document.querySelectorAll('#choices .choice').forEach(label => {
+      const input = label.querySelector('input'); const i = Number(input.value);
+      input.disabled = true;
+      label.classList.toggle('correct', i === q.correct);
+      label.classList.toggle('incorrect', i === answers[q.id] && !ok);
+    });
+    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובה הנכונה: ${q.choices[q.correct]}. `}${q.explanation.he}`;
+    $('choice-feedback').classList.toggle('incorrect', !ok);
+    $('choice-feedback').hidden = false;
+  }
   function questionAt(index) {
     current = index;
     const q = ordered[index];
@@ -132,7 +145,7 @@
     $('question-title').innerHTML = q.prompt; // the teacher's text, verbatim (contains <br>)
     $('figure').innerHTML = figures[q.id] || '';
     $('figure').hidden = !figures[q.id];
-    $('choices').replaceChildren();
+    $('choices').replaceChildren(); $('choice-feedback').hidden = true;
     $('choices').hidden = q.type !== 'mcq';
     $('open-answer').hidden = q.type !== 'open';
     $('number-answer-box').hidden = q.type !== 'fill';
@@ -144,9 +157,10 @@
       const label = document.createElement('label'); label.className = 'choice';
       const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'choice'; radio.value = i; radio.checked = answers[q.id] === i;
       const text = document.createElement('span'); text.textContent = choice;
-      radio.addEventListener('change', () => { answers[q.id] = i; persist(); countAnswered(); });
+      radio.addEventListener('change', () => { answers[q.id] = i; persist(); countAnswered(); showFeedback(q); });
       label.append(radio, text); $('choices').append(label);
     });
+    if (q.type === 'mcq' && answered(q)) showFeedback(q);
     $('flag').checked = flags.has(q.id);
     $('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
     $('next').textContent = index === total - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
