@@ -117,7 +117,7 @@ const aiConfigured = env => typeof env.OPENAI_API_KEY === 'string' && env.OPENAI
 
 const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max }]) => [id, { score, max }]));
 
-export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 12000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric } = {}) {
+export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 12000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers } = {}) {
   const openRubricFor = safeRubric(rubricLookup);
   // Resend is paced and retried (resend-send.mjs); `sleep` and `now` can be replaced by tests.
   const resendSend = createResendSender({ fetchImpl: sendFetch, rps: intFrom(env.RESEND_RPS, 2), now, ...(sleep ? { sleep } : {}) });
@@ -229,14 +229,17 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     // Server-side truth (exam-truth.mjs): verdicts, score and the key details come from the question keys, not the browser.
     let truth = null;
     if (examId !== undefined) {
-      try { truth = judgeAnswers(examId, answers); } catch { console.error('exam keys unavailable'); }
+      try { truth = judge(examId, answers); } catch { console.error('exam keys unavailable'); }
     }
     // With the keys, an open answer is graded under the id of the question the SERVER matched, so a forged questionId
     // cannot pair an answer with an easier rubric; answers that match no question are not graded.
     // Any error while finding them means AI is off for this attempt; the email is still sent.
+    // Fail closed: if the keys cannot be used for a table exam, nothing the browser claims is trusted (no AI grading
+    // under browser question ids, no score, no verdict marks) and the email says so.
+    const truthFailed = examId !== undefined && !truth;
     let gradingItems = [];
     try {
-      gradingItems = examId === undefined ? [] : payload.answers.flatMap((item, i) => {
+      gradingItems = examId === undefined || truthFailed ? [] : payload.answers.flatMap((item, i) => {
         const known = truth ? truth.answers[i] : null;
         const questionId = known ? known.questionId : item.questionId;
         const open = known ? known.matched && known.correct === undefined : item.correct === undefined;
@@ -248,7 +251,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
       ? await gradeOpenAnswers({ examId, items: gradingItems, env, fetchImpl: countedAiFetch, timeoutMs: aiTimeoutMs }).catch(() => ({ status: 'failed' }))
       : { status: 'none' };
     // The score is the server's for table exams (the browser's claim is ignored); legacy payloads keep the browser's.
-    const score = examId === undefined || !truth ? claimedScore : truth.score;
+    const score = examId === undefined ? claimedScore : truth ? truth.score : undefined;
     const aiScores = grading.status === 'ok' ? grading.scores : {};
     // Keep the grading (with the reasons) on the stored row so a retry or the teacher can find it later. Best effort:
     // runs once the row exists, never delays or fails the email, and a failure is logged by code only.
@@ -263,7 +266,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
       const trusted = known?.matched;
       return {
         question: cleanText(item.question), answer: cleanText(item.answer),
-        correct: known ? known.correct : item.correct,
+        correct: known ? known.correct : truthFailed ? undefined : item.correct,
         options: (trusted ? known.options : item.options)?.map(cleanText),
         correctAnswer: (trusted ? known.correctAnswer : item.correctAnswer) === undefined ? undefined : cleanText(trusted ? known.correctAnswer : item.correctAnswer),
         reference: (trusted ? known.reference : item.reference) === undefined ? undefined : cleanText(trusted ? known.reference : item.reference),
@@ -278,7 +281,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const emailScore = grading.status === 'ok' && score
       ? { earned: Math.min(100, score.earned + Math.round(Object.values(aiScores).reduce((sum, { score: points }) => sum + points, 0))), pending: 0, final: true } : score;
     const aiNote = grading.status === 'failed' ? 'בדיקת AI נכשלה' : undefined;
-    const notes = truth?.notes ?? [];
+    const notes = truth?.notes ?? (truthFailed ? ['⚠ אימות השרת לא זמין: הציון וסימוני ה־✓/✕ אינם מוצגים כי לא ניתן היה לאמת אותם. הבדיקה צריכה להיעשות ידנית.'] : []);
     try {
       const result = await resendSend('https://api.resend.com/emails', {
         method: 'POST',

@@ -265,6 +265,25 @@ test('a failed database connect is not cached: the next call after a short pause
   assert.equal(attempts, 2);
 });
 
+// Fail closed: if the server's answer keys cannot be used, a table exam is still emailed, but nothing the browser
+// claims is shown as verified (no score, no ✓/✕), AI grading is not run under browser-supplied question ids, and the
+// teacher is told why.
+test('server keys unavailable: email still sent, browser claims not trusted, no AI call, teacher warned', async () => {
+  let aiCalls = 0;
+  await withApp(async ({ submit, calls }) => {
+    const payload = { ...libraryPayload(), score: { earned: 100, pending: 0 } };
+    const response = await submit(payload);
+    assert.equal(response.status, 200);
+    assert.equal(calls.length, 1);
+    const { text } = calls[0].body;
+    assert.match(text, /אימות השרת לא זמין/);
+    assert.doesNotMatch(text, /ציון חלקי|ציון כולל/); // the forged 100 score is not shown
+    assert.doesNotMatch(text, /^\d+\. [✓✕]/m); // and no answer carries a verdict mark
+    assert.equal(aiCalls, 0);
+    assert.deepEqual((await response.json()).grading, { status: 'none', scores: {} });
+  }, { env: { OPENAI_API_KEY: 'k' }, judge: () => { throw new Error('keys missing'); }, aiFetch: async () => { aiCalls++; return new Response('{}', { status: 500 }); } });
+});
+
 test.after(() => {
   process.off('unhandledRejection', onFault);
   process.off('uncaughtException', onFault);
