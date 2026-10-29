@@ -71,3 +71,7 @@ Original prompt: Build a fast, well-designed, funny 3D exam-practice game as a s
 - Final game unit/service suite25passed with one optional unchanged PostgreSQL test skipped; focused main/static/submission tests11passed. Built final bundle and preserved the previous public bundle/font CSS for cached older HTML.
 
 - Unchanged official web-game skill client passed against the final nested production build served by main app: start, tutorial, visible route and real guided movement from(0,9) to(8.16,12.81), route remaining0.9, no blockedpath or browsererror artifact. Screenshot and textstate inspected. No live student attempt/email was created during QA.
+
+## Guided-return arrival regression
+- Initial public HTTPS guided trip found a real status bug on return from the antenna: player at(9.5924,15.6933) was within normal conversation range but follower arrival becamefalse after automatic replanning at1.7417units. The planner used1.7 while movement accepted0.1waypoint tolerance. Added an explicit1.8arrival predicate and regression test for the reproducedposition.
+- New durable tests/qa-guided-trip.mjs exercises the built app through normal controls withoutdevhooks: guide toAdam, agree, guide toantenna, solve tuner, collect, guideback and open first database question. POSTattempt/exam requests are intercepted and mustremainzero. Local corrected trip passed with no browsererrors. Game suite26passed, one unchanged optionalPGtestskipped; main builtasset/cache/save integration1passed. No source question or grading change.

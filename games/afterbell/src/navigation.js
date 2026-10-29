@@ -1,3 +1,5 @@
+// Match the follower's 0.1-unit waypoint tolerance when rechecking arrival.
+export const arrivedAtGoal = (start,goal) => Math.hypot(start.x-goal.x,start.z-goal.z)<=1.8;
 // The same collision predicate is used for planning, segment validation and walking.
 export function clearSegment(a,b,blocked,spacing=.14) {
   const length=Math.hypot(b.x-a.x,b.z-a.z),steps=Math.max(1,Math.ceil(length/spacing));

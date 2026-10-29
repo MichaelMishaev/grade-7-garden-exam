@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { NPCS, EXIT } from './core.js';
 import { createCampusEnvironment, normalizeEnvironment } from './environment.js';
-import { findRoute, clearSegment } from './navigation.js';
+import { findRoute, clearSegment, arrivedAtGoal } from './navigation.js';
 
 export function createWorld(container, { reduced = false, onMove, onInteract, onCollect, onEnvironmentChange }) {
   let seed = 7919;
@@ -237,7 +237,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
     trail.count=count;trail.instanceMatrix.needsUpdate=true;lastTrail=worldTime;
   }
   function planGuide(){
-    if(!guide.goal)return;const start={x:player.position.x,z:player.position.z};const path=findRoute(start,guide.goal,blocked);
+    if(!guide.goal)return;const start={x:player.position.x,z:player.position.z};const path=arrivedAtGoal(start,guide.goal)?[]:findRoute(start,guide.goal,blocked);
     guide.route=path||[];guide.endpoint=path===null?null:(path.at(-1)||start);guide.blocked=path===null;guide.arrived=path!==null&&path.length===0;guide.anchor=start;guide.lastPlan=worldTime;
     if(guide.following){walkRoute=[...guide.route];walkKind=guide.blocked||guide.arrived?null:'guide';if(!walkKind)guide.following=false;}
     drawGuide();
