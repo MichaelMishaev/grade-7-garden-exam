@@ -154,7 +154,7 @@ async function init() {
     byId('question-index').hidden = true;
   } else {
     if (quizKey.startsWith('physics-')) {
-      document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים במדעים'; });
+      document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים בפיזיקה'; });
     }
     document.title = `${selectedQuiz.title} | PrepX`;
     byId('quiz-title').textContent = selectedQuiz.title;

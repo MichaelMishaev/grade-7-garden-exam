@@ -23,8 +23,8 @@ const types = {
 const legacyExam = { count: 20, idempotencyPrefix: 'garden-exam', subject: 'תשובות למבחן הבנת הנקרא - כיתה ז׳' };
 export const exams = Object.assign(Object.create(null), {
   'physics-v1-assessment': {
-    count: 27, idempotencyPrefix: 'physics-exam', subject: 'תשובות למשימת הערכה במדידות - מדעים - כיתה ז׳',
-    title: 'תשובות למשימת הערכה במדידות', subtitle: 'מדעים · כיתה ז׳2 · שי עגנון, נתניה'
+    count: 27, idempotencyPrefix: 'physics-exam', subject: 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳',
+    title: 'תשובות למשימת הערכה במדידות', subtitle: 'פיזיקה · כיתה ז׳2 · שי עגנון, נתניה'
   }
 });
 

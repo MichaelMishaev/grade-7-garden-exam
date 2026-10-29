@@ -53,7 +53,7 @@ test('same name box on the start screen, and no name input anywhere else', () =>
 
 test('same review and results screens; results differ only in the answer count and the subject link', () => {
   assert.equal(section(physicsHtml, 'review'), section(libraryHtml, 'review'));
-  const libraryResults = section(libraryHtml, 'results').replace('subject.html?subject=hebrew">לגרסאות בעברית', 'subject.html?subject=physics">לגרסאות במדעים').replace('כל 20 התשובות', 'כל 27 התשובות');
+  const libraryResults = section(libraryHtml, 'results').replace('subject.html?subject=hebrew">לגרסאות בעברית', 'subject.html?subject=physics">לגרסאות בפיזיקה').replace('כל 20 התשובות', 'כל 27 התשובות');
   assert.equal(section(physicsHtml, 'results'), libraryResults);
   assert.match(section(physicsHtml, 'results'), /השם וכל 27 התשובות נשלחים בדוא״ל למורה באמצעות Resend/);
 });

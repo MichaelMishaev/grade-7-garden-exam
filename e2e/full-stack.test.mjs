@@ -88,7 +88,7 @@ test('read API matches extracted content', { skip }, async () => {
   assert.ok(physics.questions.every((q) => q.ref && physics.references.some((r) => r.id === q.ref.id && r.parts.some((p) => p.part === q.ref.part))));
   const subject = await getJson('/api/subjects/physics');
   assert.deepEqual(subject.exams.map((e) => e.id), ['physics-v1-assessment']);
-  assert.equal(subject.exams[0].date_label, '30.12');
+  assert.equal(subject.exams[0].date_label, '2.11');
   assert.ok((await getJson('/api/exams/hebrew-v1-garden')).questions.every((q) => q.ref?.id === 'garden-passage'));
 });
 
@@ -170,7 +170,7 @@ test('physics submission (exam field, 27 answers) is emailed with its own subjec
   assert.equal((await post(base, body)).status, 200);
   assert.equal(resendCalls.length, calls + 1);
   const sent = JSON.parse(resendCalls.at(-1).init.body);
-  assert.equal(sent.subject, 'תשובות למשימת הערכה במדידות - מדעים - כיתה ז׳');
+  assert.equal(sent.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳');
   assert.match(resendCalls.at(-1).init.headers['Idempotency-Key'], /^physics-exam\//);
   const rows = await rowFor('תלמידת פיזיקה');
   assert.equal(rows.length, 1);

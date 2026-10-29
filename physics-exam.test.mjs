@@ -72,5 +72,15 @@ test('every task has a reference part in the summary or the teacher site', () =>
 
 test('subject page lists the physics exam with its date', async () => {
   const html = (await import('node:fs')).readFileSync(new URL('./subject.html', import.meta.url), 'utf8');
-  assert.match(html, /id: 'physics-v1-assessment'[^\n]*date: '30\.12', count: '27 שאלות'/);
+  assert.match(html, /id: 'physics-v1-assessment'[^\n]*date: '2\.11', count: '27 שאלות'/);
+});
+
+test('the exam is called physics (פיזיקה), with the 2.11 date, on the subject page, home card and exam page', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = file => readFileSync(new URL(file, import.meta.url), 'utf8');
+  assert.match(read('subject.html'), /physics: \{\s*title: 'פיזיקה'/);
+  assert.match(read('index.html'), /<strong>פיזיקה<\/strong><small>מבחן בתאריך 2\.11<\/small>/);
+  const page = read('physics-exam.html');
+  assert.match(page, /משימת הערכה במדידות · פיזיקה \| PrepX/);
+  assert.doesNotMatch(page, /מדעים/);
 });

@@ -16,7 +16,7 @@ const env = { NODE_ENV: 'production', RESEND_API_KEY: 'test-secret', RESEND_FROM
 
 const physicsRows = extractContent().questions.filter((q) => q.exam_id === 'physics-v1-assessment');
 // What physics-exam.js sends: plain-text prompt, the answer, and `correct` on choice/numeric tasks.
-const physicsPayload = (name = 'תלמידת מדעים <i>') => ({
+const physicsPayload = (name = 'תלמידת פיזיקה <i>') => ({
   exam: 'physics-v1-assessment', name, startedAt: '2026-12-30T08:00:00.000Z', finishedAt: '2026-12-30T08:40:00.000Z',
   score: { earned: 52, pending: 26 },
   answers: physicsRows.map((q, i) => ({
@@ -69,10 +69,10 @@ test('physics: 27 answers are emailed once, with the same Resend key, sender and
   assert.equal(physics.body.from, garden.body.from);
   assert.deepEqual(physics.body.to, garden.body.to);
   assert.deepEqual(physics.body.to, ['345287@gmail.com']);
-  assert.equal(physics.body.subject, 'תשובות למשימת הערכה במדידות - מדעים - כיתה ז׳');
+  assert.equal(physics.body.subject, 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳');
   assert.notEqual(physics.body.subject, garden.body.subject);
   const { text, html } = physics.body;
-  assert.match(text, /^שם התלמיד\/ה: תלמידת מדעים <i>\n/);
+  assert.match(text, /^שם התלמיד\/ה: תלמידת פיזיקה <i>\n/);
   assert.match(text, /משך: 40 דקות/);
   assert.match(text, /ציון חלקי: 52 מתוך 74 · 26 נקודות ממתינות לבדיקה בשאלות פתוחות/);
   assert.match(text, /\n27\. /);
@@ -81,11 +81,11 @@ test('physics: 27 answers are emailed once, with the same Resend key, sender and
   assert.match(text, /\n6\. שני תלמידים דיווחו/); // written task: no mark in the text part
   assert.match(text, /\n325\nדרך חישוב: חישוב <b>11<\/b>/);
   assert.match(html, /<h1[^>]*>תשובות למשימת הערכה במדידות<\/h1>/);
-  assert.match(html, /מדעים · כיתה ז׳2 · שי עגנון, נתניה/);
+  assert.match(html, /פיזיקה · כיתה ז׳2 · שי עגנון, נתניה/);
   assert.doesNotMatch(html, /הבנת הנקרא/);
   assert.equal(html.match(/✎ ממתינה לבדיקת המורה/g).length, 7);
   assert.equal(html.match(/✓ נכון|✕ שגוי/g).length, 20);
-  assert.match(html, /תלמידת מדעים &lt;i&gt;/);
+  assert.match(html, /תלמידת פיזיקה &lt;i&gt;/);
   assert.match(html, /חישוב &lt;b&gt;11&lt;\/b&gt;/);
   assert.doesNotMatch(html, /<b>11/);
   assert.match(html, /https:\/\/hitech\.agnon\.online\/assets\/branding\/prepx-logo\.png/);
