@@ -17,7 +17,7 @@ try{
     page.on('console',message=>{if(message.type()==='error'&&!message.text().includes('Failed to load resource'))errors.push({profile:name,message:message.text()});});
     page.on('response',response=>{const url=new URL(response.url());if(url.pathname.startsWith('/games/afterbell/play/assets/')){const asset={profile:name,path:url.pathname,status:response.status(),type:response.headers()['content-type']};assets.push(asset);if(!response.ok())failedAssets.push(asset);}});
     page.on('requestfailed',request=>{if(request.url().includes('/games/afterbell/play/assets/'))failedAssets.push({profile:name,path:new URL(request.url()).pathname,error:request.failure()?.errorText});});
-    const home=await page.goto(base+'/',{waitUntil:'domcontentloaded'});
+    const home=await page.goto(base+'/',{waitUntil:'load'});
     check(`${name}: homepage loads`,home.status()===200);
     const card=page.locator('.afterbell-entry');
     check(`${name}: game card exists once`,await card.count()===1);
