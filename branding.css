@@ -4,7 +4,7 @@
   width: 180px;
   max-width: 100%;
   margin: 0 auto 24px;
-  padding: 0;
+  padding: 4px 0; /* the logo is a link: 36px image + 8px = a 44px tap target */
   background: transparent;
   border-radius: 0;
   box-shadow: none;

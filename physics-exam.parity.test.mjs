@@ -68,7 +68,8 @@ test('same question card structure (progress, study material, topic, title, choi
 
 test('same CSS: the library style block verbatim, same branding sheet, same header and footer', () => {
   assert.equal(style(physicsHtml), style(libraryHtml));
-  assert.match(physicsHtml, /branding\.css\?v=1/);
+  assert.match(physicsHtml, /branding\.css\?v=2/); // v=2: the logo link is a 44px tap target
+  assert.match(libraryHtml, /branding\.css\?v=2/);
   const chrome = (html) => [/<a class="prepx-brand"[^\n]*/.exec(html)[0], /<footer[^\n]*/.exec(html)[0], /<header><a class="brand"/.test(html)];
   assert.deepEqual(chrome(physicsHtml), chrome(libraryHtml));
   assert.doesNotMatch(physicsHtml, /אינן נשלחות|לא נשלח|בדיקה עצמית/);

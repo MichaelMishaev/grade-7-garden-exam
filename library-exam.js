@@ -71,6 +71,9 @@
   if (!$('student-name').value) $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
   $('article-copy').innerHTML = $('article').innerHTML;
   const countAnswered = () => { $('answered').textContent = `${ordered.filter(answered).length} תשובות מולאו`; };
+  // The teacher's explanations carry her own markup (<bdi>, <br>, <strong>): show them as HTML, like the summary does.
+  // The verdict text in front of them stays plain text.
+  const showVerdict = (prefix, html) => { const why = document.createElement('span'); why.innerHTML = html; $('choice-feedback').replaceChildren(prefix, why); };
   const answered = q => q.type === 'checkbox' ? validPick(q, answers[q.id]) : q.type === 'open' ? typeof answers[q.id] === 'string' && answers[q.id].trim().length > 0 : Number.isInteger(answers[q.id]) && answers[q.id] >= 0 && answers[q.id] < q.choices.length;
   const answerText = q => !answered(q) ? 'לא נכתבה תשובה' : q.type === 'checkbox' ? checkboxTexts(q, answers[q.id]) : q.type === 'open' ? answers[q.id].trim() : q.choices[answers[q.id]];
   const isCorrect = q => q.type === 'checkbox' ? checkboxCorrect(answers[q.id], q.correct) : answers[q.id] === q.correct;
@@ -98,7 +101,7 @@
       label.classList.toggle('correct', i === q.correct);
       label.classList.toggle('incorrect', i === answers[q.id] && !ok);
     });
-    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובה הנכונה: ${q.choices[q.correct]}. `}${q.explanation.he}`;
+    showVerdict(`${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובה הנכונה: ${q.choices[q.correct]}. `}`, q.explanation.he);
     $('choice-feedback').classList.toggle('incorrect', !ok);
     $('choice-feedback').hidden = false;
   }
@@ -110,7 +113,7 @@
       label.classList.toggle('correct', q.correct.includes(i));
       label.classList.toggle('incorrect', answers[q.id].includes(i) && !q.correct.includes(i));
     });
-    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובות הנכונות: ${checkboxTexts(q, q.correct)}. `}${q.explanation.he}`;
+    showVerdict(`${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובות הנכונות: ${checkboxTexts(q, q.correct)}. `}`, q.explanation.he);
     $('choice-feedback').classList.toggle('incorrect', !ok);
     $('choice-feedback').hidden = false;
   }
