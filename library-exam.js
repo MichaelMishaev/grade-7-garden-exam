@@ -63,6 +63,19 @@
     window.scrollTo(0, 0);
     if (focusId) $(focusId).focus({ preventScroll: true });
   }
+  // Instant feedback: once a choice is picked the question locks, so the shown answer can't be swapped for the right one.
+  function showFeedback(q) {
+    const ok = answers[q.id] === q.correct;
+    document.querySelectorAll('#choices .choice').forEach(label => {
+      const input = label.querySelector('input'); const i = Number(input.value);
+      input.disabled = true;
+      label.classList.toggle('correct', i === q.correct);
+      label.classList.toggle('incorrect', i === answers[q.id] && !ok);
+    });
+    $('choice-feedback').textContent = `${ok ? '✓ נכון מאוד!' : '✕ לא נכון.'} ${ok ? '' : `התשובה הנכונה: ${q.choices[q.correct]}. `}${q.explanation.he}`;
+    $('choice-feedback').classList.toggle('incorrect', !ok);
+    $('choice-feedback').hidden = false;
+  }
   function questionAt(index) {
     current = index;
     const q = ordered[index];
@@ -72,7 +85,7 @@
     $('progress-bar').setAttribute('aria-valuenow', index + 1);
     $('question-topic').textContent = q.topic;
     $('question-title').textContent = q.prompt;
-    $('choices').replaceChildren();
+    $('choices').replaceChildren(); $('choice-feedback').hidden = true;
     $('open-answer').hidden = q.type !== 'open';
     $('choices').hidden = q.type === 'open';
     if (q.type === 'open') $('answer').value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
@@ -80,9 +93,10 @@
       const label = document.createElement('label'); label.className = 'choice';
       const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'choice'; radio.value = i; radio.checked = answers[q.id] === i;
       const text = document.createElement('span'); text.textContent = q.choices[i];
-      radio.addEventListener('change', () => { answers[q.id] = i; persist(); $('answered').textContent = `${ordered.filter(answered).length} תשובות מולאו`; });
+      radio.addEventListener('change', () => { answers[q.id] = i; persist(); $('answered').textContent = `${ordered.filter(answered).length} תשובות מולאו`; showFeedback(q); });
       label.append(radio, text); $('choices').append(label);
     });
+    if (q.type !== 'open' && answered(q)) showFeedback(q);
     $('flag').checked = flags.has(q.id);
     $('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
     $('next').textContent = index === 19 ? 'לבדיקת התשובות' : 'לשאלה הבאה';

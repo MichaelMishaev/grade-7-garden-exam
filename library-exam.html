@@ -74,6 +74,11 @@
 .choice:has(input:checked) { border-color: #46a302; background: #e9fbdc; }
 .choice input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #46a302; }
 .choice:focus-within { outline: 3px solid #1587c2; outline-offset: 2px; }
+.choice.correct { border-color: #46a302; background: #e9fbdc; }
+.choice.incorrect { border-color: #d64545; background: #fdeaea; }
+.choice:has(input:disabled) { cursor: default; }
+.choice-feedback { margin: 14px 0 0; padding: 13px 16px; border-radius: 13px; line-height: 1.6; background: #e9fbdc; color: #1f4d0a; }
+.choice-feedback.incorrect { background: #fdeaea; color: #7a1f1f; }
 .flag { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 18px 0 0; }
 .flag input { width: 22px; height: 22px; accent-color: #46a302; }
 .review-item { min-height: 48px; }
@@ -87,7 +92,7 @@ a.button { display: inline-flex; align-items: center; text-decoration: none; }
 .source-line { color: #586d60; font-size: 14px; }
 </style>
 <link rel="stylesheet" href="branding.css?v=1">
-<script src="quiz-core.js?v=2" defer></script><script src="content-api.js?v=3" defer></script><script src="library-exam.js?v=8" defer></script>
+<script src="quiz-core.js?v=2" defer></script><script src="content-api.js?v=3" defer></script><script src="library-exam.js?v=9" defer></script>
 </head>
 <body><main class="shell">
 <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
@@ -113,6 +118,7 @@ a.button { display: inline-flex; align-items: center; text-decoration: none; }
 <details><summary>פתיחת הטקסט לקריאה חוזרת</summary><div id="article-copy" class="reading"></div></details>
 <div class="card question-card"><span id="question-topic" class="question-number"></span><h2 id="question-title" class="question-title" tabindex="-1"></h2>
 <div id="choices" role="group" aria-labelledby="question-title"></div>
+<p id="choice-feedback" class="choice-feedback" role="status" hidden></p>
 <div id="open-answer" hidden><label for="answer">התשובה שלי — תיבדק בידי המורה</label><textarea id="answer" maxlength="3000"></textarea></div>
 <label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label></div>
 <div class="actions"><button id="previous" class="button secondary" type="button">לשאלה הקודמת</button><button id="next" class="button primary" type="button">לשאלה הבאה</button><button id="review-button" class="button secondary" type="button">סקירת התשובות</button></div>
