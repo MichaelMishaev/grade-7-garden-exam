@@ -1,0 +1,220 @@
+import { quizFingerprint } from './fingerprint.js';
+import './style.css';
+import './environment.css';
+import { ENVIRONMENT, normalizeEnvironment, environmentStatus, environmentAction, puzzleSolved } from './environment.js';
+import snapshot from './content-snapshot.json';
+import { createWorld } from './world.js';
+import { NPCS, EQUIPMENT, EXIT, makeRound, validQuiz, answer, progress, academicScore, starsFor, canEscape, restoreRound, shuffle } from './core.js';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const storage = { get(key) { try { return localStorage.getItem(key); } catch { return null; } }, set(key,v) { try { localStorage.setItem(key,v);return true; } catch {return false;} } };
+const DRAFT = 'prepx-afterbell-draft-v1';
+const PENDING = 'prepx-afterbell-pending-v1';
+function pendingResults(){try{const a=JSON.parse(storage.get(PENDING)||'[]');return Array.isArray(a)?a:[];}catch{return [];}}
+function queueResult(payload){const a=pendingResults().filter(p=>p.id!==payload.id);a.push(payload);return storage.set(PENDING,JSON.stringify(a));}
+async function sendResult(payload){try{const response=await fetch('/api/afterbell/attempts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(6000)});if(!response.ok)return false;const result=await response.json();if(result.saved!==true)return false;storage.set(PENDING,JSON.stringify(pendingResults().filter(p=>p.id!==payload.id)));return true;}catch{return false;}}
+async function flushPending(){for(const payload of pendingResults()){if(!await sendResult(payload))continue;if(mode==='complete'&&round?.attemptId===payload.id&&$('save-status'))$('save-status').textContent='✓ התוצאה נשמרה בהיסטוריית המשחק.';}}
+window.addEventListener('online',flushPending);
+let trackedEnvironment=null;
+let guidedNpc=0, guidedEquipment=null, participantName='', draftStored=false, resultQueued=false;
+let quiz=snapshot.quizzes[0], round=null, mode='menu', activeNpc=null, activeQuestion=null, source='snapshot', feedbackTimer=null, toastTimer=null, autoAdvance=null, sound=false, audio=null, world=null, saveCounter=0, finishPromise=null, dialogReturn=null, loadingGeneration=0;
+const dialog=$('dialog');
+const quizSelect=$('quiz');
+quizSelect.innerHTML=snapshot.quizzes.map(q=>`<option value="${q.id}">${esc(q.title)}</option>`).join('');
+const requested=new URLSearchParams(location.search).get('quiz');
+if(snapshot.quizzes.some(q=>q.id===requested))quizSelect.value=requested;
+$('player-name').value=storage.get('prepx-afterbell-name')||'';
+function toast(text){$('toast').textContent=text;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),3300);}
+function beep(correct=true){if(!sound)return;try{audio??=new AudioContext();audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type='sine';o.frequency.setValueAtTime(correct?520:270,audio.currentTime);o.frequency.exponentialRampToValueAtTime(correct?780:220,audio.currentTime+.12);g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.25);o.start();o.stop(audio.currentTime+.26);}catch{}}
+function saveDraft(){if(!round)return;try{sessionStorage.setItem(DRAFT,JSON.stringify(round));draftStored=true;}catch{draftStored=false;}}
+function readDraft(){try{return sessionStorage.getItem(DRAFT);}catch{return null;}}
+function clearDraft(){try{sessionStorage.removeItem(DRAFT);}catch{}}
+function updateResume(){const saved=restoreRound(readDraft(),quiz);$('resume').classList.toggle('hidden',!saved);}
+async function loadQuiz(){
+  const generation=++loadingGeneration, id=quizSelect.value;
+  $('start').disabled=true;$('resume').disabled=true;$('source-status').textContent='מתחברים לשאלות של PrepX…';
+  let next=snapshot.quizzes.find(q=>q.id===id), nextSource='snapshot';
+  try {const response=await fetch(`/api/afterbell/quizzes/${id}`,{signal:AbortSignal.timeout(3500)});if(response.ok){const data=await response.json();if(data.id===id&&validQuiz(data)){next=data;nextSource='database';}}}catch{}
+  if(generation!==loadingGeneration)return;
+  quiz=next;source=nextSource;
+  $('source-status').textContent=source==='database'?`● ${quiz.questions.length} שאלות מחוברות למאגר PrepX`:`מצב לא מקוון · ${quiz.questions.length} שאלות מעותק מאגר PrepX`;
+  $('start').disabled=!world;$('resume').disabled=!world;updateResume();
+}
+quizSelect.addEventListener('change',()=>{const u=new URL(location.href);u.searchParams.set('quiz',quizSelect.value);history.replaceState(null,'',u);loadQuiz();});
+function closeDialog(){clearTimeout(feedbackTimer);feedbackTimer=null;autoAdvance=null;if(dialog.open)dialog.close();if(mode!=='menu'&&mode!=='complete'){mode='explore';activeQuestion=null;world?.setPaused(false);}if(mode==='menu')world?.setPaused(false);dialogReturn?.focus();}
+function openDialog(eyebrow,html,nextMode){if(nextMode!=='question'&&nextMode!=='feedback')activeQuestion=null;clearTimeout(feedbackTimer);autoAdvance=null;dialogReturn=document.activeElement;mode=nextMode;world?.setPaused(true);$('dialog-eyebrow').textContent=eyebrow;$('dialog-body').innerHTML=html;if(!dialog.open)dialog.showModal();$('dialog-body').scrollTop=0;$('close-dialog').focus();bindNpcConversation();releaseStick();}
+$('close-dialog').addEventListener('click',()=>{if(mode==='complete'){returnToMenu();}else closeDialog();});
+dialog.addEventListener('cancel',e=>{e.preventDefault();if(mode==='complete')returnToMenu();else closeDialog();});
+function start(resume=false){
+  if(!world)return;
+  const name=$('player-name').value.trim();if(!name){$('player-name').setCustomValidity('רק שם או כינוי, ומתחילים.');$('player-name').reportValidity();$('player-name').focus();return;}
+  $('player-name').setCustomValidity('');storage.set('prepx-afterbell-name',name);
+  round=resume?restoreRound(readDraft(),quiz):null;round??=makeRound(quiz);participantName=round.participantName||name;round.participantName=participantName;finishPromise=null;
+  mode='explore';$('welcome').classList.add('hidden');$('hud').classList.remove('hidden');$('pause').classList.remove('hidden');document.body.classList.add('playing');
+  world.setPlayer(round.player.x,round.player.z);world.setActive(true);world.setPaused(false);world.setProgress(round);round.environment=normalizeEnvironment(round.environment);world.setEnvironment(round.environment,{animate:false});world.resumeRealtime();updateHud();saveDraft();
+  $('world-labels').innerHTML=NPCS.map(n=>`<span class="world-label" id="label-${n.id}"><b>${NPCS.indexOf(n)+1}</b>${esc(n.name)}</span>`).join('')+EQUIPMENT.map(e=>`<span class="world-label equipment-label" id="label-${e.id}">▣ ${esc(e.short)}</span>`).join('')+'<span class="world-label" id="label-exit">שער היציאה</span><span class="world-label environment-label" id="label-environment"></span>';
+  guidedNpc=NPCS.findIndex(n=>!round.seals.includes(n.id));guidedEquipment=null;updateHud();
+  if(!resume){openDialog('תדריך · ז׳ איינשטיין',`<h2 id="dialog-title">החשמל נפל. השער נשאר נעול.</h2><p class="school-name">בית הספר שי עגנון · כיתת הייטק</p><p class="dialog-copy">נשארתם אחרי ההאקתון. שלוש תחנות הפרויקט כבו, וביער מסתובב שועל שלא מצא את הדרך החוצה. הצוות שלכם עדיין במתחם.</p><ol class="tutorial-steps"><li>בוחרים איש צוות במפה ומקשיבים למה שהוא צריך.</li><li>מאתרים את הציוד החסר בשטח. החץ והמפה עוזרים להגיע.</li><li>משלימים את שאלות התרגול בכל תחנה, מפעילים את שלוש המערכות ויוצאים בשער הצפוני.</li></ol><p class="feedback-note">עולם פתוח, בכל סדר. בלי ספירה לאחור. טעויות מובילות להסבר, לא לפסילה.</p><button id="begin-adventure" class="primary">יוצאים לבדוק את המתחם ←</button>`,'tutorial');$('begin-adventure').onclick=()=>{closeDialog();toast('בחרו תחנה בלוח המשימה. החץ מצביע ליעד שלכם.');};}
+}
+$('player-name').addEventListener('input',()=>{$('player-name').setCustomValidity('');});
+$('start').addEventListener('click',()=>start());$('resume').addEventListener('click',()=>start(true));
+function returnToMenu(){closeDialog();mode='menu';world.setActive(false);world.setPaused(false);world.resumeRealtime();$('welcome').classList.remove('hidden');$('hud').classList.add('hidden');$('pause').classList.add('hidden');document.body.classList.remove('playing');updateResume();}
+function nearest(){if(!round||!world)return null;const p=world.getPlayer();if(world.isObserving())return {type:'observation',d:0};if(round.environment.seated)return {type:'environment',id:'bench',d:0};let best=null;
+  NPCS.forEach((n,i)=>{const d=Math.hypot(p.x-n.x,p.z-n.z);if(d<3.5&&(!best||d<best.d))best={type:'npc',i,d};});
+  EQUIPMENT.forEach((e,i)=>{if(round.items.includes(e.id))return;const d=Math.hypot(p.x-e.x,p.z-e.z);if(d<2.8&&(!best||d<best.d))best={type:'equipment',i,d};});
+  const d=Math.hypot(p.x-EXIT.x,p.z-EXIT.z);if(d<3.5&&(!best||d<best.d))best={type:'exit',d};if(best)return best;
+  ENVIRONMENT.forEach(e=>{const d=Math.hypot(p.x-e.x,p.z-e.z);if(d<e.range&&(!best||d<best.d))best={type:'environment',id:e.id,d};});
+  world.animals().forEach(a=>{if(a.type==='duck')return;const d=Math.hypot(p.x-a.x,p.z-a.z);if(d<2.4&&(!best||d<best.d-.8))best={type:'animal',id:a.id,d};});return best;
+}
+function interact(){if(mode!=='explore')return;const n=nearest();if(!n)return;if(n.type==='observation'){world.observe(false);updateMap();return;}if(n.type==='environment'){inspectEnvironment(n.id);return;}if(n.type==='animal'){inspectAnimal(n.id);return;}if(n.type==='exit'){if(canEscape(round))finish();else toast(`עוד ${3-round.seals.length} מערכות צריכות לחזור לפעולה. בחרו תחנה במפה.`);}else if(n.type==='equipment')inspectEquipment(n.i);else talk(n.i);}
+$('interact').addEventListener('click',interact);
+const initials=['נ','א','א'];
+function character(i){const n=NPCS[i];return `<div class="character-chip"><div class="portrait" aria-hidden="true">${initials[i]}</div><div><h2 id="dialog-title">${esc(n.name)}</h2><small>${esc(n.role)}</small></div></div><button class="text-button npc-chat" data-npc-chat="${i}">לשוחח ולעזור לצוות ↗</button>`;}
+function talk(i){activeNpc=i;const n=NPCS[i],p=progress(round,i);
+  if(round.seals.includes(n.id)){openDialog('חברים לדרך',character(i)+`<p class="dialog-copy">${i===0?'מסוף הגישה פעיל. רשמתי את התקלה. עכשיו רק צריך להסביר למורה למה התאריך בדוח הוא מחר.':i===1?'מערכת הגיבוי פועלת. פעם הבאה נבדוק אותה לפני שכולם הולכים הביתה. רעיון מהפכני.':'הקשר חזר. אם תשמעו רעש מהיער — הפעם אני הולך לבדוק. עם פנס. ועם מישהו.'}</p><button id="back-world" class="primary">ממשיכים לחקור ←</button>`,'dialogue');$('back-world').onclick=closeDialog;return;}
+  if(round.understood.includes(n.id)){if(!round.items.includes(EQUIPMENT[i].id))equipmentMission(i);else showQuestion(i);return;}
+  const choices=shuffle(n.choices.map((text,original)=>({text,original})));
+  openDialog('לפני שפותרים, מקשיבים',character(i)+`<p class="dialog-copy">${esc(n.line)}</p><div class="options">${choices.map(c=>`<button class="option social" data-choice="${c.original}">${esc(c.text)}</button>`).join('')}</div><p id="social-feedback" class="feedback-note" role="status"></p>`,'dialogue');
+  document.querySelectorAll('.social').forEach(b=>b.onclick=()=>{if(Number(b.dataset.choice)!==n.need){$('social-feedback').textContent=n.wrong;beep(false);return;}
+    round.understood.push(n.id);saveDraft();beep();equipmentMission(i);
+  });
+}
+function equipmentMission(i){
+  const n=NPCS[i],e=EQUIPMENT[i],has=round.items.includes(e.id);
+  openDialog(`תחנה ${i+1} · ${n.system}`,character(i)+`<p class="dialog-copy">${esc(n.reply)}</p><div class="journal-entry"><h3>${has?'✓ הציוד איתכם':`נדרש: ${esc(e.name)}`}</h3><p>${has?esc(e.report):esc(e.hint)}</p></div><p class="feedback-note">${progress(round,i).total} שאלות מהתרגול הנבחר מפעילות את בדיקת התחנה. ציון הלימוד נפרד מהציוד ומהחקירה.</p><button class="primary" id="${has?'begin-questions':'track-equipment'}">${has?'מפעילים את מסוף התרגול':'סימון הציוד במפה'} ←</button>`,'mission');
+  if(has)$('begin-questions').onclick=()=>showQuestion(i);
+  else $('track-equipment').onclick=()=>{guidedNpc=i;guidedEquipment=e.id;closeDialog();updateHud();toast(e.hint);};
+}
+function inspectEquipment(i){const e=EQUIPMENT[i];
+  openDialog('ממצא בשטח',`<h2 id="dialog-title">${esc(e.name)}</h2><p class="dialog-copy">${esc(e.clue)}</p><p class="feedback-note">ציוד למשימה · ${esc(NPCS[e.npc].system)}</p><button class="primary" id="collect-equipment">לקחת ולהמשיך ←</button>`,'equipment');
+  $('collect-equipment').onclick=()=>{if(!round.items.includes(e.id))round.items.push(e.id);guidedNpc=e.npc;guidedEquipment=null;saveDraft();world.setProgress(round);closeDialog();updateHud();beep();toast(e.report);};
+}
+
+function commitEnvironment(patch={},id){
+  if(!round)return;Object.assign(round.environment,patch);
+  if(id&&!round.environment.visited.includes(id))round.environment.visited.push(id);
+  world.setEnvironment(round.environment);saveDraft();updateHud();updateMap();
+}
+function canUseEnvironment(e){const p=world.getPlayer();return Math.hypot(p.x-e.x,p.z-e.z)<e.range+.1;}
+function inspectEnvironment(id){
+  const e=ENVIRONMENT.find(e=>e.id===id);if(!e||!canUseEnvironment(e))return;
+  const s=round.environment;
+  if(id==='solar'){
+    openDialog('מנגנון מקומי · חקירה חופשית',`<h2 id="dialog-title">${esc(e.name)}</h2><p class="dialog-copy">${esc(e.description)}</p><div class="environment-switches">${['ירח','שמש','עץ'].map((name,i)=>`<button class="secondary env-switch" data-env-switch="${i}" aria-pressed="${s.switches[i]}"><span>${name}</span><b>${s.switches[i]?'פועל':'כבוי'}</b></button>`).join('')}</div><p id="env-puzzle-status" class="feedback" role="status">${puzzleSolved(s)?'התאורה פועלת. שלושה פנסי שביל נדלקו.':'ההערה על המכסה: ירח ועץ פועלים, שמש כבויה.'}</p><button id="env-leave" class="primary">חזרה לשביל ←</button>`,'environment');
+    document.querySelectorAll('[data-env-switch]').forEach(b=>b.onclick=()=>{if(!canUseEnvironment(e))return;const switches=[...round.environment.switches];switches[Number(b.dataset.envSwitch)]=!switches[Number(b.dataset.envSwitch)];commitEnvironment({switches},id);inspectEnvironment(id);});$('env-leave').onclick=closeDialog;return;
+  }
+  const note=id==='locker'&&s.lockerOpen?'הפתק בארונית: ״אדם השאיר את האנטנה ליד עמדת הקשר הישנה בדרום־מערב. אם אתם מחזירים, באמת תחזירו.״':e.description;
+  openDialog('חקירה חופשית · ללא ציון',`<div class="environment-heading"><span class="environment-category">${esc(environmentStatus(e,s))}</span><h2 id="dialog-title">${esc(e.name)}</h2></div><p class="dialog-copy">${esc(note)}</p><p class="feedback-note">פעולה בקמפוס. אינה מוסיפה שאלות ואינה משנה את ציון התרגול.</p><button id="env-primary" class="primary" data-environment="${id}">${esc(environmentAction(e,s))} ←</button>`,'environment');
+  $('env-primary').onclick=()=>{
+    if(!canUseEnvironment(e))return;
+    const state=round.environment;let message='';
+    if(id==='bench'){commitEnvironment({seated:!state.seated},id);message=state.seated?'אפשר להישאר רגע. כדי לקום: תנועה או כפתור הפעולה.':'חוזרים לשטח.';}
+    if(id==='door'){
+      const p=world.getPlayer();if(state.doorOpen&&Math.abs(p.x+2)<1.6&&Math.abs(p.z+16.86)<.75){toast('זוזו מעט מפתח הדלת לפני שסוגרים אותה.');return;}
+      commitEnvironment({doorOpen:!state.doorOpen},id);message=state.doorOpen?'הדלת נפתחה. אפשר להיכנס למבואה.':'דלת המבואה נסגרה.';
+    }
+    if(id==='lamp'){commitEnvironment({lampOn:!state.lampOn},id);message=state.lampOn?'הרחבה מוארת שוב.':'הפנס כובה. פנס היד שלכם עדיין פועל.';}
+    if(id==='basketball'){if(world.environmentAnimation().basketballInFlight){toast('הכדור בדרך חזרה. עוד רגע.');return;}commitEnvironment({shots:state.shots+1},id);message=`קליעה ${state.shots}. הכדור חוזר לעמדה.`;}
+    if(id==='locker'){commitEnvironment({lockerOpen:!state.lockerOpen},id);if(state.lockerOpen){inspectEnvironment(id);return;}message='הארונית סגורה. הרמז נשאר ביומן.';}
+    if(id==='noticeboard'){commitEnvironment({},id);message='שלושת מיקומי הציוד תועדו ביומן. גם כתב היד החשוד.';}
+    if(id==='telescope'){commitEnvironment({observations:state.observations+1},id);world.observe(true);message='תצפית באגם. לחצו על סיום התצפית כדי לחזור.';}
+    if(id==='water'){commitEnvironment({waterFilled:true},id);message='הקערה מלאה. ארנב מהחצר מתקרב בקצב שלו.';}
+    if(id==='planter'){commitEnvironment({watered:true},id);message='העלים התרוממו. התברר שהפתרון היה מים.';}
+    if(id==='recycling'){commitEnvironment({recycled:true},id);message='שלוש פחיות הגיעו למחזור. עכשיו נשאר לסדר את תיקיית הפרויקט.';}
+    if(id==='bike'){commitEnvironment({bells:state.bells+1},id);beep();message='הפעמון מצלצל. בדיקת החומרה הסתיימה.';}
+    closeDialog();toast(message);
+  };
+}
+const animalNames={fox:'שועל',rabbit:'ארנב',bird:'ציפור',duck:'ברווז'};
+function inspectAnimal(id){
+  const a=world.animals().find(a=>a.id===id);if(!a)return;
+  const p=world.getPlayer();if(Math.hypot(p.x-a.x,p.z-a.z)>2.8)return;
+  commitEnvironment({animalNotes:[...new Set([...round.environment.animalNotes,id])]});
+  openDialog('יומן טבע · הקמפוס אחרי הלימודים',`<h2 id="dialog-title">${animalNames[a.type]} בשטח</h2><p class="dialog-copy">${a.type==='fox'?'הוא עוצר, מקשיב, וממשיך. נראה שיש לו תוכנית טובה משלנו. אפשר לתת לו ללכת לידכם בקצב שלו.':a.type==='rabbit'?'האוזניים זזות לפני כל השאר. התצפית נשמרה ביומן; אין צורך להתקרב יותר.':a.type==='duck'?'שלושה ברווזים ממשיכים בסיור באגם. כנראה הם לא קיבלו את הודעת הביטול.':'הציפור כבר מכירה את כל הקמפוס. היא לא מתרשמת במיוחד מכיתת ההייטק.'}</p>${a.type!=='duck'?`<button id="animal-follow" class="primary">${a.following?'לתת לו להמשיך בדרכו':'ללכת יחד קצת'} ←</button>`:''}<button id="animal-leave" class="secondary">להמשיך לחקור</button>`,'environment');
+  if($('animal-follow'))$('animal-follow').onclick=()=>{commitEnvironment({following:round.environment.following===id?null:id});closeDialog();toast(round.environment.following===id?'חבר חדש הולך לידכם. אפשר להיפרד דרך אותה פעולת מפגש.':'הוא חוזר לסיבוב שלו בקמפוס.');};$('animal-leave').onclick=closeDialog;
+}
+function npcConversation(i){
+  const n=NPCS[i],helped=round.environment.helped.includes(n.id);
+  const topics=[['היומן של נועה מלא בדיקות קטנות. ״כשכל אחד משנה דבר אחר, מתקבלים שלושה באגים ודיון ארוך. נתחיל בעובדות.״','היא מראה את הכיוון של הספרייה: ״כרטיס הצוות נשאר על שולחן העבודה ממערב. תיקי הפרויקט משום מה מסודרים פחות מהקוד.״'],['איתי מצביע על החממה. ״הרובוט היה אמור להשקות. כרגע הוא בעיקר מתעניין בלהיות כבוי.״','״יחידת הגיבוי נמצאת בארגז שממזרח למעבדה. מי שהניח אותה שם קרא לזה פתרון זמני. זה היה בשבוע שעבר.״'],['״הרעש היה מהאגם. בדקתי. ברווז. לא צריך לציין את זה בסיכום ההאקתון.״','״האנטנה נשארה בדרום־מערב. אם נלך יחד לשם, אני אבדוק את השביל ואתם תבדקו שאין עוד ברווז מפתיע.״']][i];
+  openDialog('שיחה עם הצוות',character(i)+`<div class="options"><button class="secondary" data-chat-topic="0">איך הולך בינתיים?</button><button class="secondary" data-chat-topic="1">יש עוד רמז לציוד?</button><button id="npc-help" class="primary">${helped?'כבר עזרנו · לבדוק מה השתנה':['לעזור לסדר את הבדיקות','לעזור להניח את הבקר','לבדוק יחד את כיוון הרעש'][i]} ←</button></div><p id="npc-chat-reply" class="dialog-copy" role="status"></p><button id="npc-back" class="text-button">בחזרה למשימת התחנה ←</button>`,'conversation');
+  document.querySelectorAll('[data-chat-topic]').forEach(b=>b.onclick=()=>{$('npc-chat-reply').textContent=topics[Number(b.dataset.chatTopic)];});
+  $('npc-help').onclick=()=>{commitEnvironment({helped:[...new Set([...round.environment.helped,n.id])]});$('npc-chat-reply').textContent=['נועה מסמנת בדיקה אחת ברשימה ומרימה יד בתודה. ״מדהים, אפשר לפתור דברים בלי ישיבה של שעה.״','איתי מניח את הבקר על העמדה. ״עכשיו יש לי יד פנויה. בשביל להצביע על התקלה הבאה.״','אדם מסמן את כיוון האגם. ״תודה שבדקתם איתי. מוכן להחזיר את הקשר.״'][i];$('npc-help').textContent='העזרה תועדה ביומן';};$('npc-back').onclick=()=>talk(i);
+}
+function bindNpcConversation(){document.querySelectorAll('[data-npc-chat]').forEach(b=>b.onclick=()=>npcConversation(Number(b.dataset.npcChat)));}
+
+function reference(q){const ref=quiz.references.find(r=>r.id===q.ref.id);if(!ref)return '';let url;try{url=new URL(ref.url||'subject.html?subject='+quiz.subject_id,'https://hitech.agnon.online/');if(!['https:','http:'].includes(url.protocol))return '';}catch{return '';}
+  return `<a class="reference" target="_blank" rel="noopener noreferrer" href="${esc(url.href)}">מקור: ${esc(ref.title)}${q.ref.part?' · '+esc(q.ref.part):''} ↗</a>`;
+}
+function showQuestion(i){if(!round.items.includes(EQUIPMENT[i].id)){equipmentMission(i);return;}const p=progress(round,i);if(!p.next){awardSeal(i);return;}const q=round.questions.find(q=>q.id===p.next);activeQuestion=q;activeNpc=i;
+  openDialog(`${NPCS[i].name} · ${NPCS[i].system}`, `<div class="question-meta"><span>${esc(quiz.title)}</span><span>שאלה ${Object.keys(round.answers).length+1} מתוך ${round.questions.length}</span></div><div class="progress-line"><i style="width:${Object.keys(round.answers).length/round.questions.length*100}%"></i></div><h2 id="dialog-title">${esc(q.prompt)}</h2>${reference(q)}<button class="text-button npc-chat" data-npc-chat="${i}">רגע לשיחה עם ${esc(NPCS[i].name)} ↗</button><div class="options" id="answer-options">${q.options.map((o,j)=>`<button class="option answer" data-choice="${o.original}"><span class="number">${j+1}</span><span>${esc(o.text)}</span></button>`).join('')}</div><div id="answer-feedback" aria-live="polite"></div>`, 'question');
+  activeQuestion=q;
+  document.querySelectorAll('.answer').forEach(b=>b.onclick=()=>submitAnswer(q,Number(b.dataset.choice),i));
+}
+function submitAnswer(q,choice,i){const result=answer(round,q.id,choice);if(!result)return;mode='feedback';saveDraft();updateHud();beep(result.correct);
+  document.querySelectorAll('.answer').forEach(b=>{b.disabled=true;const v=Number(b.dataset.choice);if(v===q.correct)b.classList.add('correct');if(v===choice)b.classList.add('selected',result.correct?'correct':'wrong');});
+  $('answer-feedback').innerHTML=`<div class="feedback"><strong>${result.correct?'✓ תשובה נכונה.':'↺ לא הפעם. הנה ההסבר.'}</strong><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p class="english" lang="en" dir="ltr">${esc(q.explanation.en)}</p>`:''}</div><button class="text-button" id="hold-feedback">להשהות ולקרוא את ההסבר</button><p class="feedback-note">התשובה נעולה. ההסבר נשאר גם ביומן.</p>`;
+  autoAdvance=()=>showQuestion(i);feedbackTimer=setTimeout(()=>{autoAdvance=null;showQuestion(i);},1500);
+  $('hold-feedback').onclick=()=>{clearTimeout(feedbackTimer);feedbackTimer=null;autoAdvance=null;$('hold-feedback').textContent='חזרה להמשך אוטומטי';$('hold-feedback').onclick=()=>{autoAdvance=()=>showQuestion(i);feedbackTimer=setTimeout(autoAdvance,1500);$('hold-feedback').disabled=true;};};
+}
+function awardSeal(i){if(!round.items.includes(EQUIPMENT[i].id)||!round.understood.includes(NPCS[i].id)||progress(round,i).next)return;const n=NPCS[i];if(!round.seals.includes(n.id))round.seals.push(n.id);guidedNpc=NPCS.findIndex(n=>!round.seals.includes(n.id));guidedEquipment=null;saveDraft();world.setProgress(round);updateHud();beep();
+  openDialog(`מערכת ${round.seals.length} מתוך 3 חזרה לפעולה`,character(i)+`<div class="score-big" style="font-size:52px">✓</div><h2 class="finish-title">${esc(n.system)} — פעיל</h2><p class="dialog-copy">${canEscape(round)?'הגישה, הגיבוי והקשר פעילים. השער הצפוני נפתח. הגיע הזמן לצאת מהמתחם.':'התחנה מגיבה. אפשר להמשיך לכל אחת מהתחנות האחרות. המפה עודכנה.'}</p><button id="continue-world" class="primary">${canEscape(round)?'לשער היציאה':'חזרה לשטח'} ←</button>`,'reward');$('continue-world').onclick=closeDialog;
+}
+function updateHud(){if(!round)return;$('seal-slots').innerHTML=NPCS.map((n,i)=>`<button class="seal ${round.seals.includes(n.id)?'done':''} ${guidedNpc===i?'selected':''}" data-npc="${i}" title="${esc(n.name)}" aria-label="חבר ${i+1}: ${esc(n.name)}. ${round.seals.includes(n.id)?'הושלם':'הצגת הכיוון'}" aria-pressed="${guidedNpc===i}">${round.seals.includes(n.id)?'✓':i+1}</button>`).join('');
+  document.querySelectorAll('[data-npc]').forEach(b=>b.onclick=()=>{trackedEnvironment=null;guidedNpc=Number(b.dataset.npc);guidedEquipment=round.understood.includes(NPCS[guidedNpc].id)&&!round.items.includes(EQUIPMENT[guidedNpc].id)?EQUIPMENT[guidedNpc].id:null;updateHud();});
+  $('question-progress').innerHTML=`<bdi dir="ltr">${Object.keys(round.answers).length} / ${round.questions.length}</bdi> שאלות`;$('firefly-count').innerHTML=`✧ <bdi dir="ltr">${round.collected.length} / 12</bdi>`;
+  $('objective').textContent=canEscape(round)?'השער פתוח. הביתה!':'מחזירים 3 מערכות לפעולה';if($('environment-progress'))$('environment-progress').textContent=`${round.environment.visited.length}/12 תגליות`;
+  $('quest-sub').textContent=canEscape(round)?'הולכים לשער שמאחורי בית הספר.':`בחרו תחנה במפה · ציוד ${round.items.length}/3`;
+}
+
+function updateMap(){if(!world||!round)return;const p=world.getPlayer();$('minimap').innerHTML=`<path d="M0 25 L0 12 L-3 4 L0 -4 L0 -12 L7 -17 L7 -24 L0 -25 M-3 4 L-10 1 L-13 -9 M0 -4 L13 -7 M0 12 L10 14" fill="none" stroke="#719480" stroke-width="1.4"/><ellipse cx="-17" cy="13" rx="6.5" ry="5" fill="#467e86"/><rect x="-8" y="-23" width="12" height="6" fill="#718a78" rx="1"/>${NPCS.map(n=>`<circle cx="${n.x}" cy="${n.z}" r="2.2" fill="${round.seals.includes(n.id)?'#5f8270':n.color}"/><text x="${n.x}" y="${n.z+1}" font-size="3" text-anchor="middle" fill="#152d30">${round.seals.includes(n.id)?'✓':NPCS.indexOf(n)+1}</text>`).join('')}<path d="M-2 -26H2V-23H-2Z" fill="${canEscape(round)?'#daf69f':'#91a78d'}"/>${EQUIPMENT.filter(e=>!round.items.includes(e.id)&&(guidedEquipment===e.id||round.understood.includes(NPCS[e.npc].id))).map(e=>`<rect x="${e.x-1.5}" y="${e.z-1.5}" width="3" height="3" fill="#d9b47d"/>`).join('')}${ENVIRONMENT.map(e=>`<circle cx="${e.x}" cy="${e.z}" r="${trackedEnvironment===e.id?1.6:.7}" fill="${trackedEnvironment===e.id?'#fff1c7':round.environment.visited.includes(e.id)?'#8ba994':'#b39e7a'}"/>`).join('')}<circle cx="${p.x}" cy="${p.z}" r="2.1" fill="#e8a169" stroke="#fff4cd" stroke-width=".7"/>`;
+  $('location').textContent=p.z<-14?'ליד בית הספר':p.x<-10?'הספרייה והאגם':p.x>8&&p.z>5?'מגדל הפנס':p.x>8?'החממה':'קרחת היער';
+  const goal=ENVIRONMENT.find(e=>e.id===trackedEnvironment)||(canEscape(round)?EXIT:(EQUIPMENT.find(e=>e.id===guidedEquipment)||NPCS[Math.max(0,guidedNpc)]));const targetPoint=world.project(goal.x,0,goal.z),playerPoint=world.project(p.x,0,p.z);$('compass').style.transform=`rotate(${Math.atan2(targetPoint.x-playerPoint.x,playerPoint.y-targetPoint.y)*180/Math.PI}deg)`;$('direction-text').textContent=`${goal===EXIT?'השער הביתה':goal.name} · ${Math.round(Math.hypot(p.x-goal.x,p.z-goal.z))} צעדים` ;
+  NPCS.forEach(n=>{const el=$('label-'+n.id);if(!el)return;const point=world.project(n.x,3.7,n.z);el.style.left=point.x+'px';el.style.top=point.y+'px';el.style.display=point.visible?'block':'none';el.classList.toggle('done',round.seals.includes(n.id));});
+  EQUIPMENT.forEach(e=>{const label=$('label-'+e.id);if(!label)return;const point=world.project(e.x,2,e.z),distance=Math.hypot(p.x-e.x,p.z-e.z);label.style.left=point.x+'px';label.style.top=point.y+'px';label.style.display=!round.items.includes(e.id)&&point.visible&&(guidedEquipment===e.id||distance<7)?'block':'none';});
+  const exit=$('label-exit'),point=world.project(EXIT.x,6.2,EXIT.z);if(exit){exit.style.left=point.x+'px';exit.style.top=point.y+'px';exit.style.display=point.visible?'block':'none';}
+  const n=nearest();$('interact').classList.toggle('hidden',!n||mode!=='explore');if(n)$('interact').innerHTML=n.type==='observation'?'סיום התצפית <kbd>E</kbd>':n.type==='environment'?`${esc(n.id==='bench'&&round.environment.seated?'לקום מהספסל':ENVIRONMENT.find(e=>e.id===n.id).name)} <kbd>E</kbd>`:n.type==='animal'?`מפגש עם ${animalNames[world.animals().find(a=>a.id===n.id)?.type]||'חיה'} <kbd>E</kbd>`:n.type==='exit'?`${canEscape(round)?'יוצאים הביתה':'לבדוק את השער'} <kbd>E</kbd>`:n.type==='equipment'?`לבדוק ${esc(EQUIPMENT[n.i].short)} <kbd>E</kbd>`:`לדבר עם ${esc(NPCS[n.i].name)} <kbd>E</kbd>`;
+  const label=$('label-environment');if(label){const e=n?.type==='environment'?ENVIRONMENT.find(e=>e.id===n.id):null;if(e&&mode==='explore'){const point=world.project(e.x,2.2,e.z);label.textContent=environmentStatus(e,round.environment)+' · '+e.name;label.style.left=point.x+'px';label.style.top=point.y+'px';label.style.display=point.visible?'block':'none';}else label.style.display='none';}
+}
+function reviewHtml(){return round.questions.filter(q=>Object.hasOwn(round.answers,q.id)).map(q=>{const a=round.answers[q.id];return `<details class="review-item"><summary>${a.correct?'✓':'↺'} ${esc(q.prompt)}</summary><p>התשובה שלכם: ${esc(q.choices[a.choice])}</p><p>התשובה הנכונה: ${esc(q.choices[q.correct])}</p><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p lang="en" dir="ltr">${esc(q.explanation.en)}</p>`:''}${reference(q)}</details>`;}).join('');}
+function journal(){if(!round)return;openDialog('כל מה שגיליתם',`<h2 id="dialog-title">יומן ההרפתקה</h2>${NPCS.map((n,i)=>`<div class="journal-entry"><h3>${round.seals.includes(n.id)?'✓':'◇'} ${esc(n.name)}</h3><p>${esc(n.role)} · ${progress(round,i).answered} מתוך ${progress(round,i).total} שאלות</p><p>${i===0?'מצפון־מערב, ליד הספרייה.':i===1?'מצפון־מזרח, ליד החממה.':'מדרום־מזרח, ליד מגדל הפנס.'}</p></div>`).join('')}<h3>ציוד וממצאים</h3>${EQUIPMENT.map(e=>`<div class="journal-entry"><h3>${round.items.includes(e.id)?'✓':'□'} ${esc(e.name)}</h3><p>${esc(round.items.includes(e.id)?e.clue:e.hint)}</p></div>`).join('')}<h3>חקירה בקמפוס · ${round.environment.visited.length}/12</h3>${ENVIRONMENT.map(e=>`<div class="journal-entry"><h3>${round.environment.visited.includes(e.id)?'✓':'□'} ${esc(e.name)}</h3><p>${esc(environmentStatus(e,round.environment))} · ${round.environment.visited.includes(e.id)?esc(e.description):'אפשר לגלות בשטח. המפה מציגה את המיקום.'}</p><button class="text-button" data-track-environment="${e.id}">להציג מיקום במפה ←</button></div>`).join('')}<p class="feedback-note">מפגשי טבע: ${round.environment.animalNotes.length} · עזרה לצוות: ${round.environment.helped.length}/3</p><h3>השאלות שכבר פתרתם</h3><p class="feedback-note">התשובות נעולות. אפשר לקרוא וללמוד מהן בכל רגע.</p>${reviewHtml()||'<p class="feedback-note">השאלות יופיעו כאן אחרי שתענו.</p>'}`,'journal');document.querySelectorAll('[data-track-environment]').forEach(b=>b.onclick=()=>{const e=ENVIRONMENT.find(e=>e.id===b.dataset.trackEnvironment);trackedEnvironment=e.id;closeDialog();document.body.classList.add('map-open');$('map-toggle').setAttribute('aria-expanded','true');toast(`${e.name} סומן במפה.`);});}
+$('journal').onclick=journal;
+const mapToggle=document.createElement('button');mapToggle.id='map-toggle';mapToggle.className='secondary map-toggle';mapToggle.textContent='מפה';mapToggle.setAttribute('aria-expanded','false');mapToggle.setAttribute('aria-controls','minimap');$('hud').appendChild(mapToggle);mapToggle.onclick=()=>{const open=document.body.classList.toggle('map-open');mapToggle.setAttribute('aria-expanded',String(open));mapToggle.textContent=open?'סגירת מפה':'מפה';};
+const envProgress=document.createElement('span');envProgress.id='environment-progress';document.querySelector('.quest-bottom').appendChild(envProgress);
+function how(){openDialog('תדריך שטח',`<h2 id="dialog-title">איך יוצאים מכאן.</h2><div class="journal-entry"><h3>01 · משוטטים</h3><p>מקשי WASD או חצים כדי לזוז, רווח לקפוץ, Shift לרוץ. אפשר ללחוץ על הקרקע. בנייד: גוררים את העיגול וקופצים בכפתור החץ.</p></div><div class="journal-entry"><h3>02 · מקשיבים לחברים</h3><p>מתקרבים לדמות ולוחצים E או על כפתור השיחה. מבינים מה היא צריכה, מאתרים את הציוד שהוא צריך וחוזרים אליו להפעלת מסוף התרגול.</p></div><div class="journal-entry"><h3>03 · פותרים ויוצאים</h3><p>השאלות מגיעות מחומר התרגול שלכם. כל תשובה ננעלת ויש הסבר. אחרי הפעלת שלוש המערכות מגיעים לשער בצפון. אין זמן קצוב ואין קנס על טעות.</p></div><div class="journal-entry"><h3>חקירה חופשית</h3><p>מגלים 12 מקומות לפעולה: יושבים, פותחים דלתות, קולעים לסל, משקים וצופים בטבע. מתקרבים, לוחצים על הכפתור הגדול ובוחרים פעולה. ביומן יש מיקומים ורמזים. החקירה ועזרה לצוות אינן משנות את ציון הלימוד. F למסך מלא. Escape להשהיה.</p></div><button id="got-it" class="primary">חזרה למשימה ←</button>`,round&&mode!=='menu'?'help':'menu');$('got-it').onclick=closeDialog;}
+$('how').onclick=how;
+function pause(){if(mode==='menu'||mode==='complete')return;if(dialog.open){closeDialog();return;}openDialog('היער יכול לחכות',`<h2 id="dialog-title">רגע לנשום.</h2><p class="dialog-copy">${draftStored?'ההתקדמות נשמרה בלשונית הזאת.':'הדפדפן חסם שמירה מקומית. השאירו את הלשונית פתוחה כדי להמשיך.'} העולם ממתין לכם.</p><div class="options"><button id="unpause" class="primary">חזרה ליער ←</button><button id="show-controls" class="secondary">איך משחקים?</button><button id="menu" class="secondary">חזרה למסך הפתיחה</button></div>`,'paused');$('unpause').onclick=closeDialog;$('show-controls').onclick=how;$('menu').onclick=returnToMenu;}
+$('pause').onclick=pause;
+async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('הדפדפן הזה לא מאפשר מסך מלא. אפשר להמשיך לשחק כרגיל.');}}
+$('fullscreen').onclick=fullscreen;$('sound').onclick=()=>{sound=!sound;$('sound').setAttribute('aria-pressed',String(sound));$('sound').setAttribute('aria-label',sound?'כיבוי צלילים':'הפעלת צלילים');$('sound').style.color=sound?'#d9bd85':'';beep();};
+window.addEventListener('keydown',e=>{if(e.target.matches('input,select,textarea'))return;if(e.code==='KeyF'){e.preventDefault();fullscreen();}if(e.code==='Escape'&&!dialog.open){e.preventDefault();pause();}if(mode==='question'&&/^Digit[1-4]$/.test(e.code)){document.querySelectorAll('.answer')[Number(e.code.slice(-1))-1]?.click();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='explore')pause();if(document.hidden&&feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}else if(!document.hidden&&mode==='feedback'&&autoAdvance){feedbackTimer=setTimeout(autoAdvance,1500);}});
+window.addEventListener('pagehide',saveDraft);
+async function fingerprint(q){return quizFingerprint(q);}
+async function persistResult(completedRound=round,completedQuiz=quiz,completedName=participantName){
+  const payload={id:completedRound.attemptId,name:completedName,quizId:completedQuiz.id,answers:Object.entries(completedRound.answers).map(([id,a])=>({id,choice:a.choice})),startedAt:completedRound.startedAt,contentHash:await fingerprint(completedQuiz)};
+  resultQueued=queueResult(payload);return sendResult(payload);
+}
+async function finish(){if(!canEscape(round)||mode==='complete')return;const finishedRound=round,finishedQuiz=quiz,finishedName=participantName,finishedId=round.attemptId;saveDraft();const score=academicScore(round),stars=starsFor(score),correct=Object.values(round.answers).filter(a=>a.correct).length;const key=`prepx-best-${quiz.id}`,old=Number(storage.get(key));if(!Number.isFinite(old)||score>old)storage.set(key,String(score));
+  openDialog('הגעתם הביתה ✧',`<div class="stars" aria-label="${stars} כוכבים מתוך שלושה">${'★'.repeat(stars)+'☆'.repeat(3-stars)}</div><h2 class="finish-title" id="dialog-title">המערכות פעילות.<br>הדרך החוצה פתוחה.</h2><p class="finish-title feedback-note">צוות איינשטיין, המשימה הושלמה. בפעם הבאה נשארים להאקתון בשעות האור.</p><div class="score-big">${score}<small> / 100</small></div><div class="stats-row"><div><strong>${correct}/${round.questions.length}</strong><small>תשובות נכונות</small></div><div><strong>3</strong><small>מערכות פעילות</small></div><div><strong>${round.collected.length}</strong><small>גחליליות</small></div></div><p id="save-status" class="saved-note" role="status">שומרים את התוצאה בהיסטוריית המשחק…</p><div class="dialog-actions"><button id="replay" class="primary">משימה חדשה ↺</button><a class="secondary" href="https://hitech.agnon.online/subject.html?subject=${quiz.subject_id}">לחומר הלימוד ↗</a></div><button id="review-results" class="text-button">התשובות וההסברים שלכם <span>↓</span></button><div id="final-review" class="hidden">${reviewHtml()}</div>`,'complete');
+  $('replay').onclick=()=>{clearDraft();round=null;returnToMenu();};$('review-results').onclick=()=>$('final-review').classList.toggle('hidden');
+  finishPromise=persistResult(finishedRound,finishedQuiz,finishedName);const saved=await finishPromise;
+  if(mode==='complete'&&round?.attemptId===finishedId){$('save-status').textContent=saved?'✓ התוצאה נשמרה בהיסטוריית המשחק. לא נשלח דוא״ל.':(resultQueued?'אין חיבור להיסטוריה כרגע. התוצאה נשמרה במכשיר וממתינה לשליחה.':'השמירה נכשלה והדפדפן חסם שמירה מקומית. השאירו את הלשונית פתוחה ונסו שוב.');if(!saved){const retry=document.createElement('button');retry.className='text-button';retry.textContent='לנסות לשמור שוב';retry.onclick=async()=>{retry.disabled=true;const ok=await persistResult(finishedRound,finishedQuiz,finishedName);if(ok){$('save-status').textContent='✓ התוצאה נשמרה בהיסטוריית המשחק.';retry.remove();}else retry.disabled=false;};$('save-status').after(retry);}}
+  if(saved&&round?.attemptId===finishedId)clearDraft();
+}
+try {world=createWorld($('world'),{reduced,onInteract:interact,onEnvironmentChange:patch=>{if(round)commitEnvironment(patch);},onCollect:id=>{if(!round||round.collected.includes(id))return;round.collected.push(id);updateHud();saveDraft();beep();if(round.collected.length%3===0)toast(`${round.collected.length} נקודות טבע תועדו ביומן. החקירה לא משנה את ציון הלימוד.`);},onMove:(x,z,dt)=>{if(!round)return;round.player={x,z};round.elapsed+=dt;saveCounter+=dt;if(saveCounter>1){saveCounter=0;saveDraft();}}});
+  $('loading').classList.add('hidden');
+} catch {$('loading').innerHTML='<div style="max-width:320px;text-align:center"><h2>היער צריך דפדפן עם תלת־ממד.</h2><p>נסו לעדכן את הדפדפן או להפעיל האצת חומרה.</p><a href="https://hitech.agnon.online/" class="primary">בינתיים, לתרגול הרגיל ←</a></div>';$('start').disabled=true;}
+$('world').addEventListener('worldlost',()=>{openDialog('החיבור לתלת־ממד נעצר','<h2 id="dialog-title">נשמר לכם מקום ביער.</h2><p class="dialog-copy">רעננו את העמוד ובחרו בהמשך ההרפתקה השמורה.</p><button id="reload" class="primary">רענון וחזרה</button>','paused');$('reload').onclick=()=>location.reload();});
+const joystick=$('joystick');let joyPointer=null;
+function moveStick(e){if(joyPointer!==e.pointerId)return;const r=joystick.getBoundingClientRect();let x=(e.clientX-r.left-r.width/2)/36,z=(e.clientY-r.top-r.height/2)/36;const d=Math.max(1,Math.hypot(x,z));x/=d;z/=d;world?.setJoystick(x,z);$('stick').style.transform=`translate(${x*28}px,${z*28}px)`;}
+joystick.addEventListener('pointerdown',e=>{joyPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);moveStick(e);});joystick.addEventListener('pointermove',moveStick);
+function releaseStick(){joyPointer=null;world?.setJoystick(0,0);$('stick').style.transform='';}
+for(const type of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(type,releaseStick);
+$('jump').onclick=()=>world?.jump();
+setInterval(updateMap,80);
+window.render_game_to_text=()=>JSON.stringify({mode,coordinateSystem:'x east, z south; y up; world -27..27. Arrow/WASD movement is camera-relative.',source,quiz:quiz.id,player:world?.getPlayer(),target:nearest(),environment:round?ENVIRONMENT.map(e=>({...e,state:environmentStatus(e,round.environment),visited:round.environment.visited.includes(e.id),action:environmentAction(e,round.environment)})):[],environmentState:round?.environment||null,environmentAnimation:world?.environmentAnimation(),observing:world?.isObserving()||false,rendering:world?.performance(),npcs:NPCS.map((n,i)=>({id:n.id,x:n.x,z:n.z,understood:round?.understood.includes(n.id)||false,sealed:round?.seals.includes(n.id)||false,progress:round?progress(round,i):null})),equipment:EQUIPMENT.map(e=>({id:e.id,x:e.x,z:e.z,collected:round?.items.includes(e.id)||false})),exit:{...EXIT,open:round?canEscape(round):false},question:activeQuestion&&['question','feedback'].includes(mode)?{id:activeQuestion.id,prompt:activeQuestion.prompt,options:activeQuestion.options.map(o=>o.text),locked:!!round?.answers[activeQuestion.id]}:null,answered:round?Object.keys(round.answers).length:0,total:quiz.questions.length,score:round?academicScore(round):0,fireflies:round?.collected.length||0,elapsed:Math.floor(round?.elapsed||0),animals:world?.animals(),paused:dialog.open});
+window.advanceTime=ms=>world?.advanceTime(ms);
+// Test observability uses the same movement, collision and interaction functions as real play.
+if(import.meta.env.DEV&&new URLSearchParams(location.search).get('test')==='1')window.__afterbell={walkTo:(x,z)=>{if(!world.blocked(x,z)){world.setPlayer(x,z);round.player={x,z};saveDraft();updateMap();}},interact,finish,round:()=>round,world};
+loadQuiz().then(flushPending);

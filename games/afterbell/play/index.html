@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101923"><meta name="description" content="אחרי הצלצול — תעלומה בקמפוס שי עגנון. חוקרים עולם פתוח, משחזרים מערכות ומתרגלים את חומר הלימוד."><title>אחרי הצלצול · PrepX</title>  <script type="module" crossorigin src="./assets/index-D6nc5PFY.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DznLvBHO.css">
+</head>
+<body>
+  <div id="world" aria-label="קמפוס תלת־ממדי פתוח: בית ספר, מעבדות, ספרייה, יער ובעלי חיים"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="https://hitech.agnon.online/" aria-label="חזרה לאתר הלימוד PrepX"><span class="brand-icon" aria-hidden="true">P</span><span dir="ltr">PrepX<span class="brand-sub" lang="he" dir="rtl"> בשטח</span></span></a>
+    <div class="chapter"><span class="live-dot"></span> בית הספר שי עגנון <span class="chapter-divider">/</span> ז׳ איינשטיין · כיתת הייטק</div>
+    <div class="tools"><button id="sound" class="icon-button" aria-label="הפעלת צלילים" title="צלילים" aria-pressed="false">♪</button><button id="fullscreen" class="icon-button" aria-label="מסך מלא" title="מסך מלא (F)">⛶</button><button id="pause" class="icon-button hidden" aria-label="השהיה" title="השהיה (Escape)">Ⅱ</button></div>
+  </header>
+  <main id="welcome" class="welcome">
+    <div class="intro"><div class="eyebrow"><span></span> תיק שטח 01 · הקמפוס החשוך</div><h1>אחרי<br><span>הצלצול.</span></h1><p class="intro-copy">האקתון כיתת ההייטק נגמר.<br>החשמל נפל. השערים לא נפתחים.</p><p class="intro-detail">חוקרים את הקמפוס, מוצאים ציוד ומשחזרים שלוש מערכות.<br class="desktop-only"> הרמזים בשטח. הפתרונות בחומר שכבר למדתם.</p>
+    <div class="start-form"><label for="player-name">שם משתתף או כינוי</label><input id="player-name" maxlength="60" autocomplete="given-name" placeholder="שם או כינוי"><label for="quiz">תיק הלימוד למשימה</label><select id="quiz"></select><button id="start" class="primary">כניסה למשימה <span aria-hidden="true">←</span></button><button id="resume" class="secondary hidden">המשך מהנקודה האחרונה</button></div>
+    <div class="intro-meta"><span>חקירה חופשית</span><span>3 מערכות לשחזור</span><span>ללא הגבלת זמן</span></div>
+    <p class="privacy" id="privacy">השם נשמר במכשיר. בסיום, השם והתוצאה נשמרים בהיסטוריית המשחק. אין שליחת דוא״ל.</p><p id="source-status" class="source-status" role="status">מתחברים לשאלות של PrepX…</p></div>
+    <div class="scene-caption"><span class="caption-line"></span><span>בית הספר שי עגנון<span class="caption-small">כיתה ז׳ איינשטיין · כיתת הייטק<br>התוכנית הייתה לסיים לפני שהשומר מגיע.</span></span></div>
+    <div class="bottom-strip"><span>01 / הקמפוס החשוך</span><span>לחקור · להקשיב · לחבר את הפרטים</span><button id="how" class="text-button">איך משחקים? <span>↗</span></button></div>
+  </main>
+  <section id="hud" class="hidden" aria-label="מצב המשימה">
+    <div class="quest-panel"><div class="eyebrow">מערכות הקמפוס</div><h2 id="objective">משחזרים את מערכת היציאה</h2><p id="quest-sub">ציוד, אנשים, רמזים. בחרו תחנה כדי להתחיל.</p><div id="seal-slots" class="seal-slots"></div><div id="direction" class="direction"><span id="compass" aria-hidden="true">↑</span><span id="direction-text">הולכים בעקבות המפה</span></div><div class="quest-bottom"><span id="question-progress">0 שאלות</span><span id="firefly-count">✧ 0 / 12</span></div><button id="journal" class="text-button">יומן החקירה <span>↗</span></button></div>
+    <div class="map-panel"><div class="map-heading"><span>מפת הקמפוס</span><span>צ ↑</span></div><svg id="minimap" viewBox="-30 -30 60 60" role="img" aria-label="מפת העולם ומיקום השחקן"></svg><p id="location">רחבת הכניסה</p></div>
+    <div class="world-labels" id="world-labels"></div>
+    <div class="play-bottom"><span class="keyboard-help"><kbd>W A S D</kbd> תנועה <kbd>רווח</kbd> קפיצה <kbd>E</kbd> שיחה</span><button id="interact" class="primary interact hidden">לדבר <kbd>E</kbd></button><span class="tip" id="tip">אפשר גם ללחוץ על הקרקע כדי ללכת.</span></div>
+    <div class="touch-controls"><div id="joystick" role="group" aria-label="תנועה במגע"><span id="stick"></span></div><button id="jump" aria-label="קפיצה">↑</button></div>
+  </section>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span id="dialog-eyebrow" class="eyebrow"></span><button id="close-dialog" class="icon-button" aria-label="סגירה">×</button></div><div id="dialog-body"></div></dialog>
+  <div id="loading" class="loading"><span class="loading-mark" aria-hidden="true">P</span><span>טוענים את מפת הקמפוס…</span></div>
+  <noscript><p class="no-js">כדי לשחק צריך להפעיל JavaScript בדפדפן. <a href="https://hitech.agnon.online/">חזרה לתרגול</a></p></noscript>
+</body></html>

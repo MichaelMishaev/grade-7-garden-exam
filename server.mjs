@@ -137,7 +137,8 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
   const contentVersion = db?.flags.read ? cachedFor(15000, () => db.contentVersion()) : null;
   const teacherHistory = createHistoryHandler({ env, db });
   // Nothing a client sends may take the process down: the whole handler runs inside one catch (only the error name is logged).
-  return http.createServer((request, response) => {
+  let gameService;
+  const app = http.createServer((request, response) => {
     handle(request, response).catch(error => {
       console.error('request failed', error?.code ?? error?.name);
       try {
@@ -146,6 +147,9 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
       } catch { response.destroy(); }
     });
   });
+
+  app.on('close', () => { gameService?.then(game => game.emit('close')).catch(() => {}); });
+  return app;
 
   async function handle(request, response) {
   const requestStart = now();
@@ -166,6 +170,18 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
   // A request line the URL parser rejects (`//`, `//h:99999`, ...) is answered here, before any route sees it.
   let parsedUrl;
   try { parsedUrl = new URL(request.url, 'http://localhost'); } catch { return void response.writeHead(400).end(); }
+
+  if (parsedUrl.pathname.startsWith('/api/afterbell/')) {
+    try {
+      gameService ??= import('./games/afterbell/service.mjs').then(({ createGameService }) => createGameService({
+        allowedOrigins: [...allowedOrigins], databaseUrl: env.DATABASE_URL,
+        ...(env.AFTERBELL_DATABASE_PATH ? { databasePath: env.AFTERBELL_DATABASE_PATH } : {})
+      })).catch(error => { gameService = undefined; throw error; });
+      const game = await gameService;
+      game.emit('request', request, response);
+    } catch { json(503, { error: 'Game history unavailable' }); }
+    return;
+  }
 
   if (request.url === '/api/submit-exam') {
     const received = await readExamPost(request, response, json, allowedOrigins, { maxBytes: 250000, tooLarge: 'Submission too large' });

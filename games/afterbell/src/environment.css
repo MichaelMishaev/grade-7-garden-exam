@@ -1,0 +1,46 @@
+.environment-category { color: #b9c9ad; font-size: 12px; }
+.environment-switches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.env-switch { min-height: 84px; display: grid; place-items: center; gap: 5px; }
+.env-switch b { font-size: 12px; font-weight: 500; color: #bac5ca; }
+.env-switch[aria-pressed=true] { background: #345047; border-color: #b6c9a9; }
+.env-switch[aria-pressed=true] b { color: #d3e3c2; }
+.npc-chat { font-size: 12px; width: 100%; justify-content: flex-start; }
+#animal-leave { width: 100%; margin-top: 10px; }
+.map-toggle { display: none; }
+.environment-label { border-right-color: #a3bb9a; max-width: 245px; overflow: hidden; text-overflow: ellipsis; }
+#environment-progress { white-space: nowrap; }
+.quest-bottom { gap: 8px; flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .playing .topbar { height: 56px; padding-inline: 12px; background: #101b24eb; }
+  .playing .topbar .brand-sub { display: none; }
+  .playing .quest-panel { z-index: 3; top: 65px; right: 10px; left: 10px; width: auto; display: grid; grid-template-columns: 1fr auto; padding: 8px 11px; gap: 2px 10px; background: #101923eb; }
+  .playing .quest-panel > .eyebrow, .playing #quest-sub { display: none; }
+  .playing .quest-panel h2 { font-size: 12px; line-height: 1.5; margin: 0; grid-column: 1; }
+  .playing .seal-slots { grid-column: 2; grid-row: 1 / 4; margin: 0; gap: 4px; align-items: center; }
+  .playing .seal { width: 44px; height: 44px; font-size: 13px; }
+  .playing .direction { grid-column: 1; margin: 0; min-height: 23px; font-size: 10px; gap: 6px; }
+  .playing .direction #compass { width: 20px; height: 20px; font-size: 15px; }
+  .playing .quest-bottom { grid-column: 1; padding-top: 3px; font-size: 9px; border: 0; }
+  .playing #firefly-count { display: none; }
+  .playing .quest-panel #journal { position: absolute; top: calc(100% + 12px); right: 0; margin: 0; height: 44px; min-width: 104px; width: auto; padding: 0 12px; background: #15242dea; border: 1px solid #9cafa444; border-radius: 4px; font-size: 11px; }
+  .playing .map-toggle { display: block; position: fixed; top: 157px; left: 10px; z-index: 2; padding: 8px 13px; min-height: 44px; font-size: 11px; background: #15242dea; }
+  .playing .map-panel { display: none; top: 211px; left: 10px; width: 165px; padding: 10px; z-index: 2; background: #101923f2; }
+  .playing.map-open .map-panel { display: block; }
+  .playing .map-panel #minimap { height: 145px; }
+  .playing .map-panel .map-heading { font-size: 10px; }
+  .playing .play-bottom { bottom: max(157px, calc(env(safe-area-inset-bottom) + 145px)); }
+  .playing .interact { min-width: 225px; max-width: calc(100vw - 30px); min-height: 52px; padding: 12px 17px; font-size: 13px; box-shadow: 0 4px 25px #0004; }
+  .playing .interact kbd { display: none; }
+  .playing .touch-controls { bottom: max(25px, env(safe-area-inset-bottom)); }
+  .playing .world-label { max-width: 175px; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+  .playing #toast { bottom: 223px; font-size: 12px; max-width: calc(100vw - 24px); width: max-content; }
+  .playing dialog { max-height: 83dvh; }
+  .playing .environment-switches { gap: 7px; }
+  .playing .env-switch { min-height: 88px; padding: 8px; }
+}
+@media (max-height: 600px) and (max-width: 900px) {
+  .playing .quest-panel { top: 64px; }
+  .playing .map-toggle { top: 151px; }
+  .playing .map-panel { top: 201px; }
+  .playing .play-bottom { bottom: 30px; }
+}
