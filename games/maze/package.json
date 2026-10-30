@@ -1,0 +1,14 @@
+{
+  "name": "prepx-shadow-maze",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5188",
+    "build": "vite build",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "dependencies": { "three": "0.181.2" },
+  "devDependencies": { "vite": "6.4.5", "playwright": "1.56.1" }
+}

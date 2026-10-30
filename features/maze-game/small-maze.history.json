@@ -1,0 +1,56 @@
+{
+  "feature_id": "MAZE-001",
+  "slug": "small-maze",
+  "current_version": "0.3.1",
+  "current_status": "planned",
+  "history": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "created",
+      "summary": "Initial specification with 22 acceptance criteria, independent agent review and three local GLM critiques; implementation and gameplay verification pending.",
+      "sources": [
+        "SRC-01",
+        "SRC-02",
+        "SRC-03",
+        "SRC-04",
+        "SRC-05",
+        "SRC-06",
+        "POLICY-01"
+      ]
+    },
+    {
+      "version": "0.2.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "implemented",
+      "summary": "Implemented separate mobile-first 3D maze and additional homepage button; multi-agent implementation, local GLM critic QA and browser verification recorded in specification. No deployment.",
+      "sources": [
+        "SRC-07",
+        "SRC-06"
+      ]
+    },
+    {
+      "version": "0.3.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "revised",
+      "summary": "Cap every trap at1\u20133 questions, preserve full bank through extra traps and migrate earned milestones; add visible first-person cage and fresh-agent scene interactions. Local verification only.",
+      "sources": [
+        "SRC-08",
+        "SRC-09"
+      ]
+    },
+    {
+      "version": "0.3.1",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "qa-fix",
+      "summary": "GLM code/evidence critic QA plus independent mobile tests: fix landscape overlap, false saved claims, asymmetric storage-read overwrite, corrupt-save retry loop, and huge saved timer freeze; preserve original progress and trap cap.",
+      "sources": [
+        "SRC-10"
+      ]
+    }
+  ]
+}
