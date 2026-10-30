@@ -82,3 +82,14 @@ The rabbit's approach action opens a visible dialog. Feed it a carrot to gain a 
 Completion now has three locally bundled original illustrations and a prominent Home link. Each new completed run picks a different scene from the previous completion; reload and review retain that run's scene. `tests/completion-browser.mjs` checks a clearly labelled completed-run UI fixture across mobile/desktop widths; the genuine three-run rotation is checked by `tests/adventures-browser.mjs`. Art provenance is in `art/README.md`.
 
 `tests/rewards-browser.mjs` plays a complete mobile adventure using the joystick, collects all gifts, buys all three reward types and checks refresh/completion collection access. `tests/rewards.test.mjs` checks balance, purchase limits, legacy saves, score separation and persistence. Historical D-pad browser scripts target the previous input UI; current joystick input coverage is in `tests/joystick-browser.mjs`.
+
+
+## Optional arcade mode
+
+`play/arcade.html` is a short three-question sample, separate from the full-bank maze. Reach it from the maze intro. Cross three timed bridges, lock source-backed first answers, earn three boss crystals regardless of correctness, and break three boss shield segments from the marked firing lanes. Physical collisions return to a safe checkpoint; persistent assistance opens a safe path after three failures or on request. Questions have no timer. The normal full-bank score/history is never marked complete by an arcade run.
+
+Each stage offers a persistent collectible and one diamond; victory settles pending gifts and adds one bonus. At safe staging points, one diamond buys a one-use physical shield or a charge of five active seconds of half-speed hazards. The collection shows earned/spent/available amounts. The isolated `prepx-shadow-maze-arcade-v1` session envelope stores active progress and the last completed collection. New rounds have fresh wallets and do not overwrite normal maze, Afterbell or exam drafts. Corrupt/unreadable saves offer explicitly unsaved play and are preserved.
+
+Source: `arcade-core.js` (state/ledger/restore), `arcade-main.js` (UI/save/input), `arcade-renderer.js` (Three.js arena), `arcade.html`/`arcade.css`. Vite builds both modes and a shared Three.js chunk. See [MAZE-002](../../features/maze-game/arcade-run.md) for acceptance criteria and review dispositions.
+
+Verification: `node --test games/maze/tests/arcade-core.test.mjs`; `ARCADE_QA_URL=http://127.0.0.1:5193/arcade.html node games/maze/tests/arcade-browser.mjs`. The arcade browser suite uses real touch/keyboard actions in isolated sessions, not gameplay-state injection. `tests/browser.mjs` now uses the current joystick with deterministic frame stepping for the full original-maze expedition; older specialized D-pad-only scripts are historical, not current gates. Physical-device performance and student enjoyment still need human testing.

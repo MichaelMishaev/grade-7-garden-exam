@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { ENCOUNTERS, EXIT, START, CREATURES, CLUE, TREASURE, pathTo, isWalkable, createState, transition, encountersFor } from '../core.js';
 import { normalizeMazeContent } from '../content.js';
 import snapshot from '../content-snapshot.js';
+import { joystickStep } from './joystick-touch.mjs';
 
 const base = process.env.MAZE_QA_URL || 'http://127.0.0.1:4328/games/maze/play/index.html';
 const output = fileURLToPath(new URL('../../../output/maze/', import.meta.url));
@@ -14,7 +15,7 @@ const checks = [], errors = [], posts = [];
 const questions = new Map(snapshot.quizzes.flatMap(quiz => quiz.questions).map(question => [question.id, question]));
 const state = page => page.evaluate(() => JSON.parse(window.render_game_to_text()));
 const check = (name, value) => { assert.ok(value, name); checks.push(name); console.log(`PASS ${name}`); };
-const shot = (page, name) => page.screenshot({ path: `${output}/${name}.png`, fullPage: true });
+const shot = async (page, name) => { await page.evaluate(()=>window.advanceTime?.(0)); return page.screenshot({ path: `${output}/${name}.png`, fullPage: true }); };
 const sameProgress = value => JSON.stringify({ hearts: value.hearts, coins: value.coins, seals: value.seals, progress: value.progress });
 const observedOriginals = new WeakMap();
 async function cellView(page, label) {
@@ -42,6 +43,8 @@ async function cellActions(page) {
 
 async function context(options = {}) {
   const context = await browser.newContext(options);
+  await context.addInitScript(()=>{window.requestAnimationFrame=()=>0;});
+  context.on('page', p=>{const wait=p.waitForFunction.bind(p);p.waitForFunction=(fn,arg,opts={})=>wait(fn,arg,{polling:50,...opts});});
   await context.route('**/api/quizzes/**', route => route.abort());
   context.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
   context.on('response', response => { if (response.status() >= 400 && !response.url().includes('/api/')) errors.push(`HTTP ${response.status()} ${response.url()}`); });
@@ -84,12 +87,13 @@ async function choose(page, correct) {
   assert.ok(original, 'question is from the existing source-backed snapshot');
   const option = question.options.find(option => correct ? option.original === original.correct : option.original !== original.correct);
   await page.locator(`[data-choice="${option.original}"]`).click();
+  await page.evaluate(()=>window.advanceTime(16));
   await holdFeedback(page);
   return before;
 }
 async function direction(page, from, to) {
   const name = to.x > from.x ? 'right' : to.x < from.x ? 'left' : to.y > from.y ? 'down' : 'up';
-  await page.locator(`[data-direction="${name}"]`).click();
+  await joystickStep(page,name);
   await page.evaluate(() => window.advanceTime(900));
   await page.waitForFunction(() => {const value=JSON.parse(window.render_game_to_text());return value.phase!=='explore'||!value.movement?.target;});
 }
@@ -146,7 +150,7 @@ async function settle(page, correctness, recoveryCorrect = false) {
         evidence.capture = true;
       }
       if (await page.locator('#skip-capture').isVisible()) await page.locator('#skip-capture').click();
-      else await page.waitForFunction(() => JSON.parse(window.render_game_to_text()).phase !== 'capture');
+      else {await page.evaluate(()=>window.advanceTime(3500));await page.waitForFunction(() => JSON.parse(window.render_game_to_text()).phase !== 'capture');}
       continue;
     }
     if (value.phase === 'review') {
@@ -208,10 +212,10 @@ try {
   await shot(page, 'mobile-intro'); await start(page);
   check('mobile starts with three hearts and no artificial rewards', (await state(page)).hearts === 3 && (await state(page)).coins === 0);
   check('offline source fallback is visibly identified', await page.locator('#offline-badge').isVisible());
-  check('touch movement targets are at least 44 pixels', await page.locator('[data-direction]').evaluateAll(elements => elements.every(element => { const r = element.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })));
+  check('touch movement targets are at least 44 pixels', await page.locator('#movement-joystick').evaluateAll(elements => elements.every(element => { const r = element.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })));
   check('game uses Hebrew RTL', await page.locator('html').getAttribute('lang') === 'he' && await page.locator('html').getAttribute('dir') === 'rtl');
   await shot(page, 'mobile-exploration');
-  const wallStart = await state(page); await page.locator('[data-direction="left"]').click(); await page.evaluate(() => window.advanceTime(900));
+  const wallStart = await state(page); await joystickStep(page,'left'); await page.evaluate(() => window.advanceTime(900));
   check('touch movement respects maze walls', JSON.stringify((await state(page)).player) === JSON.stringify(wallStart.player));
   const canvasBox = await page.locator('#maze-canvas').boundingBox();
   const beforeTap = await state(page);
@@ -257,7 +261,7 @@ try {
     await page.setViewportSize({ width, height: width < 500 ? 844 : 900 });
     await page.waitForTimeout(60);
     check(`no horizontal overflow at ${width}px`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    check(`movement controls fit viewport at ${width}px`, await page.locator('[data-direction="down"]').evaluate(element => { const r = element.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight; }));
+    check(`movement controls fit viewport at ${width}px`, await page.locator('#movement-joystick').evaluate(element => { const r = element.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight; }));
     if (width === 320) await shot(page, 'small-mobile-exploration');
     if (width === 1440) await shot(page, 'desktop-exploration');
   }
@@ -272,7 +276,7 @@ try {
   const secondTab = await desktop.newPage();
   await secondTab.goto(base, { waitUntil: 'domcontentloaded' }); await secondTab.bringToFront(); await start(secondTab);
   check('a separate tab starts its own expedition without sharing the completed tab', (await state(secondTab)).progress.answered === 0 && (await state(secondTab)).seals.length === 0);
-  await secondTab.locator('[data-direction="down"]').click(); await secondTab.evaluate(() => window.advanceTime(900));
+  await joystickStep(secondTab,'down'); await secondTab.evaluate(() => window.advanceTime(900));
   check('movement in a separate tab cannot overwrite the first tab', sameProgress(await state(page)) === completeBeforeOtherTab);
   await secondTab.close();
   const returnLink = page.locator('a.dialog-link');
@@ -299,7 +303,7 @@ try {
   });
   page = await accessible.newPage(); await page.goto(base, { waitUntil: 'domcontentloaded' }); await start(page);
   check('denied session storage displays an honest warning', await page.locator('#storage-warning').isVisible());
-  const noSaveStart = await state(page); await page.locator('[data-direction="down"]').click(); await page.evaluate(() => window.advanceTime(900));
+  const noSaveStart = await state(page); await joystickStep(page,'down'); await page.evaluate(() => window.advanceTime(900));
   check('denied session storage leaves in-memory movement playable', (await state(page)).player.y > noSaveStart.player.y);
   // Complete the first two original answers normally, then enter the next encounter.
   await travel(page, ENCOUNTERS[0], false, false);

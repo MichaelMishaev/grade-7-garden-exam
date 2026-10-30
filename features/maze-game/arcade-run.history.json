@@ -1,0 +1,62 @@
+{
+  "feature_id": "MAZE-002",
+  "slug": "arcade-run",
+  "current_version": "0.3.0",
+  "current_status": "approved",
+  "history": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "specified",
+      "summary": "Draft short optional arcade mode: three bridge/question stages, boss crystal loop, optional diamond boosts, safe recovery, explicit state/resource invariants and17 acceptance criteria. Three local GLM logical reviews pending; no implementation or deployment.",
+      "sources": [
+        "SRC-A1",
+        "SRC-A2",
+        "SRC-A3",
+        "SRC-A4",
+        "SRC-A5"
+      ]
+    },
+    {
+      "version": "0.1.1",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "logical-review",
+      "summary": "Owner review tightens atomic stage completion, pending claims, last-heart feedback, durable assist and boss resume IDs, boost clocks and last-run collection retention. Three local GLM attempts timed out without output; bounded retries pending. Documentation not marked logically reviewed.",
+      "sources": [
+        "SRC-A2",
+        "SRC-A5"
+      ]
+    },
+    {
+      "version": "0.2.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "reviewed-specification",
+      "summary": "Complete specification with19 acceptance criteria after two usable local GLM critiques (recovery and economy), owner dispositions, atomic victory/claim settlement, shield-consumption accounting, fresh input/window generations and explicit safe staging/boss-ready states. Third progression reviewer timed out and is not counted. Product tests/playtesting/implementation/deployment not started.",
+      "sources": [
+        "SRC-A1",
+        "SRC-A2",
+        "SRC-A3",
+        "SRC-A4",
+        "SRC-A5"
+      ]
+    },
+    {
+      "version": "0.3.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "implemented",
+      "summary": "Implemented separate playable3D arcade with three timed bridges, immutable source questions, boss/crystal ledger, persistent gifts and optional shield/slow motion. Added isolated snapshot/recovery and last-run collection. Actual-play50-check suite and independent17-check QA pass; final normal-maze and release evidence recorded separately. Human engagement/physical-device testing not performed. Production push explicitly authorized after applicable checks.",
+      "sources": [
+        "SRC-A1",
+        "SRC-A2",
+        "SRC-A3",
+        "SRC-A4",
+        "SRC-A5",
+        "SRC-A6"
+      ]
+    }
+  ]
+}

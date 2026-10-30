@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0c161c"><title>שלושה גשרים ושומר · PrepX</title><link rel="icon" href="data:,">  <script type="module" crossorigin src="./assets/arcade-EPxl0hPl.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/three.module-BvdW_sF7.js">
+  <link rel="stylesheet" crossorigin href="./assets/arcade-DMT2cVIi.css">
+</head>
+<body class="arcade-page">
+<main class="game-shell">
+  <header class="topbar"><a class="back-link" href="./index.html" aria-label="חזרה למבוך המלא">Prep<span>X</span> ↗</a><h1>שלושה גשרים ושומר</h1><button class="icon-button" id="pause-button" aria-label="השהיה ותפריט" disabled>Ⅱ</button></header>
+  <section class="hud" aria-label="מצב סבב הארקייד"><div><span class="hearts" id="hearts">♥ ♥ ♥</span><small>לבבות</small></div><div><strong id="crystals">0 / 3</strong><small>גבישי בוס</small></div><div><strong id="diamonds">0 ◆</strong><small>יהלומים</small></div></section>
+  <section class="viewport arcade-viewport" aria-label="זירת הגשרים והשומר"><canvas id="maze-canvas" tabindex="0" aria-label="זירת ארקייד תלת ממדית. גררו בג׳ויסטיק או השתמשו בחצים כדי ללכת קדימה ולהתחמק."></canvas><div class="scene-caption"><span class="location-dot"></span><span id="stage-label">סבב קצר · שלוש שאלות</span></div><div class="arcade-objective"><strong id="objective">טוענים את הזירה…</strong><span id="hazard-status"></span></div></section>
+  <section class="controls" aria-label="שליטה בזירה"><div class="joystick-control"><button id="movement-joystick" class="joystick" type="button" aria-label="ג׳ויסטיק. גררו קדימה כדי לחצות ולצדדים כדי להתחמק" disabled><span class="joystick-thumb" aria-hidden="true"></span></button><span id="joystick-help">גררו לתנועה</span></div><div class="action-controls"><button id="fire-button" class="button primary" disabled>הגיעו לעמדת הירי</button><button id="slow-button" class="button" disabled>הילוך איטי</button><div class="secondary-controls"><button id="collection-button" disabled>האוסף והחנות</button><button id="assist-button" disabled>עזרה בדרך</button></div></div></section>
+  <p class="notice" id="game-notice" role="status" aria-live="polite"></p><p class="storage-warning" id="storage-warning" role="status" hidden>השמירה אינה זמינה. אפשר לשחק עכשיו, אך רענון עלול לאבד את ההתקדמות. שמירה קודמת לא תימחק.</p>
+  <p class="arcade-privacy">סבב תרגול של 3 שאלות · נשמר בלשונית הזו · אין שליחת שם או תשובות. השאלות ללא הגבלת זמן.</p>
+</main>
+<dialog id="arcade-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+</body></html>
