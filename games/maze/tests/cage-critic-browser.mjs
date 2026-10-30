@@ -26,6 +26,7 @@ try {
   const bounds=await page.evaluate(()=>{const c=document.querySelector('#maze-canvas').getBoundingClientRect(),d=document.querySelector('#game-dialog').getBoundingClientRect();return{canvas:{left:c.left,right:c.right,top:c.top,bottom:c.bottom},dialog:{left:d.left,right:d.right,top:d.top,bottom:d.bottom}};});
   await page.screenshot({path:`${output}/landscape-cage.png`,fullPage:true});
   check('landscape question sheet leaves the first-person cage unobscured beside it',bounds.canvas.right<=bounds.dialog.left-8);
+  await page.locator('#cell-tools summary').click();
   for(const action of ['look-left','look-right','lantern','rattle','inspect'])await page.locator(`[data-cell-action="${action}"]`).click();
   check('landscape scene controls cannot change academic progress or move the player',stable(await read(page))===stable(before));
   await page.setViewportSize({width:320,height:568});
@@ -34,6 +35,7 @@ try {
   await page.screenshot({path:`${output}/short-portrait-cage.png`,fullPage:true});
   const original=snapshot.quizzes.flatMap(q=>q.questions).find(q=>q.id===before.currentQuestion.id);
   await page.locator(`[data-choice="${original.correct}"]`).click();
+  await page.locator('#cell-tools summary').click();
   await page.locator('[data-cell-action="inspect"]').click();
   const feedback=await read(page);await page.waitForTimeout(1800);
   check('inspect in feedback freezes advancement without duplicate coin rewards',(await read(page)).phase==='feedback'&&(await read(page)).coins===10);

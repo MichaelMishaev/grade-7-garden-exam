@@ -55,6 +55,18 @@ async function approach(page, id) {
 }
 async function interact(page, id) {
   await approach(page, id); const before = await read(page);
+  const entity = WORLD_ENTITIES.find(entity => entity.id === id);
+  if (['human', 'fox', 'rabbit', 'owl'].includes(entity.kind)) {
+    check(`${id} acknowledges an approach with an accessible nonmodal greeting`, await page.evaluate(name => window.observedGreetings.some(item => item.name === name && item.text.length > 5), entity.name));
+    if (id === 'scout') {
+      await page.screenshot({ path: `${output}/scout-greeting-mobile.png`, fullPage: true });
+      const greeting = before.greeting;
+      await page.locator('#pause-button').click(); await advance(page, 2000);
+      check('pausing hides proximity speech without advancing or spending progress', await page.locator('#nearby-greeting').isHidden() && (await read(page)).paused && academic(await read(page)) === academic(before));
+      await page.locator('#resume-button').click();
+      check('resume restores the same nearby greeting without repeating its announcement', (await read(page)).greeting?.sequence === greeting.sequence && await page.locator('#nearby-greeting').isVisible());
+    }
+  }
   await page.locator('#interact-button').click();
   const after = await read(page);
   check(`${id} interaction has a saved discovery and leaves academic rewards unchanged`, after.world.interactions[id] === 1 && academic(after) === academic(before));
@@ -90,7 +102,14 @@ try {
   context.on('response', response => { if (response.status() >= 400 && !response.url().includes('/api/')) errors.push(`${response.status()} ${response.url()}`); });
   context.on('page', page => { page.on('pageerror', error => errors.push(error.message)); page.on('console', message => { if (message.type() === 'error' && !message.text().includes('net::ERR_FAILED') && !message.text().includes('Failed to load resource')) errors.push(message.text()); }); });
   page = await context.newPage(); await page.goto(base, { waitUntil: 'domcontentloaded' }); await start(page);
-  asset = await page.locator('script[type="module"]').getAttribute('src');
+  await page.evaluate(() => {
+    window.observedGreetings = [];
+    new MutationObserver(() => {
+      const bubble = document.querySelector('#nearby-greeting');
+      if (!bubble.hidden) window.observedGreetings.push({ name: document.querySelector('#greeting-name').textContent, text: document.querySelector('#greeting-text').textContent });
+    }).observe(document.querySelector('#greeting-text'), { childList: true, subtree: true, characterData: true });
+  });
+  asset = await page.locator('script[type="module"]').last().getAttribute('src');
   check('expanded world has a 23 by 17 map with eight visible positioned entities', MAZE.length === 17 && MAZE.every(row => row.length === 23) && (await read(page)).worldEntities.length === 8);
   const humansBefore = (await read(page)).worldEntities.filter(entity => entity.kind === 'human'); await advance(page, 1000);
   const humansAfter = (await read(page)).worldEntities.filter(entity => entity.kind === 'human');
@@ -112,6 +131,9 @@ try {
   check('pausing freezes physical fractional movement and the world simulation', JSON.stringify((await read(page)).movement.position) === JSON.stringify(paused.movement.position) && (await read(page)).elapsedMs === paused.elapsedMs);
   await page.keyboard.up('ArrowUp'); await page.locator('#resume-button').click(); await advance(page);
   await interact(page, 'scout'); check('scout enables a persistent guide to an unfinished trap', (await read(page)).world.scoutGuided);
+  const greetingsBefore = await page.evaluate(() => window.observedGreetings.length);
+  await advance(page, 15000);
+  check('lingering near a resident does not repeatedly announce hello', await page.evaluate(() => window.observedGreetings.length) === greetingsBefore && (await read(page)).phase === 'explore' && !(await read(page)).greeting);
   await page.screenshot({ path: `${output}/scout-guidance-mobile.png`, fullPage: true });
   await interact(page, 'keeper'); check('keeper lights the garden', (await read(page)).world.lightsOn);
   await interact(page, 'lamp'); await interact(page, 'pump');

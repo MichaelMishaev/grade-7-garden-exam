@@ -4,7 +4,7 @@ title: Small maze and capture recovery
 slug: small-maze
 status: approved
 phase: local-prototype
-version: 0.4.1
+version: 0.5.0
 created: 2026-10-30
 updated: 2026-10-30
 ---
@@ -30,6 +30,8 @@ This record describes the first implemented local playable slice; it is not a pr
 - SRC-08 — Michael: every trap has 1–3 questions, never more; show a more visual first-person view inside the cage while trapped.
 - SRC-11 — Michael: more interactions with people and animals, a somewhat larger maze with more routes and discoveries, and more realistic movement.
 - SRC-12 — Michael: use local GLM as a critic for the new characters, animals and movement on mobile; find and fix stuck-player and lost-progress bugs.
+- SRC-13 — Michael: use fresh agents to review every question for missing paper/story context; make trap activation visually clear and question UI concise.
+- SRC-14 — Michael: use a fresh agent to make nearby people greet the player and animals react on approach.
 - SRC-10 — Michael: use local GLM as a mobile cage QA critic, focusing on stuck players, progress loss and the three-question trap limit; fix confirmed issues.
 - SRC-09 — Michael: use a fresh coding agent to add more interactions.
 - SRC-06 — Michael: use parallel critics to identify trapped-player bugs, dead ends and similar major failures.
@@ -89,6 +91,11 @@ Required states: exploring, question-open, answer-locked/feedback, capturing, re
 | MAZE-001-AC28 | Reload or recover after exploring | All eight discovery flags, lights, bowl and fox behavior survive reload/capture/recovery. Older saves without world state load safe defaults without losing original answers, coins or earned seals. | SRC-11 |
 | MAZE-001-AC29 | Walk using touch, keyboard or a path | Continuous physical movement accelerates/brakes, retains speed through held straight segments, turns smoothly, and animates limbs by distance. Tap finishes one reachable cell; holding repeats; release stops at a center. Walls, pause and cage encounters cannot be bypassed by motion. | SRC-11 |
 | MAZE-001-AC30 | Use the new world on a phone | Nearby actions name the person/animal/object, conversations use designed RTL dialogs, map/journal identify new areas and discoveries, touch targets remain usable at320px and390px, and academic traps still contain only1–3 original questions. | SRC-11 |
+| MAZE-001-AC31 | Read any of the62 bundled questions in isolation | Each has reviewed standalone wording or short essential story/apparatus context. Canonical choices, answer indices, IDs, source data and saves stay unchanged. Changed live/saved variants retain their original wording rather than stale context. | SRC-13 |
+| MAZE-001-AC32 | Answer a trap question | Essential setup is visible before the answers. Source, ordinary explanation and cage tools are secondary accessible disclosures. Opening feedback explanation stops auto-advance. All answers remain reachable from320px upward. | SRC-13 |
+| MAZE-001-AC33 | Walk into a trap | A skippable900ms first-person gate-closing beat makes activation clear. Pause freezes it; reduced motion opens the question immediately; skip/reload/next question cannot replay or strand the transition. Academic state is committed independently. | SRC-13 |
+| MAZE-001-AC34 | Approach either person or any of the three animals | A short accessible nonmodal greeting/reaction appears and the entity visually acknowledges the player. Movement/manual conversation remain available. Lingering does not repeat announcements; an animal cannot suppress a nearby person's hello. | SRC-14 |
+| MAZE-001-AC35 | Pause, enter a question or leave greeting range | Speech hides appropriately, freezes during pause, and clears on leaving range. Greetings never award coins, answer questions, change hearts or alter saved world discoveries. | SRC-14 |
 
 ## Data, scoring and privacy invariants
 
@@ -145,6 +152,11 @@ Entries below map to implemented automated checks and the local browser run; the
 | MAZE-001-AC28 | Reload plus capture/recovery after all eight discoveries | Pass locally | world-browser.mjs, core.test.mjs |
 | MAZE-001-AC29 | Frame-rate/velocity/arrival unit tests plus real fractional/held/wall/pause browser checks | Pass locally | movement.test.mjs, world-browser.mjs |
 | MAZE-001-AC30 | Expanded mobile and existing gameplay suites using actual continuous movement | Pass locally | browser.mjs, world-browser.mjs, cage revision/critic scripts |
+| MAZE-001-AC31 | Complete source-linked audit;62-question adapter coverage and unknown-variant guards | Pass locally | question-context-audit.md; question-presentation.test.mjs |
+| MAZE-001-AC32 | Visible context, keyboard source disclosure, feedback reading and five responsive widths | Pass locally | trap-ux-browser.mjs; inspected concise/pole mobile screenshots |
+| MAZE-001-AC33 | Actual gate pixels, pause/resume, skip, next-question and reload/reduced-motion checks | Pass locally | trap-ux-browser.mjs; baseline missing-transition failure recorded |
+| MAZE-001-AC34 | All five living entities acknowledged through real controls; cooldown and competing-speaker tests | Pass locally | world-browser.mjs; greetings.test.mjs; inspected scout greeting screenshot |
+| MAZE-001-AC35 | Greeting pause/resume, range exit and academic/world invariants | Pass locally | greetings.test.mjs; world-browser.mjs; full capture/reload regressions |
 
 ## Dependencies, unresolved choices and non-goals
 
@@ -301,3 +313,11 @@ Two input defects confirmed independently: overlapping direction fingers cancele
 `tests/world-critic-browser.mjs` first failed against the previous built game, then passed all **22** assertions against fixed source and build `index-B1HdjKO3.js`. Actual touch events cover both overlapping-finger release orders, cancellation and subsequent movement at390×844 and844×390; before-frame cancellation/blur cases use deterministic lifecycle events. Pause/resume/reload retain the committed position, progress and1–3-question trap bound. The **37** world checks also pass, including all eight discoveries, water/fox behavior and capture/review/reload persistence. Both reports have zero page errors and zero POSTs. **71** game unit tests pass; repository **286** pass and **8** database-dependent checks skip. No database, exam, email or Afterbell change. Standard web-game client screenshot/state inspected; its expected local disabled-API404 uses the bundled fallback. Physical-phone performance remains unverified.
 
 GLM status is **no usable review**, not a QA pass: local helper file-reading attempt exited1 at its14-turn limit; a supplied-source no-tools attempt produced no output over eight minutes and was stopped (exit143). No alternative provider used. Findings and all browser execution above are independent Codex work. Local helper logs are `/tmp/maze-world-glm-qa.log` and `/tmp/maze-world-glm-excerpt.log`; reproducible browser evidence is in `output/maze/world-critic/` and `output/maze/world/`. Release follows the existing authorized phone-test deployment, with exact commit/provider/live checks recorded separately.
+
+## Question context, trap UX and greetings — 2026-10-30
+
+Fresh-agent audits and implementation fulfill SRC-13/14. See [the full62-question source review](question-context-audit.md) and [scoped UX findings/verification](question-ux-qa.md).29 maze-only display adaptations restore missing setup or clarify worksheet wording;33 self-contained prompts remain unchanged. Academic source/choices/answers and saved identities are untouched. Actual gate/bars/camera close in a skippable900ms entry; essential setup stays visible and optional detail is collapsed. Nearby people greet/wave and animals react through a nonmodal accessible bubble, without changing resources or discoveries.
+
+Build `index-ClzFJeYF.js` / `index-BlYgrs3t.css`. **87 unit tests pass**; **243 browser checks pass**:112 full gameplay,13 migration/revision,18 cage critic,22 mobile touch critic,45 world/greeting and33 trap/context/UX. All reports record zero application errors and zero POSTs. **286 repository tests pass;8 isolated-DB checks skip**. Final source/live parity covers all seven banks. Root inspected original PDF pages5–6, garden/source tasks, actual entry/question/pole/greeting screenshots and standard web-game client output. Scroll-ending action clearance measured1.1–12.9px across320/375/768/1024/1440px; final action remains unobscured. A source-preview-only homepage test failure was resolved by running the suite against the actual static app server, with both game entries verified. The expected disabled local quiz API404 falls back to the complete bundled content.
+
+Previous published assets are retained for cached entries. Afterbell, formal exams, database and email contracts have no diff. Physical phone performance and manual screen-reader evaluation remain untested. Release follows the existing authorized phone-test target; exact commit and live checks are recorded separately. No GLM review is claimed for this revision.

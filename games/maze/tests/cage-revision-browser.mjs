@@ -90,6 +90,7 @@ try {
   await walkToQuestion(page, ENCOUNTERS[0]); await answerCorrect(page);
   const feedback = await state(page);
   check('regular correct answer enters feedback with one original payout', feedback.phase === 'feedback' && feedback.coins === 10 && feedback.progress.answered === 1);
+  await page.locator('#cell-tools summary').click();
   await page.locator('[data-cell-action="lantern"]').click();
   await page.locator('[data-cell-action="rattle"]').click();
   await page.evaluate(() => window.advanceTime(2000)); await page.waitForTimeout(1600);

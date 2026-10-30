@@ -5,6 +5,8 @@ import '../../quiz-core.js';
 import {createMovement,advanceMovement,syncMovement} from './movement.js';
 import {WORLD_ENTITIES,nearbyWorldEntity,worldEntityPosition} from './world.js';
 import { createInteractions, reduceInteraction, interactionLabels } from './interactions.js';
+import { questionPresentation } from './question-presentation.js';
+import { createGreetings, advanceGreetings } from './greetings.js';
 
 const $ = id => document.getElementById(id);
 const SESSION_KEY = 'prepx-shadow-maze-session-v1';
@@ -15,14 +17,27 @@ let storageAvailable = true;
 let route = [], lastFrame = 0, previousFocus = null, persistElapsed = 0;
 let movement=null, queuedDirection=null, pointerDirection=null, pendingInteract=false, guidePath=[];
 let interaction = createInteractions();
+let greetings = createGreetings();
+let trapEntry = null;
+const trapEntryDuration = 900;
 const trappedPhases = new Set(['question','feedback','capture','review','review-feedback']);
 const held = new Set();
 const directionPointers = new Map();
 function clearPointerDirections(){directionPointers.clear();pointerDirection=null;}
 const activeRooms = () => encountersFor(content.questions);
-const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,guidePath,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
+const visibleGreeting = () => started&&state?.phase==='explore'&&!state.paused&&!panel?greetings.active:null;
+function renderGreeting(){
+  const active=visibleGreeting(),bubble=$('nearby-greeting');
+  bubble.hidden=!active;
+  if(active&&bubble.dataset.sequence!==String(active.sequence)){
+    $('greeting-name').textContent=active.name;
+    $('greeting-text').textContent=active.text;
+    bubble.dataset.sequence=String(active.sequence);
+  }
+}
+const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,guidePath,greeting:visibleGreeting(),trapEntry:trapEntry?1-trapEntry.remaining/trapEntryDuration:null,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
 function interactionContext(){const room=state.assignments[state.activeEncounter]||[];return {phase:state.phase,paused:state.paused,reducedMotion:reducedMotion.matches,reviewIndex:state.review?.index||0,answered:room.filter(id=>state.answers[id]).length,total:room.length};}
-function sceneControls(){return `<div class="cell-controls" aria-label="פעולות בתוך הכלוב">${['look-left','look-right','lantern','rattle','inspect'].map(action=>`<button type="button" data-cell-action="${action}" aria-label="${escapeText(interactionLabels[action])}"${action==='lantern'?` aria-pressed="${interaction.lanternRaised}"`:''}>${escapeText(({'look-left':'שמאלה','look-right':'ימינה',lantern:'פנס',rattle:'סורגים',inspect:'מנעול'})[action])}</button>`).join('')}</div><p id="cell-notice" class="cell-notice" role="status">${escapeText(interaction.notice||'אפשר להביט לצדדים, להרים את הפנס ולבדוק את הכלוב.')}</p>`;}
+function sceneControls(){return `<details class="cell-tools" id="cell-tools"><summary>לבדוק את הכלוב</summary><div class="cell-controls" aria-label="פעולות בתוך הכלוב">${['look-left','look-right','lantern','rattle','inspect'].map(action=>`<button type="button" data-cell-action="${action}" aria-label="${escapeText(interactionLabels[action])}"${action==='lantern'?` aria-pressed="${interaction.lanternRaised}"`:''}>${escapeText(({'look-left':'שמאלה','look-right':'ימינה',lantern:'פנס',rattle:'סורגים',inspect:'מנעול'})[action])}</button>`).join('')}</div><p id="cell-notice" class="cell-notice" role="status">${escapeText(interaction.notice||'בחרו פעולה כדי להסתכל סביב.')}</p></details>`;}
 function interactWithCell(action){
   if(state.phase==='feedback'){readFeedback=true;stopAuto();if($('read-feedback'))$('read-feedback').textContent='המעבר נעצר בזמן שבודקים את הכלוב.';}
   interaction=reduceInteraction(interaction,action,interactionContext());
@@ -75,6 +90,8 @@ function dispatch(action) {
     if(movement)movement={...createMovement(state.player),heading:movement.heading};
   }
   if (oldPhase === 'explore' && trappedPhases.has(state.phase)) interaction=createInteractions();
+  if(oldPhase==='explore'&&state.phase==='question'&&!reducedMotion.matches)trapEntry={remaining:trapEntryDuration,encounter:state.activeEncounter};
+  if(state.phase!=='question')trapEntry=null;
   if (action.type !== 'tick' || state.phase !== oldPhase) save();
   if (state.phase !== 'explore') route = [];
   if (oldPhase !== state.phase || oldQuestion !== currentQuestion(state, content.questions)?.id || action.type !== 'tick') {
@@ -88,34 +105,44 @@ function closeDialog() {
 function showDialog(html, focusSelector = 'button') {
   const inCell=trappedPhases.has(state.phase)&&!panel;
   dialog.classList.toggle('cell-sheet',inCell);
+  dialog.classList.toggle('trap-entry',inCell&&!!trapEntry);
   const saveNotice=storageAvailable?'':`<p class="dialog-save-warning" role="status">${unsavedMessage}</p>`;
-  const exitMenu=started&&!panel&&state.phase!=='complete'?`<button id="encounter-menu" class="reading-button">השהיה או יציאה · ${storageAvailable?'ההתקדמות נשמרת':'ללא שמירה'}</button>`:'';
-  $('dialog-content').innerHTML = saveNotice + (inCell?sceneControls():'') + html + exitMenu;
+  const exitMenu=started&&!panel&&state.phase!=='complete'?`<button id="encounter-menu" class="reading-button">${trapEntry?'השהיה':`השהיה או יציאה · ${storageAvailable?'ההתקדמות נשמרת':'ללא שמירה'}`}</button>`:'';
+  $('dialog-content').innerHTML = saveNotice + html + (inCell&&!trapEntry?sceneControls():'') + exitMenu;
   bind('encounter-menu', () => openPanel('pause'));
   document.querySelectorAll('[data-cell-action]').forEach(el=>el.addEventListener('click',()=>interactWithCell(el.dataset.cellAction)));
+  document.querySelectorAll('.cell-tools,.feedback-explanation').forEach(el=>el.addEventListener('toggle',()=>{if(el.open&&state.phase==='feedback'){readFeedback=true;stopAuto();}}));
   if (!dialog.open) { previousFocus = document.activeElement; dialog.showModal(); }
   dialog.scrollTop = 0;
-  queueMicrotask(() => $('dialog-content').querySelector('[data-choice],#continue-button,#skip-capture,#guided-continue,#close-panel,#resume-button')?.focus({preventScroll:true}));
+  queueMicrotask(() => $('dialog-content').querySelector('#skip-trap-entry,[data-choice],#continue-button,#skip-capture,#guided-continue,#close-panel,#resume-button')?.focus({preventScroll:true}));
 }
 const button = (id,label,primary=true) => `<button id="${id}" class="button ${primary?'primary':''}">${label}</button>`;
 const heading = (kicker,title) => `<div class="dialog-kicker"><span>${kicker}</span><span>מבוך הצללים</span></div>${title?`<h2 id="dialog-title">${title}</h2>`:''}`;
 function bind(id,fn) { $(id)?.addEventListener('click',fn); }
 function continueFeedback() { readFeedback = false; dispatch({type:'continue'}); }
+function finishTrapEntry(){trapEntry=null;renderUi();renderer?.render(state,viewOptions());}
+function renderTrapEntry(){
+  const room=activeRooms().find(room=>room.id===state.activeEncounter);
+  showDialog(heading('מלכודת הופעלה',text(room?.title||'הכלוב נסגר'))+'<p class="trap-entry-message">השער נסגר. עונים ומשתחררים.</p>'+button('skip-trap-entry','לשאלות ←'));
+  bind('skip-trap-entry',finishTrapEntry);
+}
 function renderQuestion() {
   const reviewing = state.phase.startsWith('review');
   const q = currentQuestion(state,content.questions);
   if (reviewing && state.review?.guided) {
-    showDialog(heading('חדר ההיחלצות','הדרך החוצה עדיין פתוחה')+'<p>אין כרגע שאלת חזרה זמינה. חפשו את הידית המוארת והרימו אותה כדי לפתוח את הכלוב. ההתקדמות שלכם נשמרת.</p>'+button('guided-continue','להרים את הידית ולהשתחרר'));
+    showDialog(heading('חדר ההיחלצות','הדרך החוצה פתוחה')+'<p>הרימו את הידית. ההתקדמות נשמרת.</p>'+button('guided-continue','לפתוח ולהשתחרר'));
     bind('guided-continue',()=>dispatch({type:'guided-continue'})); return;
   }
   if (!q) { showDialog(heading('אפשר להמשיך','חומר התרגול אינו זמין')+'<p>אפשר לחזור לעמוד הבית. ההתקדמות התקינה נשמרה בלשונית הזו.</p><a class="dialog-link" href="/index.html">חזרה ל־PrepX</a>'); return; }
   const room = activeRooms().find(e=>e.id===state.activeEncounter);
   const assigned=state.assignments[state.activeEncounter]||[];
   const trapAnswered=assigned.filter(id=>state.answers[id]).length;
+  const presentation=questionPresentation(q);
   const hint = reviewing && state.review.hint ? `<p class="explanation">רמז: ${text(q.explanation.he)}</p>` : '';
-  showDialog(heading(reviewing?`חדר ההיחלצות · שלב ${state.review.index+1} מתוך 2`:`${text(room?.title)} · שאלה ${trapAnswered+1} מתוך ${assigned.length}`,text(q.prompt))+
-    (reviewing?'<p class="small-note">חוזרים לשאלה שפגשנו. אין איבוד לבבות ואין שינוי בציון המקורי.</p>':'<p class="small-note">1–3 שאלות בכל מלכודת. היצורים מחכים בזמן שחושבים.</p>')+hint+
-    `<div class="answers">${q.options.map((option,index)=>`<button class="answer" data-choice="${option.original}"><span class="answer-index">${index+1}</span><span>${text(option.text)}</span></button>`).join('')}</div>`+sourceHtml(q));
+  showDialog(heading(reviewing?`חדר ההיחלצות · שלב ${state.review.index+1} מתוך 2`:`${text(room?.title)} · שאלה ${trapAnswered+1} מתוך ${assigned.length}`,'')+
+    (presentation.context?`<p class="question-context" id="question-context">${text(presentation.context)}</p>`:'')+`<h2 id="dialog-title">${text(presentation.prompt)}</h2>`+
+    (reviewing?'<p class="small-note">חזרה עם רמזים · בלי איבוד לבבות</p>':'')+hint+
+    `<div class="answers">${q.options.map((option,index)=>`<button class="answer" data-choice="${option.original}"><span class="answer-index">${index+1}</span><span>${text(option.text)}</span></button>`).join('')}</div><details class="question-source" id="question-source"><summary>מקור השאלה</summary>${sourceHtml(q)}</details>`);
   document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>{
     if (!['question','review'].includes(state.phase)) return;
     readFeedback = false;
@@ -127,23 +154,21 @@ function renderFeedback() {
   const q = currentQuestion(state,content.questions);
   const correct = reviewing ? state.review.correct : state.lastAnswer?.correct;
   const guided = reviewing && !correct && state.review.wrong>=2;
-  const label = correct ? (reviewing?'השרשרת משתחררת!':'תשובה נכונה!') : (reviewing?'יש עוד דרך לפתור':'המלכודת הופעלה');
-  const detail = correct ? (reviewing?'עוד צעד בדרך החוצה.':'הרווחתם 10 מטבעות. הדרך נפתחת.') : (reviewing?'הרמזים יעזרו לכם להשתחרר. לא איבדתם לב נוסף.':'לב אחד ירד. אין מטבעות על השאלה הזו, והדרך נשארת פתוחה.');
+  const label = correct ? (reviewing?'השרשרת משתחררת!':'תשובה נכונה!') : (reviewing?'יש עוד דרך לפתור':'תשובה לא נכונה');
+  const detail = correct ? (reviewing?'עוד שרשרת השתחררה.':'+10 מטבעות') : (reviewing?'מנסים שוב עם רמז.':'לב אחד ירד · ממשיכים מכאן');
   const answerText = q ? `<p>התשובה הנכונה: <strong>${text(q.choices[q.correct])}</strong></p>` : '';
   showDialog(heading(reviewing?'חדר ההיחלצות':'תוצאת המלכודת','')+
     `<div class="feedback-label"><span class="feedback-mark ${correct?'':'wrong'}" aria-hidden="true">${correct?'✓':'↘'}</span><h2 id="dialog-title">${label}</h2></div><p>${detail}</p>`+
-    (guided||!reviewing||correct?answerText:'')+explanationHtml(q)+
+    (guided||!reviewing||correct?answerText:'')+(reviewing?explanationHtml(q):`<details class="feedback-explanation" id="feedback-explanation"><summary>למה זו התשובה?</summary>${explanationHtml(q)}</details>`)+
     `<div class="dialog-actions">${button('continue-button',guided?'הבנתי, לשחרר את השרשרת':reviewing&&!correct?'לנסות עם רמז':reviewing?'לשלב הבא':'להמשיך בדרך')}</div>`+
-    (!reviewing?'<button id="read-feedback" class="reading-button">להישאר ולקרוא · עצירת המעבר האוטומטי</button>':''));
+    (!reviewing?'<button id="read-feedback" class="reading-button">לעצור ולקרוא</button>':''));
   bind('continue-button',continueFeedback);
-  bind('read-feedback',()=>{readFeedback=true;stopAuto();$('read-feedback').textContent='המעבר נעצר. המשיכו כשתהיו מוכנים.';});
+  bind('read-feedback',()=>{readFeedback=true;stopAuto();$('feedback-explanation').open=true;$('read-feedback').textContent='המעבר נעצר';});
   if (!reviewing && !readFeedback) autoTimer=setTimeout(()=>{if(state.phase==='feedback'&&!state.paused&&!panel)continueFeedback();},1500);
 }
 function renderCapture() {
-  const q=content.questions.find(q=>q.id===state.lastAnswer?.id);
-  showDialog(heading('נתפסתם · ההרפתקה ממשיכה','״תפסתי אתכם! נראה איך תשתחררו…״')+
-    '<p>אתם בתוך הכלוב. השומר מעבר לסורגים, אבל ההתקדמות נשארת שלכם. שתי שאלות עם רמזים ישחררו אתכם.</p>'+
-    (q?`<p class="small-note">על השאלה האחרונה: ${text(q.explanation.he)}</p>`:'')+button('skip-capture','לחדר ההיחלצות'));
+  showDialog(heading('נתפסתם','שתי שרשראות. דרך אחת החוצה.')+
+    '<p>שתי שאלות עם רמזים ישחררו אתכם. ההתקדמות נשמרת.</p>'+button('skip-capture','להשתחרר עם רמזים'));
   bind('skip-capture',()=>dispatch({type:'skip-capture'}));
 }
 function renderSummary(reviewOnly=false) {
@@ -186,6 +211,7 @@ function renderPanel() {
 }
 function renderUi() {
   if(!state)return;
+  renderGreeting();
   const inCell=started&&trappedPhases.has(state.phase);
   document.body.dataset.encounter=String(inCell);
   $('maze-canvas').setAttribute('aria-label',inCell?'מבט מגוף ראשון בתוך כלוב. מעבר לסורגים עומד השומר. השתמשו בכפתורי הכלוב כדי להביט, להאיר ולבדוק.':'מבוך תלת־ממדי. תנועה עם החצים או WASD, או לחיצה על שביל.');
@@ -204,7 +230,8 @@ function renderUi() {
   if(!started)return;
   if(panel){renderPanel();return;}
   if(state.paused){panel='pause';renderPanel();return;}
-  if(state.phase==='question'||state.phase==='review')renderQuestion();
+  if(trapEntry&&state.phase==='question')renderTrapEntry();
+  else if(state.phase==='question'||state.phase==='review')renderQuestion();
   else if(state.phase==='feedback'||state.phase==='review-feedback')renderFeedback();
   else if(state.phase==='capture')renderCapture();
   else if(state.phase==='complete')renderSummary();
@@ -248,6 +275,8 @@ function advanceWalking(ms){
 }
 function start() {
   if(!state||!renderer)return;
+  greetings=createGreetings();
+  $('nearby-greeting').removeAttribute('data-sequence');
   started=true;document.body.dataset.intro='false';$('intro').hidden=true;
   if(state.paused)state=transition(state,{type:'resume'},content.questions);
   panel=null;movement=createMovement(state.player);save();renderUi();updateExploreContext();renderer.resize();$('maze-canvas').focus({preventScroll:true});
@@ -287,19 +316,22 @@ $('maze-canvas').addEventListener('click',event=>{
 });
 function advance(ms) {
   if(!state||!started)return;
+  if(trapEntry&&!state.paused&&!panel){trapEntry.remaining=Math.max(0,trapEntry.remaining-ms);if(trapEntry.remaining===0||reducedMotion.matches)finishTrapEntry();}
   interaction=reduceInteraction(interaction,{type:'tick',dt:ms},interactionContext());
   dispatch({type:'tick',ms,moving:!!movement?.target});
   if(reducedMotion.matches&&state.phase==='capture')dispatch({type:'skip-capture'});
+  greetings=advanceGreetings(greetings,{dt:ms,player:movement?.position||state.player,world:state.world,elapsedMs:state.elapsedMs,phase:state.phase,paused:state.paused||!started});
+  renderGreeting();
 }
 window.advanceTime=ms=>{for(let remaining=Math.min(ms,60000);remaining>0;remaining-=16.667){const dt=Math.min(16.667,remaining);advanceWalking(dt);advance(dt);}renderer?.render(state,viewOptions());};
 window.render_game_to_text=()=>JSON.stringify(state?{
   coordinates:'tile origin upper-left; x right/east, y down/south; directions are world axes',
-  started,phase:state.phase,paused:state.paused,player:state.player,movement,world:state.world,worldEntities:WORLD_ENTITIES.map(e=>({...e,position:worldEntityPosition(e,state.elapsedMs,state.world)})),nearbyEntity:nearbyWorldEntity(state.player,state.world,state.elapsedMs)?.id||null,hearts:state.hearts,coins:state.coins,seals:state.seals,
+  started,phase:state.phase,paused:state.paused,player:state.player,movement,greeting:visibleGreeting(),world:state.world,worldEntities:WORLD_ENTITIES.map(e=>({...e,position:worldEntityPosition(e,state.elapsedMs,state.world)})),nearbyEntity:nearbyWorldEntity(state.player,state.world,state.elapsedMs)?.id||null,hearts:state.hearts,coins:state.coins,seals:state.seals,
   progress:progress(state,content.questions),activeEncounter:state.activeEncounter,review:state.review,captureCount:state.captureCount,
   captureMs:state.captureMs,elapsedMs:state.elapsedMs,graceMs:state.graceMs,
   currentQuestion:currentQuestion(state,content.questions)?{id:currentQuestion(state,content.questions).id,options:currentQuestion(state,content.questions).options}:null,
   encounters:activeRooms().map(e=>({...e,resolved:state.resolved.includes(e.id),questions:state.assignments[e.id].length,answered:state.assignments[e.id].filter(id=>state.answers[id]).length})),exit:EXIT,clues:state.clues,treasureCollected:state.treasureCollected,notice:state.notice,
-  source:content.source,contentVersion:content.version,storageAvailable,panel,view:trappedPhases.has(state.phase)&&started?'first-person-cage':'maze',interaction
+  source:content.source,contentVersion:content.version,storageAvailable,panel,trapEntry:trapEntry?{active:true,elapsedMs:trapEntryDuration-trapEntry.remaining,remainingMs:trapEntry.remaining,encounter:trapEntry.encounter}:null,view:trappedPhases.has(state.phase)&&started?'first-person-cage':'maze',interaction
 }:{phase:'loading'});
 function frame(now) {
   const dt=lastFrame?Math.min(100,now-lastFrame):0;lastFrame=now;

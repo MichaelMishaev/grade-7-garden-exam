@@ -23,3 +23,17 @@ dialog.cell-sheet::backdrop{background:transparent;backdrop-filter:none}
 .dialog-save-warning{border:1px solid #ad8550;border-radius:9px;padding:8px 10px;color:var(--gold)!important;background:#3a2d1f;font-size:12px!important;line-height:1.6!important;margin:0 0 10px!important}
 
 .secondary-controls{flex-wrap:wrap;column-gap:8px;row-gap:0}.secondary-controls button{min-width:44px}.secondary-controls #world-map-button{color:var(--gold)}
+
+/* The question comes first; optional source and cage tools stay one tap away. */
+.nearby-greeting{position:absolute;z-index:3;top:47px;inset-inline:14px;max-width:330px;margin-inline:auto;display:grid;gap:3px;padding:10px 13px;border:1px solid #9f7f4f;border-radius:13px;background:#14242cf5;box-shadow:0 5px 20px #06111755;pointer-events:none;line-height:1.55;font-size:13px}.nearby-greeting strong{color:var(--gold);font-size:11px}.nearby-greeting span{color:var(--text)}
+details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none;color:var(--muted);font-size:12px}
+details>summary::-webkit-details-marker{display:none}details>summary::before{content:'+';font-size:18px;color:var(--gold);width:18px;text-align:center;flex-shrink:0}details[open]>summary::before{content:'−'}details>summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:6px}
+.cell-tools,.question-source,.feedback-explanation{border-top:1px solid var(--line);margin-top:8px}
+.cell-tools .cell-controls{padding:2px 0 0;border:0;margin:0}.cell-tools .cell-notice{margin-bottom:10px}
+.question-source .reference{margin:0 0 10px}.feedback-explanation .explanation{margin:3px 0 12px}.feedback-timing{margin-top:7px!important}
+.cell-sheet .dialog-kicker>span:last-child{display:none}.cell-sheet .answers{margin-top:13px}.cell-sheet .answer{line-height:1.5}
+.cell-sheet p.question-context{font-size:13px;line-height:1.65;color:#d8e4e1;border-inline-start:2px solid var(--gold);padding-inline-start:10px;margin:10px 0 12px}
+.cell-sheet #encounter-menu{display:block;min-height:44px;margin:2px auto 0;text-align:center;font-size:11px}
+.cell-sheet.trap-entry{border-color:#9f7f4f;background:#15262cf2;max-height:none}
+.trap-entry #dialog-content{text-align:center;padding:19px 20px 11px}.trap-entry .dialog-kicker{justify-content:center}.trap-entry h2{font-size:25px;line-height:1.2;margin-bottom:5px}.trap-entry p.trap-entry-message{font-size:13px;margin:7px 0 14px}.trap-entry .button{min-width:160px}.trap-entry #encounter-menu{margin-top:7px}
+@media(max-height:520px) and (orientation:landscape){.trap-entry #dialog-content{padding:14px}.trap-entry h2{font-size:20px}.trap-entry p.trap-entry-message{margin:5px 0 10px}.cell-sheet.trap-entry{max-height:calc(100dvh - 121px)}}

@@ -1,7 +1,7 @@
 {
   "feature_id": "MAZE-001",
   "slug": "small-maze",
-  "current_version": "0.4.1",
+  "current_version": "0.5.0",
   "current_status": "approved",
   "history": [
     {
@@ -70,6 +70,17 @@
       "summary": "Fix overlapping mobile direction fingers and queued canceled input. Independent 59 mobile browser checks and 71 game unit checks pass; requested local GLM attempts returned no usable review (turn limit and bounded timeout).",
       "sources": [
         "SRC-12"
+      ]
+    },
+    {
+      "version": "0.5.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "ux-content",
+      "summary": "Fresh agents audit all62 questions;29 maze-only context/wording adaptations, concise disclosures and skippable cage-closing transition. Nearby people greet/wave and animals react without interrupting play or changing progress.87 unit and243 browser checks pass.",
+      "sources": [
+        "SRC-13",
+        "SRC-14"
       ]
     }
   ]

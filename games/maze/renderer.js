@@ -386,7 +386,7 @@ export function createMazeRenderer(canvas) {
   beam.position.set(0.5, 1.05, 0.75); beam.target.position.set(0, 1.25, -3.3); prison.add(beam, beam.target);
   let prisonTime = 0;
 
-  function renderPrison(state, reducedMotion, interaction) {
+  function renderPrison(state, reducedMotion, interaction, entryProgress = null) {
     if (!state.paused) prisonTime = reducedMotion ? 0 : ((state.elapsedMs || 0) + (state.captureMs || 0)) / 1000;
     const yaw = THREE.MathUtils.clamp(Number(interaction.lookYaw) || 0, -0.3, 0.3);
     prisonCamera.lookAt(-Math.sin(yaw) * 4.5, 1.24, -2.8);
@@ -409,7 +409,11 @@ export function createMazeRenderer(canvas) {
     chains[1].visible = true;
     const unlocked = state.phase === 'feedback' && state.resolved?.includes(state.activeEncounter)
       || state.phase === 'review-feedback' && reviewStep >= 1 && (state.review?.correct || state.review?.wrong >= 2);
-    gate.rotation.y = unlocked ? -0.28 : 0;
+    const entering = !reducedMotion && Number.isFinite(entryProgress);
+    const closure = entering ? 1 - (1 - THREE.MathUtils.clamp(entryProgress, 0, 1)) ** 3 : 1;
+    gate.rotation.y = entering ? -1.35 * (1 - closure) : unlocked ? -0.28 : 0;
+    frontBars.position.y = entering ? 1.4 * (1 - closure) : 0;
+    prisonCamera.position.z = 1.75 + (entering ? 0.28 * (1 - closure) : 0);
     lock.visible = !unlocked;
     cellWarden.position.y = reducedMotion ? 0 : Math.sin(prisonTime * 1.5) * 0.025;
     hand.rotation.z = reducedMotion ? 0 : Math.sin(prisonTime * 1.2) * 0.015;
@@ -434,11 +438,11 @@ export function createMazeRenderer(canvas) {
     camera.updateProjectionMatrix();
   }
 
-  function render(state, { intro = false, reducedMotion = false, encounters = ENCOUNTERS, interaction = {}, movement = null, guidePath = [] } = {}) {
+  function render(state, { intro = false, reducedMotion = false, encounters = ENCOUNTERS, interaction = {}, movement = null, guidePath = [], trapEntry = null, greeting = null } = {}) {
     resize();
     const insideCell = ['question', 'feedback', 'capture', 'review', 'review-feedback'].includes(state.phase);
     lastView = insideCell && !intro ? 'first-person-cage' : 'maze';
-    if (insideCell && !intro) { renderPrison(state, reducedMotion, interaction); return; }
+    if (insideCell && !intro) { renderPrison(state, reducedMotion, interaction, trapEntry); return; }
     encounters.forEach((encounter, index) => {
       if (!markerCache.has(encounter.id)) markerCache.set(encounter.id, createRoomMarker(encounter, index));
     });
@@ -475,24 +479,28 @@ export function createMazeRenderer(canvas) {
       if (delta < 2) model.distance += delta;
       model.last = { x: point.x, y: point.y };
       group.position.set(point.x, 0, point.y);
-      const desiredYaw = (point.heading || 0) + Math.PI;
+      const greetingHere = !state.paused && greeting?.entityId === entity.id;
+      const desiredYaw = greetingHere ? Math.atan2(point.x - position.x, point.y - position.y) : (point.heading || 0) + Math.PI;
       const yawDifference = Math.atan2(Math.sin(desiredYaw - group.rotation.y), Math.cos(desiredYaw - group.rotation.y));
       group.rotation.y += yawDifference * (reducedMotion ? 1 : 1 - Math.exp(-9 * dt));
       if (entity.kind === 'human') {
         animateHuman(model, model.distance * Math.PI * 2 / 1.15, point.moving && !reducedMotion, 1.15);
+        model.arms[1].rotation.z = greetingHere ? -1.7 : 0;
+        if (greetingHere) model.arms[1].rotation.x = reducedMotion ? -0.3 : -0.3 + Math.sin(time * 9) * 0.18;
         model.marker.rotation.y = time * 0.5;
       } else if (entity.kind === 'fox') {
         const gait = model.distance * Math.PI * 2 / 0.7;
         model.feet.forEach((foot, index) => { foot.rotation.x = point.moving && !reducedMotion ? Math.sin(gait + (index === 0 || index === 3 ? 0 : Math.PI)) * 0.5 : 0; });
-        model.tail.rotation.z = reducedMotion ? 0 : Math.sin(time * 2) * 0.12;
-        model.head.rotation.x = state.world?.foxDrinking ? 0.45 : 0;
-        model.head.position.y = state.world?.foxDrinking ? 0.23 : 0.3;
-        if (state.world?.foxDrinking) group.rotation.y = -Math.PI / 2;
+        model.tail.rotation.z = reducedMotion ? 0 : Math.sin(time * (greetingHere ? 8 : 2)) * (greetingHere ? 0.3 : 0.12);
+        const drinking = state.world?.foxDrinking && !greetingHere;
+        model.head.rotation.x = drinking ? 0.45 : 0;
+        model.head.position.y = drinking ? 0.23 : 0.3;
+        if (drinking) group.rotation.y = -Math.PI / 2;
       } else if (entity.kind === 'rabbit') {
-        model.head.rotation.x = state.world?.rabbitCalm ? 0.15 : 0;
-        model.ears.forEach((ear, index) => { ear.rotation.z = (index ? 1 : -1) * (state.world?.rabbitCalm ? 0.32 : 0.12); });
+        model.head.rotation.x = greetingHere ? -0.12 : state.world?.rabbitCalm ? 0.15 : 0;
+        model.ears.forEach((ear, index) => { ear.rotation.z = (index ? 1 : -1) * (greetingHere ? 0.04 : state.world?.rabbitCalm ? 0.32 : 0.12); });
       } else if (entity.kind === 'owl') {
-        model.head.rotation.y = state.world?.owlObserved ? Math.atan2(point.x - position.x, point.y - position.y) - group.rotation.y : reducedMotion ? 0 : Math.sin(time * 0.45) * 0.45;
+        model.head.rotation.y = greetingHere || state.world?.owlObserved ? Math.atan2(point.x - position.x, point.y - position.y) - group.rotation.y : reducedMotion ? 0 : Math.sin(time * 0.45) * 0.45;
       } else if (entity.kind === 'pump') {
         model.stream.visible = !!state.world?.waterFilled;
         model.drops.forEach((drop, index) => { drop.visible = !!state.world?.waterFilled; drop.position.y = 0.43 - ((time * 0.6 + index * 0.11) % 0.33); });

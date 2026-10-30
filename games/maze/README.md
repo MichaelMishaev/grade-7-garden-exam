@@ -58,3 +58,9 @@ The expanded23×17 maze adds a connected eastern garden and southern ruins. Old 
 Tap a direction for one step; hold it to keep walking. Keyboard and tap-to-path share the same continuous controller, with acceleration/braking and smooth turns. Physics position drives the visible figure; logical quest events commit at tile centers. Pausing freezes motion; restore uses the safe completed tile and retains all academic/world discoveries. Opening a cage stops navigation. The map/journal and “הגן והדמויות” action expose the new routes and discoveries.
 
 Additional verification: `node --test tests/movement.test.mjs tests/world.test.mjs`; `node tests/world-browser.mjs`. Maze game HTML revalidates on navigation; retain the previous published hashed asset pair when publishing the first transition from the original cache policy.
+
+## Question clarity and nearby greetings
+
+All62 questions were reviewed against their local sources. `question-presentation.js` adds short maze-only setup or clearer display wording for29 items, without editing canonical choices, grading or saved question identities. Essential context stays visible; source details, explanations and cage tools expand on request. A skippable900ms closing gate marks a new trap; pause freezes it, reduced motion skips movement, and reload resumes the question directly.
+
+Approaching either person produces a short Hebrew hello and wave. Fox, rabbit and owl acknowledge the player visually. These accessible nonmodal greetings never interrupt movement or grant academic rewards; cooldown and approach hysteresis prevent repeated announcements. `tests/trap-ux-browser.mjs`, `tests/world-browser.mjs` and the presentation/greeting unit tests cover these flows. See the [complete question audit](../../features/maze-game/question-context-audit.md).

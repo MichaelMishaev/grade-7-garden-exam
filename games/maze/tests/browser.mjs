@@ -30,6 +30,7 @@ async function cellView(page, label) {
 }
 async function cellActions(page) {
   const original = sameProgress(await state(page));
+  await page.locator('#cell-tools summary').click();
   for (const action of ['look-left', 'look-right', 'lantern', 'rattle', 'inspect']) {
     const before = (await state(page)).interaction;
     await page.locator(`[data-cell-action="${action}"]`).click();
