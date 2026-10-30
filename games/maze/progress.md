@@ -45,3 +45,8 @@ User requested local GLM critic testing for stuck states, lost progress and >3qu
 
 
 GLM QA findings resolved: successful supplied-excerpt critique confirmed the asymmetric storage read-failure/write-success overwrite path; browser reproduction10coins/1answer ->0/0 fixed by blocking unsafe writes. Static report identified permanent corrupt-save retry loop; explicit separate expedition now archives/verifies oldrawsave before newpersistence (memory-only ifbackupfails). GLM counter finding led to independent reproduced patrol hang fromNumber.MAX_VALUE elapsed timer; unsafe timers repaired withoutlosinganswers. GLM browser commands were permission-blocked; do notattribute independent browser test executions to GLM. Source/evidence report is output/maze/glm-mobile-critic.md, success excerpt result glm-mobile-excerpt-critic.json. Finalresults in feature spec.
+
+
+## Living-world revision0.4.0
+
+User: morepersons/animals/interactions, largermaze, more realisticmovement. Implemented23x17connectedmap preservingoldcells;2humans3animals+pump/lamp/bench persistentworldstate;foxdrink/followBFS;guidepaths;continuousphysicalmovement withheldvelocity,braking,turns,distancegait.71unitchecks,180browserchecks,286rootpassed/8DBskipped. Allcap/scoring/cage/save regressions pass. Rootinspectedmobileworld+standardclient screenshots. MazeHTMLcache revalidation tested; keeppriorpublishedassets forcachetransition. Releaseexactcommit trackedseparately.

@@ -89,6 +89,8 @@ async function choose(page, correct) {
 async function direction(page, from, to) {
   const name = to.x > from.x ? 'right' : to.x < from.x ? 'left' : to.y > from.y ? 'down' : 'up';
   await page.locator(`[data-direction="${name}"]`).click();
+  await page.evaluate(() => window.advanceTime(900));
+  await page.waitForFunction(() => {const value=JSON.parse(window.render_game_to_text());return value.phase!=='explore'||!value.movement?.target;});
 }
 
 const evidence = { question: false, capture: false, review: false, reviewReload: false, correct: false, exploreReturn: false };
@@ -207,13 +209,14 @@ try {
   check('touch movement targets are at least 44 pixels', await page.locator('[data-direction]').evaluateAll(elements => elements.every(element => { const r = element.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })));
   check('game uses Hebrew RTL', await page.locator('html').getAttribute('lang') === 'he' && await page.locator('html').getAttribute('dir') === 'rtl');
   await shot(page, 'mobile-exploration');
-  const wallStart = await state(page); await page.locator('[data-direction="left"]').click();
+  const wallStart = await state(page); await page.locator('[data-direction="left"]').click(); await page.evaluate(() => window.advanceTime(900));
   check('touch movement respects maze walls', JSON.stringify((await state(page)).player) === JSON.stringify(wallStart.player));
   const canvasBox = await page.locator('#maze-canvas').boundingBox();
   const beforeTap = await state(page);
   // This floor position was selected from the inspected 390px mobile screenshot.
   // Scale the visible corridor point with the canvas; no internal positioning hook is used.
   await page.locator('#maze-canvas').tap({ position: { x: canvasBox.width * .353, y: canvasBox.height * .385 } });
+  await page.evaluate(() => window.advanceTime(900));
   await page.waitForFunction(previous => { const value = JSON.parse(window.render_game_to_text()); return value.player.x !== previous.x || value.player.y !== previous.y; }, beforeTap.player);
   check('tapping a visible floor tile walks the explorer through the maze', JSON.stringify((await state(page)).player) !== JSON.stringify(beforeTap.player));
   await openPanel(page, '#map-button', 'map'); await openPanel(page, '#journal-button', 'journal');
@@ -246,7 +249,7 @@ try {
   await page.locator('#resume-button').waitFor({ state: 'visible' });
   check('Escape opens the keyboard pause menu', (await state(page)).paused);
   await page.locator('#resume-button').click();
-  const keyboardStart = await state(page); await page.keyboard.press('ArrowDown');
+  const keyboardStart = await state(page); await page.keyboard.press('ArrowDown'); await page.evaluate(() => window.advanceTime(900));
   check('keyboard movement works', (await state(page)).player.y > keyboardStart.player.y);
   for (const width of [320, 375, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: width < 500 ? 844 : 900 });
@@ -267,7 +270,7 @@ try {
   const secondTab = await desktop.newPage();
   await secondTab.goto(base, { waitUntil: 'domcontentloaded' }); await start(secondTab);
   check('a separate tab starts its own expedition without sharing the completed tab', (await state(secondTab)).progress.answered === 0 && (await state(secondTab)).seals.length === 0);
-  await secondTab.locator('[data-direction="down"]').click();
+  await secondTab.locator('[data-direction="down"]').click(); await secondTab.evaluate(() => window.advanceTime(900));
   check('movement in a separate tab cannot overwrite the first tab', sameProgress(await state(page)) === completeBeforeOtherTab);
   await secondTab.close();
   const returnLink = page.locator('a.dialog-link');
@@ -294,7 +297,7 @@ try {
   });
   page = await accessible.newPage(); await page.goto(base, { waitUntil: 'domcontentloaded' }); await start(page);
   check('denied session storage displays an honest warning', await page.locator('#storage-warning').isVisible());
-  const noSaveStart = await state(page); await page.locator('[data-direction="down"]').click();
+  const noSaveStart = await state(page); await page.locator('[data-direction="down"]').click(); await page.evaluate(() => window.advanceTime(900));
   check('denied session storage leaves in-memory movement playable', (await state(page)).player.y > noSaveStart.player.y);
   // Complete the first two original answers normally, then enter the next encounter.
   await travel(page, ENCOUNTERS[0], false, false);

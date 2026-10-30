@@ -43,6 +43,7 @@ async function walkToQuestion(page, destination) {
     const path = pathTo(value.player, destination); assert.ok(path?.length);
     const next = path[0], direction = next.x > value.player.x ? 'right' : next.x < value.player.x ? 'left' : next.y > value.player.y ? 'down' : 'up';
     await page.locator(`[data-direction="${direction}"]`).click();
+    await page.evaluate(() => window.advanceTime(900));
   }
   assert.fail('Question entrance must remain reachable');
 }

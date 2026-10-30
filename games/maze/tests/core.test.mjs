@@ -430,3 +430,15 @@ test('corrupted huge saved timer cannot freeze patrols or erase original progres
   const fractional = fresh();fractional.elapsedMs=1000.25;
   assert.equal(restoreState(fractional, QUESTIONS).elapsedMs, 1000.25, 'normal frame timing remains intact');
 });
+
+
+test('physical movement suppresses stale-tile patrol hits while time advances until real arrival', () => {
+  let state = fresh(); state.player = { x: 12, y: 5 };
+  state = act(state, 'tick', { ms: 10000, moving: true });
+  assert.equal(state.phase, 'explore'); assert.equal(state.elapsedMs, 10000);
+  assert.equal(state.hearts, 3);
+  // At 10000ms the prowler occupies x10; arriving there still opens its normal encounter.
+  state.player = { x: 9, y: 5 };
+  const arrival = act(state, 'move', { dx: 1, dy: 0 });
+  assert.equal(arrival.phase, 'question'); assert.equal(arrival.activeEncounter, 'cage'); assert.equal(arrival.hearts, 3);
+});

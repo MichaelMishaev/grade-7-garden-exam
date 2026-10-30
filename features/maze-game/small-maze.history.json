@@ -1,8 +1,8 @@
 {
   "feature_id": "MAZE-001",
   "slug": "small-maze",
-  "current_version": "0.3.1",
-  "current_status": "planned",
+  "current_version": "0.4.0",
+  "current_status": "approved",
   "history": [
     {
       "version": "0.1.0",
@@ -50,6 +50,16 @@
       "summary": "GLM code/evidence critic QA plus independent mobile tests: fix landscape overlap, false saved claims, asymmetric storage-read overwrite, corrupt-save retry loop, and huge saved timer freeze; preserve original progress and trap cap.",
       "sources": [
         "SRC-10"
+      ]
+    },
+    {
+      "version": "0.4.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "expanded",
+      "summary": "Expand connected maze23x17; add two people, three animals and persistent world interactions; continuous acceleration/braking movement with mobile verification and save compatibility.",
+      "sources": [
+        "SRC-11"
       ]
     }
   ]

@@ -49,3 +49,12 @@ Denied storage leaves the current in-memory game playable with a visible warning
 - The existing web-game skill client exercises actual keyboard movement and records `render_game_to_text` / `advanceTime` state. Local screenshots/reports are generated under ignored/uncommitted `output/` evidence paths.
 
 Detailed acceptance and review evidence: [feature record](../../features/maze-game/small-maze.md). Physical-phone GPU/touch acceptance and production deployment are separate from local browser emulation. Nothing here authorizes a push to main or a production release.
+
+
+## Living world and movement
+
+The expanded23×17 maze adds a connected eastern garden and southern ruins. Old paths and saved question coordinates remain valid. A scout and keeper offer conversations, route guidance and lighting. A fox, rabbit and owl react to the player; filling the water bowl attracts the fox, and helping it enables path-safe following. Pump, lamp and bench actions persist in this tab and remain separate from learning score/coins.
+
+Tap a direction for one step; hold it to keep walking. Keyboard and tap-to-path share the same continuous controller, with acceleration/braking and smooth turns. Physics position drives the visible figure; logical quest events commit at tile centers. Pausing freezes motion; restore uses the safe completed tile and retains all academic/world discoveries. Opening a cage stops navigation. The map/journal and “הגן והדמויות” action expose the new routes and discoveries.
+
+Additional verification: `node --test tests/movement.test.mjs tests/world.test.mjs`; `node tests/world-browser.mjs`. Maze game HTML revalidates on navigation; retain the previous published hashed asset pair when publishing the first transition from the original cache policy.

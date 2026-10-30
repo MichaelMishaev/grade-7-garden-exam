@@ -21,3 +21,5 @@ dialog.cell-sheet::backdrop{background:transparent;backdrop-filter:none}
 @media(max-width:350px){.cell-controls button{min-width:44px;font-size:10px}}
 
 .dialog-save-warning{border:1px solid #ad8550;border-radius:9px;padding:8px 10px;color:var(--gold)!important;background:#3a2d1f;font-size:12px!important;line-height:1.6!important;margin:0 0 10px!important}
+
+.secondary-controls{flex-wrap:wrap;column-gap:8px;row-gap:0}.secondary-controls button{min-width:44px}.secondary-controls #world-map-button{color:var(--gold)}

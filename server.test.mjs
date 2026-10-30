@@ -113,3 +113,18 @@ test('physics submission requires 27 answers and sends a correctly titled email'
   assert.match(calls[0].body.html, /משימת הערכה במדידות/);
   assert.match(calls[0].body.text, /27\. שאלה 27/);
 }));
+
+test('game entry pages revalidate while versioned game assets stay cacheable', () => withServer(async ({ url, calls }) => {
+  for (const path of ['/games/afterbell/play/index.html', '/games/maze/play/index.html']) {
+    const pageUrl = new URL(path, url);
+    const response = await fetch(pageUrl);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-cache');
+    const html = await response.text();
+    const asset = html.match(/<script[^>]+src="([^"]+)"/)[1];
+    const script = await fetch(new URL(asset, pageUrl));
+    assert.equal(script.status, 200);
+    assert.equal(script.headers.get('Cache-Control'), 'public, max-age=300');
+  }
+  assert.equal(calls.length, 0);
+}));

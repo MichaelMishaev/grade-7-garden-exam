@@ -2,6 +2,8 @@ import { createState, restoreState, transition, currentQuestion, progress, MAZE,
 import { loadMazeContent, normalizeMazeContent, MAZE_QUIZZES, DEFAULT_QUIZ_ID } from './content.js';
 import { createMazeRenderer } from './renderer.js';
 import '../../quiz-core.js';
+import {createMovement,advanceMovement,syncMovement} from './movement.js';
+import {WORLD_ENTITIES,nearbyWorldEntity,worldEntityPosition} from './world.js';
 import { createInteractions, reduceInteraction, interactionLabels } from './interactions.js';
 
 const $ = id => document.getElementById(id);
@@ -10,12 +12,13 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const dialog = $('game-dialog');
 let content, state, renderer, started = false, panel = null, autoTimer = null, readFeedback = false;
 let storageAvailable = true;
-let route = [], lastWalk = 0, lastFrame = 0, previousFocus = null, persistElapsed = 0;
+let route = [], lastFrame = 0, previousFocus = null, persistElapsed = 0;
+let movement=null, queuedDirection=null, pointerDirection=null, pendingInteract=false, guidePath=[];
 let interaction = createInteractions();
 const trappedPhases = new Set(['question','feedback','capture','review','review-feedback']);
 const held = new Set();
 const activeRooms = () => encountersFor(content.questions);
-const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction});
+const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,guidePath,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
 function interactionContext(){const room=state.assignments[state.activeEncounter]||[];return {phase:state.phase,paused:state.paused,reducedMotion:reducedMotion.matches,reviewIndex:state.review?.index||0,answered:room.filter(id=>state.answers[id]).length,total:room.length};}
 function sceneControls(){return `<div class="cell-controls" aria-label="פעולות בתוך הכלוב">${['look-left','look-right','lantern','rattle','inspect'].map(action=>`<button type="button" data-cell-action="${action}" aria-label="${escapeText(interactionLabels[action])}"${action==='lantern'?` aria-pressed="${interaction.lanternRaised}"`:''}>${escapeText(({'look-left':'שמאלה','look-right':'ימינה',lantern:'פנס',rattle:'סורגים',inspect:'מנעול'})[action])}</button>`).join('')}</div><p id="cell-notice" class="cell-notice" role="status">${escapeText(interaction.notice||'אפשר להביט לצדדים, להרים את הפנס ולבדוק את הכלוב.')}</p>`;}
 function interactWithCell(action){
@@ -64,6 +67,11 @@ function dispatch(action) {
   if (next === state) return;
   const oldPhase = state.phase, oldQuestion = currentQuestion(state, content.questions)?.id;
   state = next;
+  if(movement)movement=syncMovement(movement,state.player);
+  if(state.phase!=='explore'){
+    held.clear();pointerDirection=null;queuedDirection=null;pendingInteract=false;
+    if(movement)movement={...createMovement(state.player),heading:movement.heading};
+  }
   if (oldPhase === 'explore' && trappedPhases.has(state.phase)) interaction=createInteractions();
   if (action.type !== 'tick' || state.phase !== oldPhase) save();
   if (state.phase !== 'explore') route = [];
@@ -146,7 +154,7 @@ function renderSummary(reviewOnly=false) {
 }
 function openPanel(kind) {
   if (!started || state.phase==='complete') return;
-  stopAuto(); route=[]; held.clear(); panel=kind; dispatch({type:'pause'}); renderUi();
+  stopAuto(); route=[]; held.clear(); pointerDirection=null;queuedDirection=null; panel=kind; dispatch({type:'pause'}); renderUi();
 }
 function closePanel() { panel=null; dispatch({type:'resume'}); renderUi(); }
 function renderPanel() {
@@ -154,13 +162,20 @@ function renderPanel() {
     const cells=MAZE.map((row,y)=>[...row].map((cell,x)=>{
       const player=x===state.player.x&&y===state.player.y;
       const room=activeRooms().find(e=>e.x===x&&e.y===y);
-      const mark=player?'●':room?(state.resolved.includes(room.id)?'✓':'✧'):x===EXIT.x&&y===EXIT.y?'↗':cell==='S'?'⌂':'';
+      const entity=WORLD_ENTITIES.find(e=>{const p=worldEntityPosition(e,state.elapsedMs,state.world);return Math.round(p.x)===x&&Math.round(p.y)===y;});
+      const mark=player?'●':entity?(entity.kind==='human'?'♟':'·'):room?(state.resolved.includes(room.id)?'✓':'✧'):x===EXIT.x&&y===EXIT.y?'↗':cell==='S'?'⌂':'';
       return `<span class="map-cell ${cell==='#'?'wall':''} ${state.visited.includes(`${x},${y}`)?'visited':''} ${room?'seal':''} ${player?'player':''}" aria-hidden="true">${mark}</span>`;
     }).join('')).join('');
-    showDialog(heading('מפה · הזמן נעצר','מצאו את הדרך שלכם')+`<div class="map-grid" style="grid-template-columns:repeat(${MAZE[0].length},1fr)" role="img" aria-label="מפת המבוך. נקודה מסמנת אתכם, כוכב מסמן מלכודת, חץ מסמן יציאה.">${cells}</div><p class="map-legend">● אתם כאן · ✧ חותם · ✓ חותם שנאסף · ↗ יציאה<br>אפשר ללכת לשבילים מוארים בלחיצה עליהם במשחק.</p>`+button('close-panel','חזרה למבוך'));
+    showDialog(heading('מפה · הזמן נעצר','מצאו את הדרך שלכם')+`<div class="map-grid" style="grid-template-columns:repeat(${MAZE[0].length},1fr);aspect-ratio:${MAZE[0].length}/${MAZE.length}" role="img" aria-label="מפת המבוך. נקודה מסמנת אתכם, כוכב מסמן מלכודת, חץ מסמן יציאה.">${cells}</div><p class="map-legend">● אתם כאן · ✧ מלכודת · ✓ הושלמה · ♟ דמות · ↗ יציאה<br>הגן המזרחי והחורבות בדרום מחוברים למבוך בכמה מעברים. חפשו דמויות, חיות ומשאבת מים.</p>`+button('close-panel','חזרה למבוך'));
     bind('close-panel',closePanel);
+  } else if(panel==='world') {
+    const dialogue=state.world.dialogue;
+    const human=dialogue?.entityId==='scout';
+    showDialog(heading(human?'מפגש עם סייר השבילים':'מפגש בגן',text(dialogue?.title||'אורח בשביל'))+`<p>${text(dialogue?.text||'יש עוד הרבה לגלות בין השבילים.')}</p><p class="small-note" id="world-topic-text">אפשר לעצור, לשאול ולהכיר את המקום. אין כאן שאלת מבחן.</p><div class="dialog-actions">${button('world-topic','מה עוד יש באזור?',false)}${button('close-panel','להמשיך לחקור')}</div>`);
+    bind('close-panel',closePanel);
+    bind('world-topic',()=>{$('world-topic-text').textContent=human?'השביל המואר מוביל למלכודת שטרם סיימתם. בגן המזרחי תמצאו שומרת, משאבה ובעלי חיים. המעברים הדרומיים חוזרים לחצר — אין צורך להתחיל מחדש.':'כשממלאים את קערת המים, השועל מגיע לשתות. אפשר להתקרב אליו ולהציע לו ללכת איתכם. בחורבות מחכה ינשוף, ובין השיחים מסתתר ארנב.';});
   } else if(panel==='journal') {
-    showDialog(heading('יומן הדרך · הזמן נעצר','רמזים שנשארים איתכם')+`<ul class="hint-list"><li>מצאו שלוש מלכודות המסומנות בחותם זוהר.</li><li>השלמת השאלות נותנת חותם, גם אחרי טעות.</li><li>כדי להשתחרר מכלוב, אפשר להיעזר ברמזים. אחרי שתי טעויות תקבלו פתרון מודרך.</li>${state.clues.length?'<li>החריטה שגיליתם: שלושה חותמים פותחים את השער. לא צריך לענות נכון על הכול.</li>':'<li>חפשו חריטה מוארת על קיר המבוך.</li>'}${state.treasureCollected?'<li>גיליתם את חדר האוצר הסודי!</li>':''}</ul>`+button('close-panel','חזרה להרפתקה'));
+    showDialog(heading('יומן הדרך · הזמן נעצר','רמזים שנשארים איתכם')+`<ul class="hint-list"><li>מצאו את המלכודות המסומנות בחותם זוהר. בכל אחת עד שלוש שאלות.</li><li>השלמת השאלות נותנת חותם, גם אחרי טעות.</li><li>כדי להשתחרר מכלוב, אפשר להיעזר ברמזים. אחרי שתי טעויות תקבלו פתרון מודרך.</li>${state.clues.length?'<li>החריטה שגיליתם: שלושה חותמים פותחים את השער. לא צריך לענות נכון על הכול.</li>':'<li>חפשו חריטה מוארת על קיר המבוך.</li>'}${state.treasureCollected?'<li>גיליתם את חדר האוצר הסודי!</li>':''}<li>מפגשים בגנים ובחורבות: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}.</li>${state.world.scoutGuided?'<li>הסייר סימן את הדרך למלכודת הקרובה שטרם הושלמה.</li>':''}${state.world.waterFilled?'<li>מילאתם את קערת המים בגן.</li>':''}${state.world.foxFollowing?'<li>השועל מכיר אתכם ומלווה אתכם בשביל.</li>':''}</ul>`+button('close-panel','חזרה להרפתקה'));
     bind('close-panel',closePanel);
   } else {
     showDialog(heading('המשחק בהשהיה','הדרך תחכה לכם')+`<p>${storageAvailable?'ההתקדמות נשמרת בלשונית הזו.':'ההתקדמות אינה נשמרת. הישארו בלשונית הזו כדי להמשיך.'} הלבבות, היצורים והמלכודות מחכים עד שתחזרו.</p><p class="small-note">תנועה: החצים או WASD. אפשר ללחוץ על שביל. E לבדיקה מקרוב. F למסך מלא.</p>`+button('resume-button','להמשיך מאותו מקום')+`<a class="dialog-link" href="/index.html">חזרה ל־PrepX · ${storageAvailable?'ההתקדמות תישמר':'ללא שמירה'}</a>`);
@@ -178,9 +193,11 @@ function renderUi() {
   $('seals').textContent=`${state.seals.length} / 3`;
   $('offline-badge').hidden=!content.offline;
   const pr=progress(state,content.questions);
+  guidePath=[];
+  if(state.world.scoutGuided){for(const room of activeRooms().filter(e=>!state.resolved.includes(e.id))){const p=pathTo(state.player,room);if(p&&(!guidePath.length||p.length<guidePath.length))guidePath=p;}}
   $('location-label').textContent=inCell?'בתוך הכלוב · מבט מגוף ראשון':pr.complete?'שער היציאה מחכה':'מסדרונות הצללים';
   $('objective-text').textContent=pr.complete?'סיימתם את המלכודות. מצאו את השער הזוהר.':`מלכודות ${pr.trapsResolved} מתוך ${pr.trapsTotal} · ${pr.answered} מתוך ${pr.total} שאלות`;
-  $('notice').textContent=state.notice||'אפשר ללחוץ על שביל כדי ללכת אליו. המפה והרמזים תמיד זמינים.';
+  $('notice').textContent=state.notice||`מפגשים בעולם: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}. הסייר מחכה בשבילים, ובגן המזרחי יש עוד דמויות ובעלי חיים.`;
   document.querySelectorAll('[data-direction],#interact-button').forEach(el=>el.disabled=!started||state.paused||state.phase!=='explore');
   if(!started)return;
   if(panel){renderPanel();return;}
@@ -191,47 +208,87 @@ function renderUi() {
   else if(state.phase==='complete')renderSummary();
   else closeDialog();
 }
-function step(name) { if(!started||dialog.open||panel)return;const v=direction[name];if(v)dispatch({type:'move',dx:v[0],dy:v[1]}); }
+function step(name) {
+  if(!started||dialog.open||panel||state.phase!=='explore')return;
+  if(direction[name]){route=[];queuedDirection=name;}
+}
+function handleInteract(){
+  if(!started||state.paused||state.phase!=='explore')return;
+  if(movement?.target){pendingInteract=true;held.clear();pointerDirection=null;route=[];queuedDirection=null;return;}
+  pendingInteract=false;
+  const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
+  if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human')openPanel('world');}
+  else dispatch({type:'interact'});
+}
+function updateExploreContext(){
+  if(!started||state.phase!=='explore'||state.paused)return;
+  const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
+  const label=entity?.actionLabel||'לבדוק מקרוב';
+  if($('interact-button').textContent!==label)$('interact-button').textContent=label;
+}
+function advanceWalking(ms){
+  if(!movement||!started)return;
+  const name=pointerDirection||[...held].at(-1)||queuedDirection;
+  const vector=name?direction[name]:null;
+  const wasTarget=movement.target;
+  let continuous=!!(pointerDirection||held.size);
+  if(!vector&&route.length>1){const a=route[0],b=route[1];continuous=b.x-a.x===a.x-movement.origin.x&&b.y-a.y===a.y-movement.origin.y;}
+  const result=advanceMovement(movement,{direction:vector?{dx:vector[0],dy:vector[1]}:undefined,nextCell:!vector?route[0]:undefined,continuous,canWalk:isWalkable,paused:state.paused||state.phase!=='explore'||dialog.open,dt:ms/1000});
+  movement=result.movement;
+  if(queuedDirection&&(movement.target||result.arrived||!isWalkable(movement.origin.x+(vector?.[0]||0),movement.origin.y+(vector?.[1]||0))))queuedDirection=null;
+  if(result.arrived){
+    if(route[0]?.x===result.arrived.x&&route[0]?.y===result.arrived.y)route.shift();
+    dispatch({type:'move',dx:result.arrived.dx,dy:result.arrived.dy});
+    if(pendingInteract)handleInteract();
+  }
+  if(!wasTarget&&!movement.target&&!result.arrived&&vector)queuedDirection=null;
+  updateExploreContext();
+}
 function start() {
   if(!state||!renderer)return;
   started=true;document.body.dataset.intro='false';$('intro').hidden=true;
   if(state.paused)state=transition(state,{type:'resume'},content.questions);
-  panel=null;save();renderUi();renderer.resize();$('maze-canvas').focus({preventScroll:true});
+  panel=null;movement=createMovement(state.player);save();renderUi();updateExploreContext();renderer.resize();$('maze-canvas').focus({preventScroll:true});
 }
 $('start-button').addEventListener('click',start);
 $('pause-button').addEventListener('click',()=>openPanel('pause'));
 $('map-button').addEventListener('click',()=>openPanel('map'));
 $('journal-button').addEventListener('click',()=>openPanel('journal'));
-$('interact-button').addEventListener('click',()=>dispatch({type:'interact'}));
-document.querySelectorAll('[data-direction]').forEach(el=>el.addEventListener('click',()=>{route=[];step(el.dataset.direction);}));
+$('world-map-button').addEventListener('click',()=>openPanel('map'));
+$('interact-button').addEventListener('click',handleInteract);
+document.querySelectorAll('[data-direction]').forEach(el=>{
+  el.addEventListener('pointerdown',event=>{if(event.button!==0||el.disabled)return;event.preventDefault();el.setPointerCapture(event.pointerId);pointerDirection=el.dataset.direction;step(pointerDirection);});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,()=>{pointerDirection=null;});
+  el.addEventListener('click',event=>{if(event.detail===0)step(el.dataset.direction);});
+});
 dialog.addEventListener('cancel',event=>{event.preventDefault();if(panel)closePanel();else if(state.phase==='explore')closeDialog();});
 const keyDirection={ArrowUp:'up',ArrowRight:'right',ArrowDown:'down',ArrowLeft:'left',w:'up',d:'right',s:'down',a:'left'};
 window.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.metaKey||event.altKey)return;
   const name=keyDirection[event.key]||keyDirection[event.key.toLowerCase()];
-  if(name&&started&&!dialog.open){event.preventDefault();if(!event.repeat){route=[];step(name);lastWalk=performance.now();held.add(name);}}
+  if(name&&started&&!dialog.open){event.preventDefault();if(!event.repeat){route=[];step(name);held.add(name);}}
   if(event.key==='Escape'&&started&&!dialog.open){event.preventDefault();openPanel('pause');}
-  if(event.key.toLowerCase()==='e'&&started&&!dialog.open)dispatch({type:'interact'});
+  if(event.key.toLowerCase()==='e'&&started&&!dialog.open)handleInteract();
   if(event.key.toLowerCase()==='f'&&started&&!dialog.open){if(document.fullscreenElement)document.exitFullscreen?.();else document.querySelector('.game-shell').requestFullscreen?.().catch(()=>{});}
 });
 window.addEventListener('keyup',event=>held.delete(keyDirection[event.key]||keyDirection[event.key.toLowerCase()]));
-window.addEventListener('blur',()=>{held.clear();route=[];});
+window.addEventListener('blur',()=>{held.clear();pointerDirection=null;route=[];});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started&&!state.paused&&state.phase!=='complete')openPanel('pause');});
 $('maze-canvas').addEventListener('click',event=>{
   if(!started||dialog.open||state.phase!=='explore')return;
   const destination=renderer.cellFromPointer(event.clientX,event.clientY);
-  if(destination&&isWalkable(destination.x,destination.y))route=pathTo(state.player,destination)||[];
+  if(destination&&isWalkable(destination.x,destination.y)){held.clear();pointerDirection=null;queuedDirection=null;const from=movement?.target||state.player;route=pathTo(from,destination)||[];if(movement?.target)route.unshift({...movement.target});}
 });
 function advance(ms) {
   if(!state||!started)return;
   interaction=reduceInteraction(interaction,{type:'tick',dt:ms},interactionContext());
-  dispatch({type:'tick',ms});
+  dispatch({type:'tick',ms,moving:!!movement?.target});
   if(reducedMotion.matches&&state.phase==='capture')dispatch({type:'skip-capture'});
 }
-window.advanceTime=ms=>{advance(ms);renderer?.render(state,viewOptions());};
+window.advanceTime=ms=>{for(let remaining=Math.min(ms,60000);remaining>0;remaining-=16.667){const dt=Math.min(16.667,remaining);advanceWalking(dt);advance(dt);}renderer?.render(state,viewOptions());};
 window.render_game_to_text=()=>JSON.stringify(state?{
   coordinates:'tile origin upper-left; x right/east, y down/south; directions are world axes',
-  started,phase:state.phase,paused:state.paused,player:state.player,hearts:state.hearts,coins:state.coins,seals:state.seals,
+  started,phase:state.phase,paused:state.paused,player:state.player,movement,world:state.world,worldEntities:WORLD_ENTITIES.map(e=>({...e,position:worldEntityPosition(e,state.elapsedMs,state.world)})),nearbyEntity:nearbyWorldEntity(state.player,state.world,state.elapsedMs)?.id||null,hearts:state.hearts,coins:state.coins,seals:state.seals,
   progress:progress(state,content.questions),activeEncounter:state.activeEncounter,review:state.review,captureCount:state.captureCount,
   captureMs:state.captureMs,elapsedMs:state.elapsedMs,graceMs:state.graceMs,
   currentQuestion:currentQuestion(state,content.questions)?{id:currentQuestion(state,content.questions).id,options:currentQuestion(state,content.questions).options}:null,
@@ -241,17 +298,15 @@ window.render_game_to_text=()=>JSON.stringify(state?{
 function frame(now) {
   const dt=lastFrame?Math.min(100,now-lastFrame):0;lastFrame=now;
   if(state){
+    advanceWalking(dt);
     advance(dt);
-    if(started&&!dialog.open&&!state.paused&&now-lastWalk>170){
-      if(held.size){step([...held].at(-1));lastWalk=now;}
-      else if(route.length){const cell=route.shift();dispatch({type:'move',dx:cell.x-state.player.x,dy:cell.y-state.player.y});lastWalk=now;}
-    }
     persistElapsed+=dt;if(persistElapsed>1500){save();persistElapsed=0;}
     renderer?.render(state,viewOptions());
   }
   requestAnimationFrame(frame);
 }
 function initializeIntro() {
+  movement=createMovement(state.player);guidePath=[];
   const select=$('quiz-select');
   select.innerHTML=MAZE_QUIZZES.map(quiz=>`<option value="${escapeText(quiz.id)}">${text(quiz.title)}</option>`).join('');
   select.value=content.id;
@@ -261,7 +316,7 @@ function initializeIntro() {
   $('start-button').disabled=false;
   select.addEventListener('change',async()=>{
     select.disabled=true;$('start-button').disabled=true;$('start-button').textContent='טוענים את חומר התרגול…';
-    try{content=await loadMazeContent({quizId:select.value});state=createState(content.questions);save();renderUi();$('start-button').textContent='להיכנס למבוך ←';}
+    try{content=await loadMazeContent({quizId:select.value});state=createState(content.questions);movement=createMovement(state.player);save();renderUi();$('start-button').textContent='להיכנס למבוך ←';}
     catch{$('notice').textContent='לא הצלחנו לטעון תרגול. אפשר לנסות שוב או לחזור ל־PrepX.';}
     finally{select.disabled=false;$('start-button').disabled=false;}
   });

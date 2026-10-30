@@ -21,7 +21,7 @@ try {
   context.on('request',req=>{if(req.method()==='POST')posts.push(req.url());});
   context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
   page=await context.newPage();await page.goto(base);await page.locator('#start-button').click();
-  for(const dir of ['down','down','down','down','right','right','right'])await page.locator(`[data-direction="${dir}"]`).click();
+  for(const dir of ['down','down','down','down','right','right','right']){await page.locator(`[data-direction="${dir}"]`).click();await page.evaluate(()=>window.advanceTime(900));}
   const before=await read(page);check('real movement enters a capped first-person trap',before.phase==='question'&&before.view==='first-person-cage'&&before.encounters.every(e=>e.questions>=1&&e.questions<=3));
   const bounds=await page.evaluate(()=>{const c=document.querySelector('#maze-canvas').getBoundingClientRect(),d=document.querySelector('#game-dialog').getBoundingClientRect();return{canvas:{left:c.left,right:c.right,top:c.top,bottom:c.bottom},dialog:{left:d.left,right:d.right,top:d.top,bottom:d.bottom}};});
   await page.screenshot({path:`${output}/landscape-cage.png`,fullPage:true});
@@ -54,7 +54,7 @@ try {
   denied.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
   denied.on('request',req=>{if(req.method()==='POST')posts.push(req.url());});
   page=await denied.newPage();await page.goto(base);await page.locator('#start-button').click();
-  for(const dir of ['down','down','down','down','right','right','right'])await page.locator(`[data-direction="${dir}"]`).click();
+  for(const dir of ['down','down','down','down','right','right','right']){await page.locator(`[data-direction="${dir}"]`).click();await page.evaluate(()=>window.advanceTime(900));}
   await page.screenshot({path:`${output}/denied-storage-question.png`,fullPage:true});
   check('storage denial warns inside the active question instead of falsely claiming progress is saved',await page.locator('#game-dialog .dialog-save-warning').isVisible()&&!(await page.locator('#encounter-menu').innerText()).includes('ההתקדמות נשמרת'));
   await page.locator('#encounter-menu').click();

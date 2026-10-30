@@ -2,16 +2,16 @@
 id: MAZE-001
 title: Small maze and capture recovery
 slug: small-maze
-status: planned
+status: approved
 phase: local-prototype
-version: 0.3.1
+version: 0.4.0
 created: 2026-10-30
 updated: 2026-10-30
 ---
 
 # Small maze and capture recovery
 
-Delivery: Implemented locally as a separate game; verified in local browser emulation; not deployed.
+Delivery: Implemented with mobile verification. Production release evidence is recorded for each exact deployed commit; prior local run records below remain historical.
 
 ## User problem and intended outcome
 
@@ -28,6 +28,7 @@ This record describes the first implemented local playable slice; it is not a pr
 - SRC-05 — Conversation proposal for the first slice: capture leads to two guided review questions about earlier mistakes, then nearby return with restored hearts. Numerical defaults below remain tunable.
 - SRC-07 — Michael, implementation request: add another game button, preserve the old game, implement and test mobile first. This supersedes the original assumption of entering through the existing Afterbell world.
 - SRC-08 — Michael: every trap has 1–3 questions, never more; show a more visual first-person view inside the cage while trapped.
+- SRC-11 — Michael: more interactions with people and animals, a somewhat larger maze with more routes and discoveries, and more realistic movement.
 - SRC-10 — Michael: use local GLM as a mobile cage QA critic, focusing on stuck players, progress loss and the three-question trap limit; fix confirmed issues.
 - SRC-09 — Michael: use a fresh coding agent to add more interactions.
 - SRC-06 — Michael: use parallel critics to identify trapped-player bugs, dead ends and similar major failures.
@@ -82,6 +83,11 @@ Required states: exploring, question-open, answer-locked/feedback, capturing, re
 | MAZE-001-AC23 | Enter any active trap | Its assignment contains 1–3 original questions and the header counts within that trap. Longer selected sets add active trap locations instead of adding a fourth question or dropping content. All original questions remain required for exit. | SRC-08 |
 | MAZE-001-AC24 | Enter question, feedback, capture or recovery | Render a real perspective view from inside the cell with foreground bars/lock, a guardian beyond them and the player lantern. Keep at least 180px of unblurred scene visible above the scrollable sheet at 320px and 390px; return to overhead view on escape. | SRC-08 |
 | MAZE-001-AC25 | Use scene controls | Look left/right, toggle the lantern, rattle bars and inspect the lock; show corresponding camera/light/guardian/lock feedback. Original answers, coins, hearts and score do not change. Pause blocks actions/timers, reduced motion suppresses shaking, and interacting during feedback stops auto-advance for reading. | SRC-09 |
+| MAZE-001-AC26 | Explore the expanded maze | A connected23×17 world preserves every old walkable tile and all question/exit coordinates. New east garden and south ruins loops provide several return routes. No existing save is placed in a wall. | SRC-11 |
+| MAZE-001-AC27 | Meet residents and wildlife | Two human characters, fox, rabbit, owl, water pump, lamp and bench offer contextual actions. Talking enables guidance/lights; water attracts the fox to drink and enables following; other discoveries have visible persistent responses. These actions never award academic points, coins or hearts. | SRC-11 |
+| MAZE-001-AC28 | Reload or recover after exploring | All eight discovery flags, lights, bowl and fox behavior survive reload/capture/recovery. Older saves without world state load safe defaults without losing original answers, coins or earned seals. | SRC-11 |
+| MAZE-001-AC29 | Walk using touch, keyboard or a path | Continuous physical movement accelerates/brakes, retains speed through held straight segments, turns smoothly, and animates limbs by distance. Tap finishes one reachable cell; holding repeats; release stops at a center. Walls, pause and cage encounters cannot be bypassed by motion. | SRC-11 |
+| MAZE-001-AC30 | Use the new world on a phone | Nearby actions name the person/animal/object, conversations use designed RTL dialogs, map/journal identify new areas and discoveries, touch targets remain usable at320px and390px, and academic traps still contain only1–3 original questions. | SRC-11 |
 
 ## Data, scoring and privacy invariants
 
@@ -133,6 +139,11 @@ Entries below map to implemented automated checks and the local browser run; the
 | MAZE-001-AC23 | All bank sizes 1–30 assignment tests; 11-question mobile full run | Pass locally | core.test.mjs, content.test.mjs, browser.mjs |
 | MAZE-001-AC24 | Mobile 320/390 screenshot inspection; capture/review/reduced-motion and return checks | Pass locally | browser.mjs, output/maze/first-person-question-320.png |
 | MAZE-001-AC25 | Pure interaction tests; five real DOM actions; focused feedback interruption checks | Pass locally | interactions.test.mjs, browser.mjs and cage-revision-browser.mjs |
+| MAZE-001-AC26 | Complete old-map subset and all-tile reachability tests | Pass locally | core.test.mjs, world.test.mjs |
+| MAZE-001-AC27 | Eight real-input encounters, water/fox drinking/following and lighting checks | Pass locally | world-browser.mjs, world.test.mjs, inspected mobile screenshots |
+| MAZE-001-AC28 | Reload plus capture/recovery after all eight discoveries | Pass locally | world-browser.mjs, core.test.mjs |
+| MAZE-001-AC29 | Frame-rate/velocity/arrival unit tests plus real fractional/held/wall/pause browser checks | Pass locally | movement.test.mjs, world-browser.mjs |
+| MAZE-001-AC30 | Expanded mobile and existing gameplay suites using actual continuous movement | Pass locally | browser.mjs, world-browser.mjs, cage revision/critic scripts |
 
 ## Dependencies, unresolved choices and non-goals
 
@@ -264,3 +275,20 @@ Final QA results and build identity are recorded below after the last test run. 
 Final build: `index-BVwLyHTR.js` / `index-BqSDdB5i.css`. **47 unit/content/interaction checks passed**, **112 full gameplay browser checks passed**, **13 save/migration checks passed**, and **18 adversarial critic checks passed** (143 browser assertions total across the three runs). Zero application errors and zero POSTs. Final web-game skill client reached the actual cage with normal keyboard controls; screenshot and text state inspected, no console-error artifact.
 
 Normal persistence, recovery and the three-question trap bound passed. Read-only storage faults leave the prior saved10coins/oneanswer record intact; subsequent restored reads recover it. Explicit corrupt-save recovery preserves the exact old record and remains resumable after reload. Corrupt giant timers repair before simulation instead of hanging the patrol loop. Landscape cage and question controls remain separate and usable. No physical-phone or production-deployment claim is made.
+
+
+## Living-world expansion — 2026-10-30
+
+The maze grows from17×13 to23×17 while preserving every old traversable tile, existing source-question assignment, original trap coordinates and exit. The garden and ruins add connected exploration loops. The old game remains separate.
+
+Residents: a trail scout offers dialogue and a lit route toward the nearest unfinished trap; the garden keeper turns on garden lights and explains local discoveries. Friendly animals are original3D fox/rabbit/owl models. The pump fills a bowl; the fox walks to drink, then can accompany the player along collision-safe waypoints. Rabbit observation, owl attention, a garden lamp and a quiet bench add optional encounters. These are fictional world activities, not new academic questions or fetch quests.
+
+Physical walking now uses a deterministic controller with acceleration, braking, smooth heading and retained velocity across held straight steps. The rendered position moves continuously and limb motion follows distance; logical question/hazard events commit at reached tile centers. Touch hold, keyboard hold and tap-to-walk use the same controller. Pausing freezes motion; new cage events align to the canonical encounter tile; a reload resumes from a safe completed tile while preserving learning/world state. Patrol contact is deferred during between-center travel so an enemy cannot catch the tile the player has visibly left.
+
+Local results: **71 core/content/world/movement/interaction tests passed**; **180 browser checks passed** (112existing gameplay,13migration,18critic,37new-world). New-world checks use real inputs and prove all eight interactions without answering an academic question or changing coins, then retain discoveries through reload/capture/recovery. Existing eleven-question3/3/3/2 cap and first-person cage checks pass. **286 repository checks passed;8 isolated-database checks skipped**. No database/schema/email changes.
+
+World mobile screenshots: `output/maze/world/scout-guidance-mobile.png`, `garden-water-mobile.png`, `world-preserved-after-recovery.png`; standard web-game skill screenshot/state: `output/maze-world-skill/`. Screenshots were opened and inspected. Physical-device performance remains a separate phone test.
+
+Release guard: maze HTML now revalidates like Afterbell HTML; hashed assets remain cacheable. A focused HTTP test first reproduced the maze entry's stale-cache header and then passed the corrected behavior for both games. The previous published maze asset pair remains available across this transition so already-cached entries can load.
+
+The prior deployed baseline was `c4ad29a`. This expansion follows the existing phone-test release target; exact new commit/deployment/live evidence is saved in the release receipt. No previous GLM critique is represented as a review of these new world mechanics.

@@ -1,18 +1,23 @@
+import { createWorld, normalizeWorld, interactWorld, updateWorld } from './world.js';
 // The maze uses tile coordinates: (0, 0) is the upper-left; x grows right, y down.
 export const MAZE = [
-  '#################',
-  '#S..#.....#....X#',
-  '#.#.#.###.#.###.#',
-  '#.#...#...#.....#',
-  '#.#####.#####.#.#',
-  '#...A...#..B..#.#',
-  '###.#.###.#.###.#',
-  '#...#.....#.....#',
-  '#.#######.#####.#',
-  '#...C...#...G...#',
-  '#.###.#.###.#.#.#',
-  '#.....#.....#T..#',
-  '#################'
+  '#######################',
+  '#S..#.....#....X#.....#',
+  '#.#.#.###.#.###.#.###.#',
+  '#.#...#...#...........#',
+  '#.#####.#####.#.#.#.#.#',
+  '#...A...#..B..#.#.#...#',
+  '###.#.###.#.###.#.###.#',
+  '#...#.....#...........#',
+  '#.#######.#####.#.#.#.#',
+  '#...C...#...G...#.#...#',
+  '#.###.#.###.#.#.#.###.#',
+  '#.....#.....#T........#',
+  '###.#####.#####.#.###.#',
+  '#.....#.....#.........#',
+  '#.###.#.###.#.#####.#.#',
+  '#.....................#',
+  '#######################'
 ];
 export const START = { x: 1, y: 1 };
 export const EXIT = { x: 15, y: 1 };
@@ -191,7 +196,7 @@ export function createState(questions, rng = Math.random) {
   const state = {
     version: 1, contentKey: fingerprint(questions), order,
     choiceOrders: Object.fromEntries(questions.map(q => [q.id, shuffle(q.choices.map((_, i) => i), rng)])), assignments,
-    phase: 'explore', paused: false, player: { ...START }, checkpoint: { ...START },
+    world: createWorld(), phase: 'explore', paused: false, player: { ...START }, checkpoint: { ...START },
     hearts: 3, coins: 0, seals: [], sealProofs: {}, resolved: [], answers: {}, activeEncounter: null, lastAnswer: null,
     review: null, capturePosition: null, captureMs: 0, captureCount: 0, graceMs: 0, elapsedMs: 0,
     clues: [], treasureCollected: false, visited: [`${START.x},${START.y}`], notice: null
@@ -220,13 +225,20 @@ export function transition(state, action, questions) {
   if (action.type === 'resume') return state.paused ? { ...state, paused: false } : state;
   if (state.paused || state.phase === 'complete') return state;
   const next = copy(state);
+  if (action.type === 'world-interact' && next.phase === 'explore') {
+    const interaction = interactWorld(next.world, action.entityId, next.player, next.elapsedMs);
+    if (!interaction) return state;
+    next.world = interaction.world; next.notice = interaction.notice;
+    return next;
+  }
   if (action.type === 'tick') {
     if (!Number.isFinite(action.ms) || action.ms <= 0) return state;
     const ms = Math.min(action.ms, 60000);
     if (next.phase === 'explore') {
-      const contact = creatureEncounter(next, next.elapsedMs, next.elapsedMs + ms);
+      const contact = action.moving === true ? null : creatureEncounter(next, next.elapsedMs, next.elapsedMs + ms);
       next.elapsedMs = contact ? contact.time : next.elapsedMs + ms;
       next.graceMs = contact ? 0 : Math.max(0, next.graceMs - ms);
+      next.world = updateWorld(next.world, { type: 'tick', elapsedMs: next.elapsedMs, player: next.player }, pathTo);
       if (contact) enterRoom(next, contact.room);
     }
     else if (next.phase === 'capture') { next.captureMs += ms; if (next.captureMs >= 3000) beginReview(next, questions); }
@@ -239,6 +251,7 @@ export function transition(state, action, questions) {
     const destination = { x: next.player.x + action.dx, y: next.player.y + action.dy };
     if (!isWalkable(destination.x, destination.y)) return state;
     next.checkpoint = { ...next.player }; next.player = destination; next.notice = null;
+    next.world = updateWorld(next.world, { type: 'move', player: next.player }, pathTo);
     const key = `${destination.x},${destination.y}`;
     if (!next.visited.includes(key)) next.visited.push(key);
     if (sameTile(destination, CLUE) && !next.clues.includes('route')) { next.clues.push('route'); next.notice = 'חריטה על הקיר: שלושה חותמים והשלמת המלכודות פותחים את השער. גם אחרי טעות, הדרך נשארת פתוחה.'; }
@@ -333,6 +346,7 @@ export function restoreState(saved, questions) {
     if (!state.visited.includes(`${state.player.x},${state.player.y}`)) state.visited.push(`${state.player.x},${state.player.y}`);
     // Huge corrupted timers can make patrol-loop increments stop advancing.
     state.elapsedMs = Number.isFinite(raw.elapsedMs) && raw.elapsedMs >= 0 && raw.elapsedMs <= Number.MAX_SAFE_INTEGER ? raw.elapsedMs : 0;
+    state.world = normalizeWorld(raw.world, isWalkable, state.elapsedMs);
     state.graceMs = Number.isFinite(raw.graceMs) ? Math.max(0, Math.min(5000, raw.graceMs)) : 0;
     state.captureCount = Number.isInteger(raw.captureCount) && raw.captureCount >= 0 ? raw.captureCount : 0;
     state.capturePosition = validPoint(raw.capturePosition) ? raw.capturePosition : { ...state.player };
