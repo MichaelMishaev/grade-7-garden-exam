@@ -58,6 +58,26 @@
     <p class="storage-warning" id="storage-warning" role="status" hidden>השמירה בדפדפן אינה זמינה. אפשר להמשיך, אבל רענון עלול לאבד התקדמות.</p>
   </main>
   <dialog id="game-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+  <script id="file-open-guard">
+    // This classic script can recover even when file:// blocks module loading.
+    if (location.protocol === 'file:') {
+      document.querySelector('#intro h2').textContent = 'המשחק מחכה לכם ברשת';
+      document.querySelector('#intro .intro-copy p').textContent = 'הקובץ נפתח ישירות מהמחשב. פתחו את הגרסה המקוונת כדי לשחק.';
+      document.querySelector('#intro ul').hidden = true;
+      document.querySelector('label[for="quiz-select"]').hidden = true;
+      document.getElementById('quiz-select').hidden = true;
+      const link = document.createElement('a');
+      link.id = 'file-open-game';
+      link.className = 'button primary';
+      link.href = 'https://hitech.agnon.online/games/maze/play/index.html';
+      link.textContent = 'לפתוח את המשחק ←';
+      document.getElementById('start-button').replaceWith(link);
+      document.querySelector('.controls').hidden = true;
+      document.getElementById('pause-button').disabled = true;
+      document.getElementById('notice').textContent = 'כדי לשחק, פתחו את המשחק דרך הקישור שלמעלה.';
+      document.querySelector('.privacy').hidden = true;
+    }
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
