@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0c161c">
   <title>מבוך הצללים · PrepX</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230c161c%27/%3E%3Cpath d=%27M8 25V8h16v17h-8V14h3%27 fill=%27none%27 stroke=%27%23f2c477%27 stroke-width=%273%27/%3E%3C/svg%3E">
-  <script type="module" crossorigin src="./assets/index-DBFLIdrs.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-TIWnMXe6.css">
+  <script type="module" crossorigin src="./assets/index-Cty-szRI.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-C2bEAVOi.css">
 </head>
 <body>
   <main class="game-shell">
@@ -21,6 +21,9 @@
       <div><strong><span class="coin-mark" aria-hidden="true">◈</span> <bdi id="coins">0</bdi></strong><small>מטבעות</small></div>
       <div><strong class="seal-count"><span aria-hidden="true">✧</span> <bdi id="seals">0 / 3</bdi></strong><small>חותמים</small></div>
     </section>
+    <button id="rewards-button" class="rewards-bar" type="button" disabled aria-label="יהלומים, אוסף ושדרוגים">
+      <span><span aria-hidden="true">◆</span> <bdi id="diamonds">0</bdi> יהלומים</span><span>האוסף והשדרוגים <span aria-hidden="true">←</span></span>
+    </button>
     <section class="viewport" aria-label="עולם המבוך">
       <canvas id="maze-canvas" tabindex="0" aria-label="מבוך תלת־ממדי. תנועה עם החצים או WASD. אפשר גם ללחוץ על שביל. לחצו E כדי לבדוק מקום סמוך."></canvas>
       <div class="scene-caption"><span class="location-dot"></span><span id="location-label">בפתח מבוך הצללים</span><span id="offline-badge" hidden>מצב לא מקוון</span></div>
@@ -44,17 +47,16 @@
       <div id="renderer-error" class="render-error" role="alert" hidden>אי אפשר להציג תלת־ממד בדפדפן הזה. נסו דפדפן שתומך ב־WebGL. <a href="/index.html">חזרה לעמוד הבית</a></div>
     </section>
     <section class="controls" aria-label="שליטה במשחק" id="controls">
-      <div class="dpad" dir="ltr" aria-label="כיווני תנועה">
-        <button data-direction="up" class="up" aria-label="למעלה">↑</button>
-        <button data-direction="left" class="left" aria-label="שמאלה">←</button>
-        <span class="dpad-center" aria-hidden="true">·</span>
-        <button data-direction="right" class="right" aria-label="ימינה">→</button>
-        <button data-direction="down" class="down" aria-label="למטה">↓</button>
+      <div class="joystick-control" dir="ltr">
+        <button id="movement-joystick" class="joystick" type="button" aria-label="ג׳ויסטיק לתנועה. גררו לכיוון הרצוי, או השתמשו במקשי החצים" aria-describedby="joystick-help" disabled>
+          <span class="joystick-thumb" aria-hidden="true"></span>
+        </button>
+        <span id="joystick-help" dir="rtl">גררו לתנועה</span>
       </div>
       <div class="action-controls">
         <button id="interact-button" class="button primary">לבדוק מקרוב <kbd>E</kbd></button>
         <div class="secondary-controls"><button id="map-button">מפת המבוך</button><button id="journal-button">רמזים</button><button id="world-map-button">הגן והדמויות</button></div>
-        <small class="keyboard-hint">חצים / WASD לתנועה · לחיצה על שביל להליכה · לחיצה ארוכה לתנועה רציפה</small>
+        <small class="keyboard-hint">חצים / WASD לתנועה · לחיצה על שביל להליכה · גרירת הג׳ויסטיק לתנועה רציפה</small>
       </div>
     </section>
     <p class="notice" id="notice" role="status" aria-live="polite">הדרך ממשיכה גם אחרי טעות.</p>

@@ -204,7 +204,7 @@ export function createState(questions, rng = Math.random) {
   const order = shuffle(questions.map(q => q.id), rng);
   const assignments = assignmentsFor(order);
   const state = {
-    version: 1, layoutId: activeLayoutId, giftsSeen: [], contentKey: fingerprint(questions), order,
+    version: 1, layoutId: activeLayoutId, giftsSeen: [], rewardPurchases: [], contentKey: fingerprint(questions), order,
     choiceOrders: Object.fromEntries(questions.map(q => [q.id, shuffle(q.choices.map((_, i) => i), rng)])), assignments,
     world: createWorld(), phase: 'explore', paused: false, player: { ...START }, checkpoint: { ...START },
     hearts: 3, coins: 0, seals: [], sealProofs: {}, resolved: [], answers: {}, activeEncounter: null, lastAnswer: null,
@@ -229,8 +229,18 @@ export function progress(state, questions) {
   return { answered, total: questions.length, trapsResolved: encountersFor(questions).filter(room => state.resolved.includes(room.id)).length, trapsTotal: encountersFor(questions).length, correct: questions.filter(q => state.answers[q.id]?.correct).length, score: totalWeight ? Math.round(earned / totalWeight * 100) : 0, complete: answered === questions.length && state.seals.length === 3 };
 }
 
+export function rewardBalance(state) {
+  return Math.max(0, (state.giftsSeen?.length || 0) - (state.rewardPurchases?.length || 0));
+}
+
 export function transition(state, action, questions) {
   if (!state || !action || typeof action.type !== 'string') return state;
+  if (action.type === 'buy-reward') {
+    const item=action.item,purchases=state.rewardPurchases || [];
+    if(state.phase!=='explore'||!state.paused||rewardBalance(state)<1||!['compass','lantern','heart'].includes(item))return state;
+    if(item==='heart' ? state.hearts<=0||state.hearts>=3 : purchases.includes(item))return state;
+    return {...state,rewardPurchases:[...purchases,item],hearts:state.hearts+(item==='heart'?1:0),notice:item==='heart'?'לב נוסף לדרך!':item==='compass'?'המצפן מצייר שביל אל היעד הבא.':'פנס האור המשופר מאיר את הדרך!'};
+  }
   if (action.type === 'pause') return state.paused || state.phase === 'complete' ? state : { ...state, paused: true };
   if (action.type === 'collect-gift') {
     const id = action.id;
@@ -374,6 +384,11 @@ export function restoreState(saved, questions) {
     restoreEarnedSeals(state, raw);
     syncSeals(state);
     state.giftsSeen = Array.isArray(raw.giftsSeen) ? [...new Set(raw.giftsSeen.filter(id => state.resolved.includes(id)))] : [...state.resolved];
+    state.rewardPurchases=[];
+    for(const item of Array.isArray(raw.rewardPurchases)?raw.rewardPurchases:[]){
+      if(state.rewardPurchases.length>=state.giftsSeen.length)break;
+      if(['compass','lantern','heart'].includes(item)&&(item==='heart'||!state.rewardPurchases.includes(item)))state.rewardPurchases.push(item);
+    }
     if (state.phase === 'complete' && !progress(state, questions).complete) state.phase = 'explore';
     if (state.phase === 'question' && !nextId(state)) { state.phase = 'explore'; state.activeEncounter = null; }
     if (state.phase === 'feedback' && !state.lastAnswer) { state.phase = 'explore'; state.activeEncounter = null; }

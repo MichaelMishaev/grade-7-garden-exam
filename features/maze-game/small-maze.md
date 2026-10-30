@@ -4,7 +4,7 @@ title: Small maze and capture recovery
 slug: small-maze
 status: approved
 phase: local-prototype
-version: 0.5.0
+version: 0.6.0
 created: 2026-10-30
 updated: 2026-10-30
 ---
@@ -35,20 +35,21 @@ This record describes the first implemented local playable slice; it is not a pr
 - SRC-10 — Michael: use local GLM as a mobile cage QA critic, focusing on stuck players, progress loss and the three-question trap limit; fix confirmed issues.
 - SRC-09 — Michael: use a fresh coding agent to add more interactions.
 - SRC-06 — Michael: use parallel critics to identify trapped-player bugs, dead ends and similar major failures.
+- SRC-15 — Michael: earned diamonds disappear after collection; show totals and gifts, and make rewards useful through purchases/exchanges to give players a reason to keep playing.
 - POLICY-01 — Repository AGENTS.md, QUESTION-RULES.md and docs/TESTING.md: Hebrew RTL, source-backed content, preserved scoring, privacy and release boundaries. Existing game integration is described in [Afterbell README](../../games/afterbell/README.md).
 
 ## Prototype scope and proposed defaults
 
 DEFAULT-01: one handcrafted maze, about 10 minutes as an unvalidated playtest target, not a forced time limit. Three hearts, three seals, two creature types (a patrol creature and a trap guardian), three visual trap types (floor collapse, locked cage, guardian gate), one clue room and one optional treasure branch. Each trap has 1–3 original questions, never more. The default six-question set uses three traps with 2/2/2 questions. Eleven-question sets use four traps with 3/3/3/2. Additional active trap locations preserve the entire selected set; never truncate it or report a partial round as a full score. Three baseline seals remain milestones; the exit also requires every original question across all active traps.
 
-A correct original answer gives 10 coins; a wrong original answer gives none and removes one heart. Initial prototype has no coin deduction, store or mandatory purchases. Creatures create exploration pressure and trigger encounters; they do not stack continuous damage or hit while a question is open. Both path choices eventually reconnect. Seals are awarded for completing encounters, regardless of answer correctness, so mistakes never block the exit.
+A correct original answer gives 10 coins; a wrong original answer gives none and removes one heart. Coins remain a record of correct answers. Collected trap gifts each award one fictional diamond for optional upgrades in the collection shop; no purchase is required to complete the maze. Creatures create exploration pressure and trigger encounters; they do not stack continuous damage or hit while a question is open. Both path choices eventually reconnect. Seals are awarded for completing encounters, regardless of answer correctness, so mistakes never block the exit.
 
 At zero hearts, the creature captures the character. Suggested scene: it closes a cage and says the Hebrew equivalent of “Caught you! Solve the challenge to escape.” No “bad boy/girl” dialogue. Review uses missed questions with progressively explicit help. Escape restores hearts and resumes nearby. No restart, lost seals, erased exploration or loss of previously earned coins.
 
 ## Experience and screen hierarchy
 
 1. PrepX homepage and maze entrance: separate game button, brief goal and enter/return controls.
-2. Exploration: maze view, hearts, coins, seal progress and compact objective; optional map/journal and pause.
+2. Exploration: maze view, hearts, coins, seal progress and compact objective; visible diamond balance opens the collection/shop; optional map/journal and pause. Movement uses the draggable joystick or keyboard.
 3. Encounter: eye-level first-person 3D cage with visible foreground bars, padlock, guardian and lantern. A scrollable bottom sheet shows one question at a time, local trap progress (maximum three), choices, locked feedback and source. The actual cage remains visible above it without background blur; hazards freeze while reading.
 4. Capture: first-person cell remains visible for a brief skippable capture beat and recovery, including a static reduced-motion equivalent.
 5. Escape room: two review steps, clear hints and guided completion; show that original learning score is unchanged. These are a separate recovery encounter with two review questions, not extra original questions added to a trap.
@@ -321,3 +322,21 @@ Fresh-agent audits and implementation fulfill SRC-13/14. See [the full62-questio
 Build `index-ClzFJeYF.js` / `index-BlYgrs3t.css`. **87 unit tests pass**; **243 browser checks pass**:112 full gameplay,13 migration/revision,18 cage critic,22 mobile touch critic,45 world/greeting and33 trap/context/UX. All reports record zero application errors and zero POSTs. **286 repository tests pass;8 isolated-DB checks skip**. Final source/live parity covers all seven banks. Root inspected original PDF pages5–6, garden/source tasks, actual entry/question/pole/greeting screenshots and standard web-game client output. Scroll-ending action clearance measured1.1–12.9px across320/375/768/1024/1440px; final action remains unobscured. A source-preview-only homepage test failure was resolved by running the suite against the actual static app server, with both game entries verified. The expected disabled local quiz API404 falls back to the complete bundled content.
 
 Previous published assets are retained for cached entries. Afterbell, formal exams, database and email contracts have no diff. Physical phone performance and manual screen-reader evaluation remain untested. Release follows the existing authorized phone-test target; exact commit and live checks are recorded separately. No GLM review is claimed for this revision.
+
+
+## Version 0.6.0 — visible collection and useful rewards
+
+Source: SRC-15, implemented on the existing feature branch together with the already-requested joystick and answer reactions. Delivery: local implementation; no release claim.
+
+The visible exploration diamond counter opens a paused collection/shop. Every claimed trap gift adds one diamond and stays on display after spending. The wallet shows earned, spent and available amounts; upcoming gifts show their trap, giving players the next objective. All gift variants award the same diamond value, including traps completed after mistakes. Each optional purchase costs one diamond: brighter/larger explorer lantern and wider cage illumination; compass breadcrumb path to the nearest remaining trap, then the exit; or one missing heart. Upgrades are one-time per adventure, while hearts can be purchased again when missing. Coins, original answers, scoring and mandatory exit criteria remain unchanged. Purchases are possible only during paused exploration, with enough balance; completed games expose the collection read-only. The collection, balance and upgrades belong to the existing per-tab adventure save and subject archive, not an account-wide/lifetime wallet.
+
+| Criterion | Observable result | Evidence |
+|---|---|---|
+| REWARD-01 | Every collected gift adds exactly one diamond; repeat collection adds nothing. Legacy collected gifts are credited. | rewards.test.mjs |
+| REWARD-02 | All earned gifts stay visible after spending; wallet separately displays earned/spent/available. | rewards-browser.mjs actual playthrough |
+| REWARD-03 | Full-health/insufficient-balance/duplicate/invalid purchases cannot spend currency; purchase never changes coins/answers/knowledge score. | rewards.test.mjs and browser |
+| REWARD-04 | Heart restores one missing heart; compass draws an objective path through walkable tiles; upgraded lantern illuminates a wider area and has a larger visible lantern. | unit, browser playthrough and inspected before/after WebGL screenshots |
+| REWARD-05 | Refresh preserves gifts, purchases, hearts and balance; completed-run collection remains accessible. | browser playthrough through exit and refresh |
+| REWARD-06 | Hebrew RTL, >=44px controls, keyboard focus on purchase result, scrollable shop, mobile/narrow/landscape layouts and reduced-motion contract. | browser checks and inspected screenshots; manual screen-reader/physical-phone testing not performed |
+
+Verification records and current compiled asset hashes are in games/maze/progress.md and output/maze/rewards/report.json. Product desirability and student enjoyment still need human playtesting; implementation checks establish behavior, not engagement outcomes. No real money, identity, API, database or teacher-email changes.

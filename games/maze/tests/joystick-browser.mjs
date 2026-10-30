@@ -1,0 +1,57 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {joystickStep} from './joystick-touch.mjs';
+const base=process.env.MAZE_QA_URL||'http://127.0.0.1:5192/';
+const output=new URL('../../../output/maze/joystick/',import.meta.url).pathname;
+await mkdir(output,{recursive:true});
+const checks=[],errors=[],writes=[];
+const check=(name,pass)=>{assert.ok(pass,name);checks.push(name);console.log('PASS',name);};
+const browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+try{
+ const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ await context.addInitScript(()=>{window.requestAnimationFrame=()=>0;Math.random=()=>.999999;});
+ await context.route('**/api/quizzes/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{}'}));
+ const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.method()!=='GET')writes.push(r.url());});
+ await page.goto(base);await page.waitForFunction(()=>window.render_game_to_text&&!document.querySelector('#start-button').disabled,null,{polling:50});await page.locator('#start-button').tap();
+ const read=()=>page.evaluate(()=>JSON.parse(window.render_game_to_text()));
+ const advance=ms=>page.evaluate(ms=>window.advanceTime(ms),ms);
+ const control=page.locator('#movement-joystick'),thumb=control.locator('.joystick-thumb');
+ const cdp=await context.newCDPSession(page);
+ const center=async()=>{await control.scrollIntoViewIfNeeded();const b=await control.boundingBox();return {x:b.x+b.width/2,y:b.y+b.height/2};};
+ const touch=async(type,point)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:point?[point]:[]});
+ let p=await center();await touch('touchStart',p);await touch('touchMove',{x:p.x+5,y:p.y+4});await advance(700);
+ check('center dead zone does not move player',(await read()).player.x===1&&(await read()).player.y===1&&(await read()).joystick.direction===null);
+ await touch('touchMove',{x:p.x-40,y:p.y});await page.waitForTimeout(1600);await advance(1600);
+ check('long touch has no text selection and respects wall',await page.evaluate(()=>getSelection().toString()==='')&&(await read()).player.x===1);
+ check('control disables selection and native touch gestures',await control.evaluate(el=>{const s=getComputedStyle(el);return s.userSelect==='none'&&s.touchAction==='none';}));
+ check('context menu event is cancelled',await control.evaluate(el=>!el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))));
+ await touch('touchEnd');
+ await joystickStep(page,'down');check('drag down moves one tile',(await read()).player.y===2);
+ check('release clears direction and centers thumb',!(await read()).joystick.active&&(await read()).joystick.direction===null&&await thumb.evaluate(el=>el.style.transform==='translate(0px, 0px)'));
+ const released=(await read()).player;await advance(1200);check('release stops further walking',JSON.stringify((await read()).player)===JSON.stringify(released));
+ await joystickStep(page,'up');check('drag up reverses direction',(await read()).player.y===1);
+ await joystickStep(page,'right');check('drag right moves east',(await read()).player.x===2);
+ await joystickStep(page,'left');check('drag left moves west',(await read()).player.x===1);
+ p=await center();await touch('touchStart',p);await touch('touchMove',{x:p.x,y:p.y+150});
+ check('pointer capture tracks beyond joystick boundary',(await read()).joystick.direction==='down');
+ check('thumb remains within base radius',await thumb.evaluate(el=>{const m=new DOMMatrixReadOnly(getComputedStyle(el).transform);return Math.hypot(m.m41,m.m42)<=43;}));
+ await control.evaluate(el=>el.dispatchEvent(new PointerEvent('pointerdown',{pointerId:99,button:0,clientX:0,clientY:0,bubbles:true})));
+ check('second finger cannot take over active joystick',(await read()).joystick.direction==='down');
+ await advance(0);await page.screenshot({path:output+'joystick-held.png',fullPage:true});
+ await touch('touchCancel');check('cancel resets movement',!(await read()).joystick.active&&(await read()).joystick.direction===null);
+ p=await center();await touch('touchStart',p);await touch('touchMove',{x:p.x,y:p.y+40});
+ await page.locator('#pause-button').evaluate(el=>el.click());
+ check('pause clears active drag and disables joystick',!(await read()).joystick.active&&await control.isDisabled());
+ await touch('touchEnd');await page.locator('#resume-button').tap();await advance(800);
+ check('resume does not revive held movement',(await read()).joystick.direction===null&&(await read()).player.y===1);
+ p=await center();await touch('touchStart',p);await touch('touchMove',{x:p.x,y:p.y+40});await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+ check('window blur clears drag',!(await read()).joystick.active);await touch('touchEnd');
+ await page.keyboard.press('ArrowDown');await advance(600);check('keyboard arrows remain usable',(await read()).player.y===2);
+ for(const [width,height] of [[390,844],[320,568],[844,390]]){
+  await page.setViewportSize({width,height});await control.scrollIntoViewIfNeeded();
+  check(`joystick fits ${width}x${height}`,await control.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.width>=120;})&&await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await advance(0);await page.screenshot({path:output+`joystick-${width}.png`,fullPage:true});
+ }
+ await context.close();check('zero application errors and writes',errors.length===0&&writes.length===0);
+}finally{await writeFile(output+'report.json',JSON.stringify({base,checks,errors,writes},null,2));await browser.close();}

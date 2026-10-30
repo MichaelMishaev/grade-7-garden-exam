@@ -16,7 +16,7 @@ test('three distinct connected mazes keep every landmark, NPC and patrol reachab
   }
   selectMazeLayout();
 });
-test('gifts are cosmetic, collected once, and survive refresh; old saves do not replay gifts',()=>{
+test('gifts are collected once without changing answers, and survive refresh; old saves do not replay gifts',()=>{
   const original=createState(questions);
   const state={...original,resolved:['floor'],giftsSeen:[]};
   const gift=transition(state,{type:'collect-gift',id:'floor'},questions);

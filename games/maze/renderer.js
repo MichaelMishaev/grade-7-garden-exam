@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { answerReactionPose } from './answer-reaction.js';
 import { WORLD_ENTITIES, WATER_BOWL, worldEntityPosition } from './world.js';
 import { MAZE, MAZE_LAYOUTS, ENCOUNTERS, CREATURES, START, EXIT, CLUE, TREASURE, creaturePosition } from './core.js';
 
@@ -146,13 +147,13 @@ export function createMazeRenderer(canvas) {
       mesh(geometry(new THREE.CylinderGeometry(0.037, 0.032, 0.15, 7)), jacketMaterial, elbow, 0, -0.075, 0);
       mesh(sphere(0.039), complexion, elbow, 0, -0.16, 0);
     }
-    let lantern = null;
+    let lantern = null, lanternLight = null;
     if (carriesLantern) {
       lantern = mesh(box(0.1, 0.145, 0.1), amber, group, 0.22, 0.31, -0.05);
       mesh(geometry(new THREE.TorusGeometry(0.055, 0.012, 4, 10)), brass, group, 0.22, 0.43, -0.05);
-      const light = new THREE.PointLight('#ffc271', 2, 4.5, 2); light.position.set(0.28, 0.6, -0.18); group.add(light);
+      const light = lanternLight = new THREE.PointLight('#ffc271', 2, 4.5, 2); light.position.set(0.28, 0.6, -0.18); group.add(light);
     }
-    return { group, torso, head, legs, knees, arms, lantern };
+    return { group, torso, head, legs, knees, arms, lantern, lanternLight };
   }
   function animateHuman(rig, gait, moving, speed = 1) {
     const amplitude = moving ? Math.min(1, speed / 2.4) : 0;
@@ -185,10 +186,13 @@ export function createMazeRenderer(canvas) {
     const group = new THREE.Group();
     const cloak = material('#8175a0', { emissive: '#332540', emissiveIntensity: 0.45 });
     mesh(geometry(new THREE.ConeGeometry(0.29, 0.65, 9)), cloak, group, 0, 0.42, 0);
-    mesh(sphere(0.19), ink, group, 0, 0.73, 0);
-    for (const x of [-0.065, 0.065]) mesh(sphere(0.028), cyan, group, x, 0.76, -0.17);
+    const head = new THREE.Group(); head.position.y = 0.73; group.add(head);
+    mesh(sphere(0.19), ink, head);
+    group.userData.head = head;
+    group.userData.arms = [];
+    for (const x of [-0.065, 0.065]) mesh(sphere(0.028), cyan, head, x, 0.03, -0.17);
     for (const side of [-1, 1]) {
-      const arm = mesh(box(0.14, 0.4, 0.14), cloak, group, side * 0.29, 0.55, 0); arm.rotation.z = side * 0.55;
+      const arm = mesh(box(0.14, 0.4, 0.14), cloak, group, side * 0.29, 0.55, 0); arm.rotation.z = side * 0.55; group.userData.arms.push({ arm, side });
     }
     return group;
   }
@@ -282,7 +286,11 @@ export function createMazeRenderer(canvas) {
   mesh(geometry(new THREE.CylinderGeometry(0.18, 0.15, 0.09, 12, 1, true)), brass, bowl, 0, 0.05, 0);
   mesh(geometry(new THREE.CylinderGeometry(0.145, 0.145, 0.015, 12)), ink, bowl, 0, 0.015, 0);
   const bowlWater = mesh(geometry(new THREE.CircleGeometry(0.147, 16)), waterMaterial, bowl, 0, 0.075, 0); bowlWater.rotation.x = -Math.PI / 2;
-  const breadcrumbs = new THREE.InstancedMesh(geometry(new THREE.CircleGeometry(0.055, 8)), amber, 48); scene.add(breadcrumbs); breadcrumbs.count = 0;
+  const routeMaterial=new THREE.MeshBasicMaterial({color:'#f2c477',depthTest:false,transparent:true,opacity:0.9}); resources.add(routeMaterial);
+  const breadcrumbs = new THREE.InstancedMesh(geometry(new THREE.CircleGeometry(0.12, 12)), routeMaterial, 48);
+  // The path changes location/count; an initially empty bounding sphere must not hide it.
+  breadcrumbs.frustumCulled=false;breadcrumbs.renderOrder=4;
+  scene.add(breadcrumbs); breadcrumbs.count = 0;
 
   // Tall landmarks sit only on wall cells, leaving walkable routes uncluttered.
   wallCells.filter(point => (point.x >= 17 || point.y >= 13) && point.x > 0 && point.x < MAZE[0].length - 1 && point.y > 0 && point.y < MAZE.length - 1 && (point.x * 3 + point.y) % 5 === 0).forEach(point => {
@@ -349,7 +357,7 @@ export function createMazeRenderer(canvas) {
   const cellWarden = wraith();
   cellWarden.scale.setScalar(2.35); cellWarden.position.set(0, 0, -2.55); cellWarden.rotation.y = Math.PI; prison.add(cellWarden);
   for (const side of [-1, 1]) {
-    const horn = mesh(geometry(new THREE.ConeGeometry(0.07, 0.24, 5)), purple, cellWarden, side * 0.14, 0.93, 0);
+    const horn = mesh(geometry(new THREE.ConeGeometry(0.07, 0.24, 5)), purple, cellWarden.userData.head, side * 0.14, 0.2, 0);
     horn.rotation.z = side * -0.3;
   }
   const wardenGlow = new THREE.PointLight('#9a74d0', 3, 3.5, 2); wardenGlow.position.set(0, 1.8, -2.2); prison.add(wardenGlow);
@@ -388,14 +396,15 @@ export function createMazeRenderer(canvas) {
   beam.position.set(0.5, 1.05, 0.75); beam.target.position.set(0, 1.25, -3.3); prison.add(beam, beam.target);
   let prisonTime = 0;
 
-  function renderPrison(state, reducedMotion, interaction, entryProgress = null) {
+  function renderPrison(state, reducedMotion, interaction, entryProgress = null, answerReaction = null) {
     if (!state.paused) prisonTime = reducedMotion ? 0 : ((state.elapsedMs || 0) + (state.captureMs || 0)) / 1000;
     const yaw = THREE.MathUtils.clamp(Number(interaction.lookYaw) || 0, -0.3, 0.3);
     prisonCamera.lookAt(-Math.sin(yaw) * 4.5, 1.24, -2.8);
     const raised = !!interaction.lanternRaised;
     hand.position.y = raised ? 1.05 : 0.85;
     handLight.position.y = raised ? 1.25 : 0.95;
-    handLight.intensity = raised ? 4 : 2;
+    handLight.intensity = (raised ? 4 : 2) + (state.rewardPurchases?.includes('lantern') ? 3 : 0);
+    handLight.distance = state.rewardPurchases?.includes('lantern') ? 7 : 4;
     beam.intensity = raised ? 14 : 0;
     lockFace.material.emissive.set(interaction.lockInspected ? '#ab6f21' : '#000000');
     lockFace.material.emissiveIntensity = interaction.lockInspected ? 0.65 : 0;
@@ -417,7 +426,11 @@ export function createMazeRenderer(canvas) {
     frontBars.position.y = entering ? 1.4 * (1 - closure) : 0;
     prisonCamera.position.z = 1.75 + (entering ? 0.28 * (1 - closure) : 0);
     lock.visible = !unlocked;
-    cellWarden.position.y = reducedMotion ? 0 : Math.sin(prisonTime * 1.5) * 0.025;
+    const reaction = answerReactionPose(answerReaction, reducedMotion);
+    cellWarden.position.y = (reducedMotion ? 0 : Math.sin(prisonTime * 1.5) * 0.025) + reaction.lift;
+    cellWarden.rotation.z = (interaction.rattleMs > 0 && !reducedMotion ? -0.06 : 0) + reaction.tilt;
+    cellWarden.userData.head.rotation.set(reaction.headPitch, reaction.headYaw, 0);
+    cellWarden.userData.arms.forEach(({ arm, side }) => { arm.rotation.z = side * (0.55 + reaction.arms); });
     hand.rotation.z = reducedMotion ? 0 : Math.sin(prisonTime * 1.2) * 0.015;
     torchLights.forEach((light, index) => { light.intensity = 8 + Math.sin(prisonTime * 3 + index) * 0.4; });
     prison.updateMatrixWorld();
@@ -440,11 +453,11 @@ export function createMazeRenderer(canvas) {
     camera.updateProjectionMatrix();
   }
 
-  function render(state, { intro = false, reducedMotion = false, encounters = ENCOUNTERS, interaction = {}, movement = null, guidePath = [], trapEntry = null, greeting = null } = {}) {
+  function render(state, { intro = false, reducedMotion = false, encounters = ENCOUNTERS, interaction = {}, movement = null, guidePath = [], trapEntry = null, answerReaction = null, greeting = null } = {}) {
     resize();
     const insideCell = ['question', 'feedback', 'capture', 'review', 'review-feedback'].includes(state.phase);
     lastView = insideCell && !intro ? 'first-person-cage' : 'maze';
-    if (insideCell && !intro) { renderPrison(state, reducedMotion, interaction, trapEntry); return; }
+    if (insideCell && !intro) { renderPrison(state, reducedMotion, interaction, trapEntry, answerReaction); return; }
     encounters.forEach((encounter, index) => {
       if (!markerCache.has(encounter.id)) markerCache.set(encounter.id, createRoomMarker(encounter, index));
     });
@@ -515,12 +528,16 @@ export function createMazeRenderer(canvas) {
       }
     });
     bowlWater.visible = !!state.world?.waterFilled;
-    const crumbs = state.world?.scoutGuided ? guidePath.slice(0, 48) : [];
+    const crumbs = state.world?.scoutGuided || state.rewardPurchases?.includes('compass') ? guidePath.slice(0, 48) : [];
     breadcrumbs.count = crumbs.length;
     crumbs.forEach((point, index) => {
       matrix.makeRotationX(-Math.PI / 2); matrix.setPosition(point.x, 0.025, point.y); breadcrumbs.setMatrixAt(index, matrix);
     });
     breadcrumbs.instanceMatrix.needsUpdate = true;
+    const upgradedLantern=state.rewardPurchases?.includes('lantern');
+    explorerRig.lanternLight.intensity=upgradedLantern?6:2;
+    explorerRig.lanternLight.distance=upgradedLantern?8:4.5;
+    explorerRig.lantern.scale.setScalar(upgradedLantern?1.4:1);
     explorerRig.lantern.material.emissiveIntensity = 1.5 + Math.sin(time * 3) * 0.08;
     halo.position.set(explorer.position.x, 0.017, explorer.position.z);
     halo.visible = state.graceMs > 0 || intro;

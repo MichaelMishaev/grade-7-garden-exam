@@ -1,7 +1,7 @@
 {
   "feature_id": "MAZE-001",
   "slug": "small-maze",
-  "current_version": "0.5.0",
+  "current_version": "0.6.0",
   "current_status": "approved",
   "history": [
     {
@@ -36,7 +36,7 @@
       "date": "2026-10-30",
       "actor": "Codex",
       "change_type": "revised",
-      "summary": "Cap every trap at1\u20133 questions, preserve full bank through extra traps and migrate earned milestones; add visible first-person cage and fresh-agent scene interactions. Local verification only.",
+      "summary": "Cap every trap at1–3 questions, preserve full bank through extra traps and migrate earned milestones; add visible first-person cage and fresh-agent scene interactions. Local verification only.",
       "sources": [
         "SRC-08",
         "SRC-09"
@@ -81,6 +81,16 @@
       "sources": [
         "SRC-13",
         "SRC-14"
+      ]
+    },
+    {
+      "version": "0.6.0",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "implemented",
+      "summary": "Visible diamond wallet, permanent gift collection and one-diamond lantern/compass/missing-heart upgrades. Actual mobile expedition verifies collection, spending, score integrity, refresh and completion access. Local only; prior joystick and answer reactions retained.",
+      "sources": [
+        "SRC-15"
       ]
     }
   ]
