@@ -10,14 +10,15 @@ export const WORLD_ENTITIES = [
   { id: 'bench', kind: 'bench', name: 'ספסל בין החורבות', title: 'ספסל בין החורבות', actionLabel: 'לנוח לרגע', x: 9, y: 15 }
 ];
 export const WATER_BOWL = { x: 19, y: 11 };
-const flagNames = ['scoutGuided', 'lightsOn', 'waterFilled', 'foxFollowing', 'foxDrinking', 'rabbitCalm', 'owlObserved', 'benchRested', 'playerResting'];
+const flagNames = ['scoutGuided', 'lightsOn', 'waterFilled', 'foxFollowing', 'foxDrinking', 'rabbitCalm', 'rabbitFed', 'rabbitFollowing', 'owlObserved', 'benchRested', 'playerResting'];
 const samePoint = (a, b) => a.x === b.x && a.y === b.y;
 const validPoint = point => point && Number.isInteger(point.x) && Number.isInteger(point.y) && point.x >= 1 && point.x <= 21 && point.y >= 1 && point.y <= 15;
 const copy = value => JSON.parse(JSON.stringify(value));
 
 export function createWorld() {
   return { version: 1, ...Object.fromEntries(flagNames.map(flag => [flag, false])), interactions: {}, dialogue: null,
-    fox: { x: 19, y: 7, previous: { x: 19, y: 7 }, startedMs: 0 }, foxMoveMs: 0 };
+    fox: { x: 19, y: 7, previous: { x: 19, y: 7 }, startedMs: 0 }, foxMoveMs: 0,
+    rabbit: { x: 21, y: 11, previous: { x: 21, y: 11 }, startedMs: 0 }, rabbitMoveMs: 0 };
 }
 export function normalizeWorld(raw, walkable = () => true, elapsedMs = Infinity) {
   const result = createWorld();
@@ -30,6 +31,14 @@ export function normalizeWorld(raw, walkable = () => true, elapsedMs = Infinity)
       startedMs: Number.isFinite(raw.fox.startedMs) && raw.fox.startedMs >= 0 && raw.fox.startedMs < 1e12 && raw.fox.startedMs <= elapsedMs ? raw.fox.startedMs : 0 };
   }
   result.foxMoveMs = Number.isFinite(raw.foxMoveMs) && raw.foxMoveMs >= 0 && raw.foxMoveMs < 1e12 && raw.foxMoveMs <= elapsedMs ? raw.foxMoveMs : 0;
+  if (validPoint(raw.rabbit) && walkable(raw.rabbit.x, raw.rabbit.y)) {
+    result.rabbit = { x: raw.rabbit.x, y: raw.rabbit.y,
+      previous: validPoint(raw.rabbit.previous) && walkable(raw.rabbit.previous.x, raw.rabbit.previous.y) && Math.abs(raw.rabbit.previous.x - raw.rabbit.x) + Math.abs(raw.rabbit.previous.y - raw.rabbit.y) <= 1 ? { ...raw.rabbit.previous } : { x: raw.rabbit.x, y: raw.rabbit.y },
+      startedMs: Number.isFinite(raw.rabbit.startedMs) && raw.rabbit.startedMs >= 0 && raw.rabbit.startedMs < 1e12 && raw.rabbit.startedMs <= elapsedMs ? raw.rabbit.startedMs : 0 };
+  }
+  result.rabbitMoveMs = Number.isFinite(raw.rabbitMoveMs) && raw.rabbitMoveMs >= 0 && raw.rabbitMoveMs < 1e12 && raw.rabbitMoveMs <= elapsedMs ? raw.rabbitMoveMs : 0;
+  result.rabbitFollowing = result.rabbitFollowing && result.rabbitFed;
+  result.rabbitCalm = result.rabbitCalm || result.rabbitFed;
   result.foxFollowing = result.foxFollowing && result.waterFilled;
   result.foxDrinking = result.waterFilled && !result.foxFollowing && samePoint(result.fox, WATER_BOWL);
   // Dialogue is reconstructed by the next local interaction; do not render saved arbitrary text.
@@ -37,11 +46,11 @@ export function normalizeWorld(raw, walkable = () => true, elapsedMs = Infinity)
 }
 
 export function worldEntityPosition(entity, elapsedMs = 0, world = createWorld()) {
-  if (entity.id === 'fox') {
-    const fox = world.fox || createWorld().fox;
-    const previous = fox.previous || fox, t = Math.max(0, Math.min(1, (elapsedMs - fox.startedMs) / 550));
-    return { x: previous.x + (fox.x - previous.x) * t, y: previous.y + (fox.y - previous.y) * t,
-      heading: Math.atan2(fox.x - previous.x, fox.y - previous.y), moving: t < 1 && !samePoint(previous, fox) };
+  if (entity.id === 'fox' || entity.id === 'rabbit') {
+    const animal = world[entity.id] || createWorld()[entity.id];
+    const previous = animal.previous || animal, t = Math.max(0, Math.min(1, (elapsedMs - animal.startedMs) / (entity.id === 'rabbit' ? 420 : 550)));
+    return { x: previous.x + (animal.x - previous.x) * t, y: previous.y + (animal.y - previous.y) * t,
+      heading: Math.atan2(animal.x - previous.x, animal.y - previous.y), moving: t < 1 && !samePoint(previous, animal) };
   }
   if (entity.path?.length) {
     const step = Math.floor(elapsedMs / 2400) % entity.path.length;
@@ -58,7 +67,8 @@ export function nearbyWorldEntity(player, world, elapsedMs = 0) {
     .filter(item => item.distance <= 1.5).sort((a, b) => a.distance - b.distance)[0]?.entity || null;
 }
 
-export function interactWorld(world, entityId, player, elapsedMs = 0) {
+export function interactWorld(world, entityId, player, elapsedMs = 0, intent = 'approach') {
+  if (intent !== 'approach' && !(intent === 'feed' && entityId === 'rabbit')) return null;
   const entity = WORLD_ENTITIES.find(entity => entity.id === entityId);
   if (!entity || !player || !Number.isFinite(player.x) || !Number.isFinite(player.y)) return null;
   const position = worldEntityPosition(entity, elapsedMs, world);
@@ -81,7 +91,10 @@ export function interactWorld(world, entityId, player, elapsedMs = 0) {
     } else text = 'השועל מרחרח את האוויר ומביט לכיוון המשאבה. נראה שהוא מחפש מים.';
   } else if (entity.id === 'rabbit') {
     next.rabbitCalm = true;
-    text = 'התקרבתם בשקט. הארנב נשאר לידכם במקום לברוח, ומציץ מעבר לשיחים.';
+    if (intent === 'feed') {
+      next.rabbitFed = true; next.rabbitFollowing = true;
+      text = 'הארנב מכרסם את הגזר. עכשיו יש לכם חבר לדרך — הוא ילך אחריכם בשביל!';
+    } else text = next.rabbitFed ? 'הארנב מזהה אתכם ומזיז את האוזניים. הוא ממשיך ללוות אתכם בשביל.' : 'הארנב מתקרב ומרים את האוזניים. לתת לו גזר?';
   } else if (entity.id === 'owl') {
     next.owlObserved = true;
     text = 'הינשוף מסובב את ראשו אל המעבר הצפוני של החורבות. הדרך חוזרת למבוך — זו אינה דרך ללא מוצא.';
@@ -96,7 +109,7 @@ export function interactWorld(world, entityId, player, elapsedMs = 0) {
   return { world: next, notice: text, entity };
 }
 
-export function updateWorld(world, event, routeFinder) {
+function updateFox(world, event, routeFinder) {
   if (!world || !event) return world;
   if (event.type === 'move') {
     if (!world.playerResting) return world;
@@ -116,4 +129,16 @@ export function updateWorld(world, event, routeFinder) {
   const point = path[0];
   return { ...world, foxDrinking: false, foxMoveMs: event.elapsedMs,
     fox: { ...point, previous: at, startedMs: event.elapsedMs } };
+}
+
+
+export function updateWorld(world, event, routeFinder) {
+  const next = updateFox(world, event, routeFinder);
+  if (!next || event?.type !== 'tick' || !Number.isFinite(event.elapsedMs) || typeof routeFinder !== 'function' || !next.rabbitFollowing || !next.rabbitFed || !event.player) return next;
+  const rabbit = next.rabbit || createWorld().rabbit;
+  const at = { x: rabbit.x, y: rabbit.y }, path = routeFinder(at, event.player);
+  if (!path || path.length <= 1 || event.elapsedMs - (next.rabbitMoveMs || 0) < 480) return next;
+  // Every committed hop traverses one neighboring walkable tile; rendering interpolates it.
+  return { ...next, rabbitMoveMs: event.elapsedMs,
+    rabbit: { ...path[0], previous: at, startedMs: event.elapsedMs } };
 }

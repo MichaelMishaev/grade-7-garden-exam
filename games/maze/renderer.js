@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { WORLD_ENTITIES, WATER_BOWL, worldEntityPosition } from './world.js';
-import { MAZE, ENCOUNTERS, CREATURES, START, EXIT, CLUE, TREASURE, creaturePosition } from './core.js';
+import { MAZE, MAZE_LAYOUTS, ENCOUNTERS, CREATURES, START, EXIT, CLUE, TREASURE, creaturePosition } from './core.js';
 
 // Tile coordinates are x east, y south; the world maps these onto x and z.
 export function createMazeRenderer(canvas) {
@@ -26,8 +26,10 @@ export function createMazeRenderer(canvas) {
     const result = new THREE.MeshStandardMaterial({ color, roughness: 0.9, ...options });
     resources.add(result); return result;
   };
-  const stone = material('#34515a');
-  const capStone = material('#405c65');
+  const layoutId=MAZE_LAYOUTS.find(layout=>layout.tiles===MAZE)?.id;
+  const palette=layoutId==='moon'?['#4b4c70','#68688a','#2b304b']:layoutId==='ember'?['#645044','#80674e','#3d302b']:['#34515a','#405c65','#22373e'];
+  const stone = material(palette[0]);
+  const capStone = material(palette[1]);
   const floorStone = material('#22373e');
   const floorAccent = material('#304850');
   const brass = material('#c09550', { metalness: 0.45, roughness: 0.55 });
@@ -57,7 +59,7 @@ export function createMazeRenderer(canvas) {
     instanced.instanceMatrix.needsUpdate = true; scene.add(instanced); return instanced;
   };
   const groundTiles = instance(box(0.98, 0.14, 0.98), material('#ffffff'), floorCells, -0.08);
-  floorCells.forEach((cell, index) => groundTiles.setColorAt(index, new THREE.Color(cell.x >= 16 ? '#2b413b' : cell.y >= 13 ? '#3d4344' : '#22373e')));
+  floorCells.forEach((cell, index) => groundTiles.setColorAt(index, new THREE.Color(cell.x >= 16 ? '#2b413b' : cell.y >= 13 ? '#3d4344' : palette[2])));
   if (groundTiles.instanceColor) groundTiles.instanceColor.needsUpdate = true;
   instance(box(0.95, 0.72, 0.95), stone, wallCells, 0.28);
   instance(box(1, 0.08, 1), capStone, wallCells, 0.66);
@@ -497,6 +499,8 @@ export function createMazeRenderer(canvas) {
         model.head.position.y = drinking ? 0.23 : 0.3;
         if (drinking) group.rotation.y = -Math.PI / 2;
       } else if (entity.kind === 'rabbit') {
+        if (state.world?.rabbitCalm && !point.moving) group.rotation.y = Math.atan2(point.x-position.x,point.y-position.y);
+        group.position.y = point.moving && !reducedMotion ? Math.abs(Math.sin(elapsed / 90)) * 0.1 : 0;
         model.head.rotation.x = greetingHere ? -0.12 : state.world?.rabbitCalm ? 0.15 : 0;
         model.ears.forEach((ear, index) => { ear.rotation.z = (index ? 1 : -1) * (greetingHere ? 0.04 : state.world?.rabbitCalm ? 0.32 : 0.12); });
       } else if (entity.kind === 'owl') {

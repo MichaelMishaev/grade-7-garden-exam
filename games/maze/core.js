@@ -1,6 +1,7 @@
+import { buildMazeLayouts } from './layouts.js';
 import { createWorld, normalizeWorld, interactWorld, updateWorld } from './world.js';
 // The maze uses tile coordinates: (0, 0) is the upper-left; x grows right, y down.
-export const MAZE = [
+const ORIGINAL_MAZE = [
   '#######################',
   '#S..#.....#....X#.....#',
   '#.#.#.###.#.###.#.###.#',
@@ -19,6 +20,15 @@ export const MAZE = [
   '#.....................#',
   '#######################'
 ];
+export const MAZE_LAYOUTS = buildMazeLayouts(ORIGINAL_MAZE);
+export let MAZE = MAZE_LAYOUTS[0].tiles;
+let activeLayoutId = 'classic';
+export function selectMazeLayout(id = 'classic') {
+  const layout = MAZE_LAYOUTS.find(layout => layout.id === id);
+  if (!layout) throw new Error('Unknown maze layout');
+  MAZE = layout.tiles; activeLayoutId = layout.id;
+  return layout;
+}
 export const START = { x: 1, y: 1 };
 export const EXIT = { x: 15, y: 1 };
 export const CLUE = { x: 4, y: 9 };
@@ -194,7 +204,7 @@ export function createState(questions, rng = Math.random) {
   const order = shuffle(questions.map(q => q.id), rng);
   const assignments = assignmentsFor(order);
   const state = {
-    version: 1, contentKey: fingerprint(questions), order,
+    version: 1, layoutId: activeLayoutId, giftsSeen: [], contentKey: fingerprint(questions), order,
     choiceOrders: Object.fromEntries(questions.map(q => [q.id, shuffle(q.choices.map((_, i) => i), rng)])), assignments,
     world: createWorld(), phase: 'explore', paused: false, player: { ...START }, checkpoint: { ...START },
     hearts: 3, coins: 0, seals: [], sealProofs: {}, resolved: [], answers: {}, activeEncounter: null, lastAnswer: null,
@@ -222,11 +232,15 @@ export function progress(state, questions) {
 export function transition(state, action, questions) {
   if (!state || !action || typeof action.type !== 'string') return state;
   if (action.type === 'pause') return state.paused || state.phase === 'complete' ? state : { ...state, paused: true };
+  if (action.type === 'collect-gift') {
+    const id = action.id;
+    return state.resolved.includes(id) && !state.giftsSeen.includes(id) ? { ...state, giftsSeen: [...state.giftsSeen, id] } : state;
+  }
   if (action.type === 'resume') return state.paused ? { ...state, paused: false } : state;
   if (state.paused || state.phase === 'complete') return state;
   const next = copy(state);
   if (action.type === 'world-interact' && next.phase === 'explore') {
-    const interaction = interactWorld(next.world, action.entityId, next.player, next.elapsedMs);
+    const interaction = interactWorld(next.world, action.entityId, next.player, next.elapsedMs, action.intent);
     if (!interaction) return state;
     next.world = interaction.world; next.notice = interaction.notice;
     return next;
@@ -320,7 +334,9 @@ export function restoreState(saved, questions) {
     validateQuestions(questions);
     const raw = typeof saved === 'string' ? JSON.parse(saved) : copy(saved);
     if (!raw || raw.version !== 1 || raw.contentKey !== fingerprint(questions) || !Array.isArray(raw.order) || raw.order.length !== questions.length || new Set(raw.order).size !== questions.length || raw.order.some(id => !questions.some(q => q.id === id))) return null;
+    selectMazeLayout(raw.layoutId || 'classic');
     const state = createState(questions, () => 0.999999);
+    if(Number.isInteger(raw.completionArt)&&raw.completionArt>=0&&raw.completionArt<3)state.completionArt=raw.completionArt;
     state.order = raw.order;
     state.assignments = assignmentsFor(state.order);
     state.choiceOrders = {};
@@ -357,6 +373,7 @@ export function restoreState(saved, questions) {
     state.lastAnswer = raw.lastAnswer && has(state, raw.lastAnswer.id) ? { id: raw.lastAnswer.id, ...state.answers[raw.lastAnswer.id] } : null;
     restoreEarnedSeals(state, raw);
     syncSeals(state);
+    state.giftsSeen = Array.isArray(raw.giftsSeen) ? [...new Set(raw.giftsSeen.filter(id => state.resolved.includes(id)))] : [...state.resolved];
     if (state.phase === 'complete' && !progress(state, questions).complete) state.phase = 'explore';
     if (state.phase === 'question' && !nextId(state)) { state.phase = 'explore'; state.activeEncounter = null; }
     if (state.phase === 'feedback' && !state.lastAnswer) { state.phase = 'explore'; state.activeEncounter = null; }

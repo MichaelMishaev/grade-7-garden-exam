@@ -6,7 +6,7 @@ import { ENCOUNTERS, EXIT, START, CREATURES, CLUE, TREASURE, pathTo, isWalkable,
 import { normalizeMazeContent } from '../content.js';
 import snapshot from '../content-snapshot.js';
 
-const base = process.env.MAZE_QA_URL || 'http://127.0.0.1:5188';
+const base = process.env.MAZE_QA_URL || 'http://127.0.0.1:4328/games/maze/play/index.html';
 const output = fileURLToPath(new URL('../../../output/maze/', import.meta.url));
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ['--enable-webgl', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -54,7 +54,7 @@ async function context(options = {}) {
   return context;
 }
 async function ready(page) {
-  await page.waitForFunction(() => typeof window.render_game_to_text === 'function' && !document.querySelector('#start-button')?.disabled);
+  await page.waitForFunction(() => typeof window.render_game_to_text === 'function' && !document.querySelector('#start-button')?.disabled,null,{polling:50,timeout:60000});
 }
 async function start(page) {
   await ready(page);
@@ -63,7 +63,7 @@ async function start(page) {
 }
 async function holdFeedback(page) {
   const hold = page.locator('#read-feedback');
-  if (await hold.isVisible()) await hold.click();
+  if (await hold.isVisible()) { await hold.focus(); await page.keyboard.press('Enter'); }
 }
 async function clickContinue(page) {
   const guided = page.locator('#guided-continue');
@@ -98,6 +98,7 @@ const evidence = { question: false, capture: false, review: false, reviewReload:
 async function settle(page, correctness, recoveryCorrect = false) {
   for (let guard = 0; guard < 80; guard++) {
     let value = await state(page);
+    if(value.pendingGift){await page.locator('#collect-gift').click();continue;}
     if (value.phase === 'explore' || value.phase === 'complete') {
       if (value.phase === 'explore' && evidence.question && !evidence.exploreReturn) { check('finishing an encounter restores maze exploration camera', value.view === 'maze'); evidence.exploreReturn = true; }
       return value;
@@ -269,7 +270,7 @@ try {
   await shot(page, 'desktop-complete');
   const completeBeforeOtherTab = sameProgress(await state(page));
   const secondTab = await desktop.newPage();
-  await secondTab.goto(base, { waitUntil: 'domcontentloaded' }); await start(secondTab);
+  await secondTab.goto(base, { waitUntil: 'domcontentloaded' }); await secondTab.bringToFront(); await start(secondTab);
   check('a separate tab starts its own expedition without sharing the completed tab', (await state(secondTab)).progress.answered === 0 && (await state(secondTab)).seals.length === 0);
   await secondTab.locator('[data-direction="down"]').click(); await secondTab.evaluate(() => window.advanceTime(900));
   check('movement in a separate tab cannot overwrite the first tab', sameProgress(await state(page)) === completeBeforeOtherTab);

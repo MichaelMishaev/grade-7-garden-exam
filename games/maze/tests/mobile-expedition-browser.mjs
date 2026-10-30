@@ -86,6 +86,7 @@ async function answer(correct, reviewing = false) {
 async function settle() {
   for (let guard = 0; guard < 90; guard++) {
     const state = await read(page);
+    if(state.pendingGift){await page.locator('#collect-gift').tap();continue;}
     if (state.phase === 'explore' || state.phase === 'complete') return;
     if (state.phase === 'question') {
       await answer(originalCount >= 3);

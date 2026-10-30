@@ -1,4 +1,4 @@
-import { createState, restoreState, transition, currentQuestion, progress, MAZE, encountersFor, EXIT, pathTo, isWalkable } from './core.js';
+import { createState, restoreState, transition, currentQuestion, progress, MAZE_LAYOUTS, selectMazeLayout, MAZE, encountersFor, EXIT, pathTo, isWalkable } from './core.js';
 import { loadMazeContent, normalizeMazeContent, MAZE_QUIZZES, DEFAULT_QUIZ_ID } from './content.js';
 import { createMazeRenderer } from './renderer.js';
 import '../../quiz-core.js';
@@ -7,13 +7,15 @@ import {WORLD_ENTITIES,nearbyWorldEntity,worldEntityPosition} from './world.js';
 import { createInteractions, reduceInteraction, interactionLabels } from './interactions.js';
 import { questionPresentation } from './question-presentation.js';
 import { createGreetings, advanceGreetings } from './greetings.js';
+import completionAtlas from './art/escape-moments.png';
+import { COMPLETION_ART, isCompletionArt, chooseCompletionArt } from './completion-art.js';
 
 const $ = id => document.getElementById(id);
 const SESSION_KEY = 'prepx-shadow-maze-session-v1';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const dialog = $('game-dialog');
 let content, state, renderer, started = false, panel = null, autoTimer = null, readFeedback = false;
-let storageAvailable = true;
+let storageAvailable = true, switchingAdventure = false;
 let route = [], lastFrame = 0, previousFocus = null, persistElapsed = 0;
 let movement=null, queuedDirection=null, pointerDirection=null, pendingInteract=false, guidePath=[];
 let interaction = createInteractions();
@@ -24,6 +26,7 @@ const trappedPhases = new Set(['question','feedback','capture','review','review-
 const held = new Set();
 const directionPointers = new Map();
 function clearPointerDirections(){directionPointers.clear();pointerDirection=null;}
+const pendingGift = () => state?.phase === 'explore' ? state.resolved.find(id => !state.giftsSeen.includes(id)) : null;
 const activeRooms = () => encountersFor(content.questions);
 const visibleGreeting = () => started&&state?.phase==='explore'&&!state.paused&&!panel?greetings.active:null;
 function renderGreeting(){
@@ -39,7 +42,7 @@ const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,e
 function interactionContext(){const room=state.assignments[state.activeEncounter]||[];return {phase:state.phase,paused:state.paused,reducedMotion:reducedMotion.matches,reviewIndex:state.review?.index||0,answered:room.filter(id=>state.answers[id]).length,total:room.length};}
 function sceneControls(){return `<details class="cell-tools" id="cell-tools"><summary>לבדוק את הכלוב</summary><div class="cell-controls" aria-label="פעולות בתוך הכלוב">${['look-left','look-right','lantern','rattle','inspect'].map(action=>`<button type="button" data-cell-action="${action}" aria-label="${escapeText(interactionLabels[action])}"${action==='lantern'?` aria-pressed="${interaction.lanternRaised}"`:''}>${escapeText(({'look-left':'שמאלה','look-right':'ימינה',lantern:'פנס',rattle:'סורגים',inspect:'מנעול'})[action])}</button>`).join('')}</div><p id="cell-notice" class="cell-notice" role="status">${escapeText(interaction.notice||'בחרו פעולה כדי להסתכל סביב.')}</p></details>`;}
 function interactWithCell(action){
-  if(state.phase==='feedback'){readFeedback=true;stopAuto();if($('read-feedback'))$('read-feedback').textContent='המעבר נעצר בזמן שבודקים את הכלוב.';}
+  if(state.phase==='feedback')pauseFeedbackReading('המעבר נעצר בזמן שבודקים את הכלוב.');
   interaction=reduceInteraction(interaction,action,interactionContext());
   if($('cell-notice'))$('cell-notice').textContent=interaction.notice;
   document.querySelector('[data-cell-action="lantern"]')?.setAttribute('aria-pressed',String(interaction.lanternRaised));
@@ -73,7 +76,7 @@ function markStorageUnavailable() {
   }
 }
 function save() {
-  if (!content || !state || !storageAvailable) return;
+  if (!content || !state || !storageAvailable || switchingAdventure) return;
   try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({content, state})); }
   catch { markStorageUnavailable(); }
 }
@@ -104,6 +107,7 @@ function closeDialog() {
 }
 function showDialog(html, focusSelector = 'button') {
   const inCell=trappedPhases.has(state.phase)&&!panel;
+  dialog.classList.remove('gift-sheet');
   dialog.classList.toggle('cell-sheet',inCell);
   dialog.classList.toggle('trap-entry',inCell&&!!trapEntry);
   const saveNotice=storageAvailable?'':`<p class="dialog-save-warning" role="status">${unsavedMessage}</p>`;
@@ -111,7 +115,7 @@ function showDialog(html, focusSelector = 'button') {
   $('dialog-content').innerHTML = saveNotice + html + (inCell&&!trapEntry?sceneControls():'') + exitMenu;
   bind('encounter-menu', () => openPanel('pause'));
   document.querySelectorAll('[data-cell-action]').forEach(el=>el.addEventListener('click',()=>interactWithCell(el.dataset.cellAction)));
-  document.querySelectorAll('.cell-tools,.feedback-explanation').forEach(el=>el.addEventListener('toggle',()=>{if(el.open&&state.phase==='feedback'){readFeedback=true;stopAuto();}}));
+  document.querySelectorAll('.cell-tools,.feedback-explanation').forEach(el=>el.addEventListener('toggle',()=>{if(el.open&&state.phase==='feedback')pauseFeedbackReading();}));
   if (!dialog.open) { previousFocus = document.activeElement; dialog.showModal(); }
   dialog.scrollTop = 0;
   queueMicrotask(() => $('dialog-content').querySelector('#skip-trap-entry,[data-choice],#continue-button,#skip-capture,#guided-continue,#close-panel,#resume-button')?.focus({preventScroll:true}));
@@ -120,6 +124,16 @@ const button = (id,label,primary=true) => `<button id="${id}" class="button ${pr
 const heading = (kicker,title) => `<div class="dialog-kicker"><span>${kicker}</span><span>מבוך הצללים</span></div>${title?`<h2 id="dialog-title">${title}</h2>`:''}`;
 function bind(id,fn) { $(id)?.addEventListener('click',fn); }
 function continueFeedback() { readFeedback = false; dispatch({type:'continue'}); }
+function pauseFeedbackReading(message='המעבר נעצר') {
+  if(state.phase!=='feedback')return;
+  readFeedback=true;stopAuto();
+  if($('read-feedback'))$('read-feedback').textContent=message;
+  if($('feedback-actions'))$('feedback-actions').hidden=false;
+  if(!$('continue-button')){
+    $('feedback-actions')?.insertAdjacentHTML('beforeend',button('continue-button','להמשיך אחרי הקריאה'));
+    bind('continue-button',continueFeedback);
+  }
+}
 function finishTrapEntry(){trapEntry=null;renderUi();renderer?.render(state,viewOptions());}
 function renderTrapEntry(){
   const room=activeRooms().find(room=>room.id===state.activeEncounter);
@@ -143,11 +157,20 @@ function renderQuestion() {
     (presentation.context?`<p class="question-context" id="question-context">${text(presentation.context)}</p>`:'')+`<h2 id="dialog-title">${text(presentation.prompt)}</h2>`+
     (reviewing?'<p class="small-note">חזרה עם רמזים · בלי איבוד לבבות</p>':'')+hint+
     `<div class="answers">${q.options.map((option,index)=>`<button class="answer" data-choice="${option.original}"><span class="answer-index">${index+1}</span><span>${text(option.text)}</span></button>`).join('')}</div><details class="question-source" id="question-source"><summary>מקור השאלה</summary>${sourceHtml(q)}</details>`);
-  document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>{
-    if (!['question','review'].includes(state.phase)) return;
-    readFeedback = false;
-    dispatch({type:reviewing?'review-answer':'answer',choice:Number(el.dataset.choice)});
-  }));
+  document.querySelectorAll('[data-choice]').forEach(el=>{
+    // A release from the outgoing feedback screen cannot become a new answer.
+    let pressedHere=false;
+    el.addEventListener('pointerdown',()=>{pressedHere=true;});
+    el.addEventListener('pointercancel',()=>{pressedHere=false;});
+    el.addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key))event.preventDefault();});
+    el.addEventListener('click',event=>{
+      const freshPress=pressedHere;pressedHere=false;
+      if(event.detail>0&&!freshPress)return;
+      if(state.phase!==(reviewing?'review':'question')||currentQuestion(state,content.questions)?.id!==q.id)return;
+      readFeedback = false;
+      dispatch({type:reviewing?'review-answer':'answer',choice:Number(el.dataset.choice)});
+    });
+  });
 }
 function renderFeedback() {
   const reviewing = state.phase === 'review-feedback';
@@ -160,10 +183,10 @@ function renderFeedback() {
   showDialog(heading(reviewing?'חדר ההיחלצות':'תוצאת המלכודת','')+
     `<div class="feedback-label"><span class="feedback-mark ${correct?'':'wrong'}" aria-hidden="true">${correct?'✓':'↘'}</span><h2 id="dialog-title">${label}</h2></div><p>${detail}</p>`+
     (guided||!reviewing||correct?answerText:'')+(reviewing?explanationHtml(q):`<details class="feedback-explanation" id="feedback-explanation"><summary>למה זו התשובה?</summary>${explanationHtml(q)}</details>`)+
-    `<div class="dialog-actions">${button('continue-button',guided?'הבנתי, לשחרר את השרשרת':reviewing&&!correct?'לנסות עם רמז':reviewing?'לשלב הבא':'להמשיך בדרך')}</div>`+
+    `<div class="dialog-actions" id="feedback-actions"${!reviewing&&!readFeedback?' hidden':''}>${reviewing?button('continue-button',guided?'הבנתי, לשחרר את השרשרת':!correct?'לנסות עם רמז':'לשלב הבא'):readFeedback?button('continue-button','להמשיך אחרי הקריאה'):''}</div>`+
     (!reviewing?'<button id="read-feedback" class="reading-button">לעצור ולקרוא</button>':''));
   bind('continue-button',continueFeedback);
-  bind('read-feedback',()=>{readFeedback=true;stopAuto();$('feedback-explanation').open=true;$('read-feedback').textContent='המעבר נעצר';});
+  bind('read-feedback',()=>{pauseFeedbackReading();$('feedback-explanation').open=true;});
   if (!reviewing && !readFeedback) autoTimer=setTimeout(()=>{if(state.phase==='feedback'&&!state.paused&&!panel)continueFeedback();},1500);
 }
 function renderCapture() {
@@ -172,13 +195,24 @@ function renderCapture() {
   bind('skip-capture',()=>dispatch({type:'skip-capture'}));
 }
 function renderSummary(reviewOnly=false) {
+  if(!isCompletionArt(state.completionArt)){
+    let previous=null;
+    if(storageAvailable){try{const value=sessionStorage.getItem(SESSION_KEY+'-last-completion-art');previous=value===null?null:Number(value);}catch{markStorageUnavailable();}}
+    state.completionArt=chooseCompletionArt(null,previous);save();
+    if(storageAvailable){try{sessionStorage.setItem(SESSION_KEY+'-last-completion-art',String(state.completionArt));}catch{/* The run itself is saved; decoration history is optional. */}}
+  }
+  const art=COMPLETION_ART[state.completionArt];
   const pr=progress(state,content.questions);
   const stars=globalThis.QuizCore?.starsFor(pr.score)||0;
-  const rows=content.questions.filter(q=>state.answers[q.id]).map(q=>`<div class="review-item"><strong>${state.answers[q.id].correct?'✓':'↘'} ${text(q.prompt)}</strong><p>התשובה שלכם: ${text(q.choices[state.answers[q.id].choice])}</p><p>התשובה הנכונה: ${text(q.choices[q.correct])}</p>${explanationHtml(q)}</div>`).join('');
-  showDialog(heading('השער פתוח','יצאתם ממבוך הצללים!')+`<p>כל שלושת החותמים שלכם. גם דרך עם טעויות מובילה החוצה.</p><div class="result-grid"><div><strong>${pr.score}</strong><small>ציון ידע מתוך 100</small></div><div><strong>${state.coins}</strong><small>מטבעות משחק</small></div><div><strong>${state.captureCount}</strong><small>היחלצויות</small></div></div><p class="small-note">${'★'.repeat(stars)}${'☆'.repeat(3-stars)} · הציון מבוסס על התשובות הראשונות בלבד. החזרה בחדר ההיחלצות אינה משנה אותו.</p>`+
-    (reviewOnly?rows:button('review-result','לעבור על התשובות',false))+'<a class="dialog-link" href="/index.html">בחזרה ל־PrepX · לבחור הרפתקה אחרת</a>');
+  const rows=reviewOnly?content.questions.filter(q=>state.answers[q.id]).map(q=>`<div class="review-item"><strong>${state.answers[q.id].correct?'✓':'↘'} ${text(q.prompt)}</strong><p>התשובה שלכם: ${text(q.choices[state.answers[q.id].choice])}</p><p>התשובה הנכונה: ${text(q.choices[q.correct])}</p>${explanationHtml(q)}</div>`).join(''):'';
+  showDialog(`<section class="completion-screen" data-completion-art="${state.completionArt}"><div class="completion-picture" role="img" aria-label="${escapeText(art.alt)}" style="background-image:url('${escapeText(completionAtlas)}');background-position:center ${art.position}"></div><div class="completion-copy">`+
+    heading('ההרפתקה הושלמה',text(art.title))+`<p class="completion-message">${text(art.message)}</p><p class="completion-stars" aria-label="${stars} כוכבים מתוך 3">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</p><div class="result-grid completion-results"><div><strong>${pr.score}</strong><small>ציון ידע מתוך 100</small></div><div><strong>${state.coins}</strong><small>מטבעות</small></div><div><strong>${state.captureCount}</strong><small>היחלצויות</small></div></div><div class="completion-actions"><a class="dialog-link button primary" id="completion-home" href="/index.html">בחזרה הביתה ↗</a>${button('change-subject','הרפתקה חדשה · החלפת נושא',false)}${reviewOnly?button('back-to-celebration','חזרה לחגיגה',false):'<button id="review-result" class="reading-button">לעבור על התשובות</button>'}</div><p class="small-note completion-score-note">הציון מבוסס על התשובות הראשונות. ההיחלצות אינה משנה אותו.</p>${rows}</div></section>`);
   bind('review-result',()=>renderSummary(true));
+  bind('back-to-celebration',()=>renderSummary(false));
+  bind('change-subject',showSubjectPicker);
+  $('completion-home').focus({preventScroll:true});
 }
+
 function openPanel(kind) {
   if (!started || state.phase==='complete') return;
   stopAuto(); route=[]; held.clear(); clearPointerDirections();queuedDirection=null; panel=kind; dispatch({type:'pause'}); renderUi();
@@ -198,14 +232,23 @@ function renderPanel() {
   } else if(panel==='world') {
     const dialogue=state.world.dialogue;
     const human=dialogue?.entityId==='scout';
-    showDialog(heading(human?'מפגש עם סייר השבילים':'מפגש בגן',text(dialogue?.title||'אורח בשביל'))+`<p>${text(dialogue?.text||'יש עוד הרבה לגלות בין השבילים.')}</p><p class="small-note" id="world-topic-text">אפשר לעצור, לשאול ולהכיר את המקום. אין כאן שאלת מבחן.</p><div class="dialog-actions">${button('world-topic','מה עוד יש באזור?',false)}${button('close-panel','להמשיך לחקור')}</div>`);
+    const rabbit=dialogue?.entityId==='rabbit';
+    showDialog(heading(human?'מפגש עם סייר השבילים':'מפגש בגן',text(dialogue?.title||'אורח בשביל'))+`<p>${text(dialogue?.text||'יש עוד הרבה לגלות בין השבילים.')}</p><p class="small-note" id="world-topic-text">אפשר לעצור, לשאול ולהכיר את המקום. אין כאן שאלת מבחן.</p><div class="dialog-actions">${rabbit&&!state.world.rabbitFed?button('feed-rabbit','לתת לארנב גזר 🥕'):''}${rabbit?'':button('world-topic','מה עוד יש באזור?',false)}${button('close-panel',rabbit&&state.world.rabbitFollowing?'לצאת לדרך יחד':'להמשיך לחקור')}</div>`);
     bind('close-panel',closePanel);
+    bind('feed-rabbit',()=>{
+      dispatch({type:'resume'});
+      dispatch({type:'world-interact',entityId:'rabbit',intent:'feed'});
+      dispatch({type:'pause'});
+      renderer?.render(state,viewOptions());
+    });
     bind('world-topic',()=>{$('world-topic-text').textContent=human?'השביל המואר מוביל למלכודת שטרם סיימתם. בגן המזרחי תמצאו שומרת, משאבה ובעלי חיים. המעברים הדרומיים חוזרים לחצר — אין צורך להתחיל מחדש.':'כשממלאים את קערת המים, השועל מגיע לשתות. אפשר להתקרב אליו ולהציע לו ללכת איתכם. בחורבות מחכה ינשוף, ובין השיחים מסתתר ארנב.';});
   } else if(panel==='journal') {
-    showDialog(heading('יומן הדרך · הזמן נעצר','רמזים שנשארים איתכם')+`<ul class="hint-list"><li>מצאו את המלכודות המסומנות בחותם זוהר. בכל אחת עד שלוש שאלות.</li><li>השלמת השאלות נותנת חותם, גם אחרי טעות.</li><li>כדי להשתחרר מכלוב, אפשר להיעזר ברמזים. אחרי שתי טעויות תקבלו פתרון מודרך.</li>${state.clues.length?'<li>החריטה שגיליתם: שלושה חותמים פותחים את השער. לא צריך לענות נכון על הכול.</li>':'<li>חפשו חריטה מוארת על קיר המבוך.</li>'}${state.treasureCollected?'<li>גיליתם את חדר האוצר הסודי!</li>':''}<li>מפגשים בגנים ובחורבות: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}.</li>${state.world.scoutGuided?'<li>הסייר סימן את הדרך למלכודת הקרובה שטרם הושלמה.</li>':''}${state.world.waterFilled?'<li>מילאתם את קערת המים בגן.</li>':''}${state.world.foxFollowing?'<li>השועל מכיר אתכם ומלווה אתכם בשביל.</li>':''}</ul>`+button('close-panel','חזרה להרפתקה'));
+    showDialog(heading('יומן הדרך · הזמן נעצר','רמזים שנשארים איתכם')+`<p class="small-note">מתנות שנאספו: ${state.giftsSeen.length} ✧</p><ul class="hint-list"><li>מצאו את המלכודות המסומנות בחותם זוהר. בכל אחת עד שלוש שאלות.</li><li>השלמת השאלות נותנת חותם, גם אחרי טעות.</li><li>כדי להשתחרר מכלוב, אפשר להיעזר ברמזים. אחרי שתי טעויות תקבלו פתרון מודרך.</li>${state.clues.length?'<li>החריטה שגיליתם: שלושה חותמים פותחים את השער. לא צריך לענות נכון על הכול.</li>':'<li>חפשו חריטה מוארת על קיר המבוך.</li>'}${state.treasureCollected?'<li>גיליתם את חדר האוצר הסודי!</li>':''}<li>מפגשים בגנים ובחורבות: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}.</li>${state.world.scoutGuided?'<li>הסייר סימן את הדרך למלכודת הקרובה שטרם הושלמה.</li>':''}${state.world.waterFilled?'<li>מילאתם את קערת המים בגן.</li>':''}${state.world.foxFollowing?'<li>השועל מכיר אתכם ומלווה אתכם בשביל.</li>':''}</ul>`+button('close-panel','חזרה להרפתקה'));
     bind('close-panel',closePanel);
   } else {
     showDialog(heading('המשחק בהשהיה','הדרך תחכה לכם')+`<p>${storageAvailable?'ההתקדמות נשמרת בלשונית הזו.':'ההתקדמות אינה נשמרת. הישארו בלשונית הזו כדי להמשיך.'} הלבבות, היצורים והמלכודות מחכים עד שתחזרו.</p><p class="small-note">תנועה: החצים או WASD. אפשר ללחוץ על שביל. E לבדיקה מקרוב. F למסך מלא.</p>`+button('resume-button','להמשיך מאותו מקום')+`<a class="dialog-link" href="/index.html">חזרה ל־PrepX · ${storageAvailable?'ההתקדמות תישמר':'ללא שמירה'}</a>`);
+    $('dialog-content').insertAdjacentHTML('beforeend',button('change-subject','הרפתקה חדשה · החלפת נושא',false));
+    bind('change-subject',showSubjectPicker);
     bind('resume-button',closePanel);
   }
 }
@@ -223,14 +266,15 @@ function renderUi() {
   const pr=progress(state,content.questions);
   guidePath=[];
   if(state.world.scoutGuided){for(const room of activeRooms().filter(e=>!state.resolved.includes(e.id))){const p=pathTo(state.player,room);if(p&&(!guidePath.length||p.length<guidePath.length))guidePath=p;}}
-  $('location-label').textContent=inCell?'בתוך הכלוב · מבט מגוף ראשון':pr.complete?'שער היציאה מחכה':'מסדרונות הצללים';
+  $('location-label').textContent=inCell?'בתוך הכלוב · מבט מגוף ראשון':pr.complete?'שער היציאה מחכה':MAZE_LAYOUTS.find(layout=>layout.id===state.layoutId).title;
   $('objective-text').textContent=pr.complete?'סיימתם את המלכודות. מצאו את השער הזוהר.':`מלכודות ${pr.trapsResolved} מתוך ${pr.trapsTotal} · ${pr.answered} מתוך ${pr.total} שאלות`;
   $('notice').textContent=state.notice||`מפגשים בעולם: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}. הסייר מחכה בשבילים, ובגן המזרחי יש עוד דמויות ובעלי חיים.`;
   document.querySelectorAll('[data-direction],#interact-button').forEach(el=>el.disabled=!started||state.paused||state.phase!=='explore');
   if(!started)return;
   if(panel){renderPanel();return;}
   if(state.paused){panel='pause';renderPanel();return;}
-  if(trapEntry&&state.phase==='question')renderTrapEntry();
+  if(pendingGift())renderGift();
+  else if(trapEntry&&state.phase==='question')renderTrapEntry();
   else if(state.phase==='question'||state.phase==='review')renderQuestion();
   else if(state.phase==='feedback'||state.phase==='review-feedback')renderFeedback();
   else if(state.phase==='capture')renderCapture();
@@ -246,7 +290,7 @@ function handleInteract(){
   if(movement?.target){pendingInteract=true;held.clear();clearPointerDirections();route=[];queuedDirection=null;return;}
   pendingInteract=false;
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
-  if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human')openPanel('world');}
+  if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human'||entity.id==='rabbit')openPanel('world');renderer?.render(state,viewOptions());}
   else dispatch({type:'interact'});
 }
 function updateExploreContext(){
@@ -296,7 +340,7 @@ document.querySelectorAll('[data-direction]').forEach(el=>{
   });
   el.addEventListener('click',event=>{if(event.detail===0)step(el.dataset.direction);});
 });
-dialog.addEventListener('cancel',event=>{event.preventDefault();if(panel)closePanel();else if(state.phase==='explore')closeDialog();});
+dialog.addEventListener('cancel',event=>{event.preventDefault();if(panel==='subjects'){if(!$('cancel-subject')?.disabled)$('cancel-subject')?.click();}else if(panel)closePanel();else if(pendingGift())dispatch({type:'collect-gift',id:pendingGift()});else if(state.phase==='explore')closeDialog();});
 const keyDirection={ArrowUp:'up',ArrowRight:'right',ArrowDown:'down',ArrowLeft:'left',w:'up',d:'right',s:'down',a:'left'};
 window.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.metaKey||event.altKey)return;
@@ -315,7 +359,7 @@ $('maze-canvas').addEventListener('click',event=>{
   if(destination&&isWalkable(destination.x,destination.y)){held.clear();clearPointerDirections();queuedDirection=null;const from=movement?.target||state.player;route=pathTo(from,destination)||[];if(movement?.target)route.unshift({...movement.target});}
 });
 function advance(ms) {
-  if(!state||!started)return;
+  if(!state||!started||pendingGift())return;
   if(trapEntry&&!state.paused&&!panel){trapEntry.remaining=Math.max(0,trapEntry.remaining-ms);if(trapEntry.remaining===0||reducedMotion.matches)finishTrapEntry();}
   interaction=reduceInteraction(interaction,{type:'tick',dt:ms},interactionContext());
   dispatch({type:'tick',ms,moving:!!movement?.target});
@@ -326,7 +370,7 @@ function advance(ms) {
 window.advanceTime=ms=>{for(let remaining=Math.min(ms,60000);remaining>0;remaining-=16.667){const dt=Math.min(16.667,remaining);advanceWalking(dt);advance(dt);}renderer?.render(state,viewOptions());};
 window.render_game_to_text=()=>JSON.stringify(state?{
   coordinates:'tile origin upper-left; x right/east, y down/south; directions are world axes',
-  started,phase:state.phase,paused:state.paused,player:state.player,movement,greeting:visibleGreeting(),world:state.world,worldEntities:WORLD_ENTITIES.map(e=>({...e,position:worldEntityPosition(e,state.elapsedMs,state.world)})),nearbyEntity:nearbyWorldEntity(state.player,state.world,state.elapsedMs)?.id||null,hearts:state.hearts,coins:state.coins,seals:state.seals,
+  layoutId:state.layoutId,gifts:state.giftsSeen,pendingGift:pendingGift(),maze:MAZE,quizId:content.id,started,phase:state.phase,paused:state.paused,player:state.player,movement,greeting:visibleGreeting(),world:state.world,worldEntities:WORLD_ENTITIES.map(e=>({...e,position:worldEntityPosition(e,state.elapsedMs,state.world)})),nearbyEntity:nearbyWorldEntity(state.player,state.world,state.elapsedMs)?.id||null,hearts:state.hearts,coins:state.coins,seals:state.seals,
   progress:progress(state,content.questions),activeEncounter:state.activeEncounter,review:state.review,captureCount:state.captureCount,
   captureMs:state.captureMs,elapsedMs:state.elapsedMs,graceMs:state.graceMs,
   currentQuestion:currentQuestion(state,content.questions)?{id:currentQuestion(state,content.questions).id,options:currentQuestion(state,content.questions).options}:null,
@@ -350,6 +394,7 @@ function initializeIntro() {
   select.value=content.id;
   const existing=Object.keys(state.answers).length>0||state.visited.length>1;
   select.disabled=existing;
+  $('new-adventure-button').hidden=!existing;
   $('start-button').textContent=existing?'להמשיך מאותו מקום':'להיכנס למבוך ←';
   $('start-button').disabled=false;
   select.addEventListener('change',async()=>{
@@ -358,8 +403,73 @@ function initializeIntro() {
     catch{$('notice').textContent='לא הצלחנו לטעון תרגול. אפשר לנסות שוב או לחזור ל־PrepX.';}
     finally{select.disabled=false;$('start-button').disabled=false;}
   });
+  $('layout-name').textContent=MAZE_LAYOUTS.find(layout=>layout.id===state.layoutId).title;
   renderUi();requestAnimationFrame(frame);
 }
+function giftArt(index) {
+  const shapes=[
+    '<polygon points="20,24 50,8 80,24 94,46 50,96 6,46" fill="#f2c477"/><path d="M20 24 34 46 50 8 66 46 80 24M6 46H94M34 46 50 96 66 46" fill="none" stroke="#fff2c9" stroke-width="3"/><path d="M66 46H94L50 96Z" fill="#ac7139"/><path d="M20 24 6 46H34Z" fill="#fff0bc"/>',
+    '<circle cx="50" cy="28" r="20" fill="none" stroke="#f2c477" stroke-width="12"/><path d="M50 49V94M50 72H72M50 86H65" fill="none" stroke="#f2c477" stroke-width="12" stroke-linecap="round"/>',
+    '<path d="m50 5 13 30 32 4-24 23 7 33-28-17-28 17 7-33L5 39l32-4Z" fill="#f2c477" stroke="#fff0bb" stroke-width="3"/><path d="M50 5V78L29 62Z" fill="#fff0bb"/>'
+  ];
+  return `<svg viewBox="0 0 100 104" width="106" height="110" aria-hidden="true">${shapes[index%3]}</svg>`;
+}
+function renderGift() {
+  const id=pendingGift(), index=activeRooms().findIndex(room=>room.id===id);
+  const names=['גביש אור','מפתח הירח','כוכב השומר','אבן להבה','פנינת ההד','נוצת הלחישות','אבן רונות','טיפת אור','קשת זהב','יהלום הכספת'];
+  showDialog(heading('המלכודת הושלמה!','מתנה לדרך')+`<div class="gift-scene" aria-hidden="true"><div class="gift-rays"></div><div class="gift-gem">${giftArt(index)}</div>${Array.from({length:12},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><h3 class="gift-name">${names[index]||'גביש אור'}</h3><p class="gift-description">מתנה לאוסף שלכם · גם אחרי טעויות ממשיכים!</p>`+button('collect-gift','לקחת ולהמשיך ←'));
+  dialog.classList.add('gift-sheet');
+  $('collect-gift').focus({preventScroll:true});
+  bind('collect-gift',()=>{dialog.classList.remove('gift-sheet');dispatch({type:'collect-gift',id});});
+}
+function showSubjectPicker() {
+  stopAuto();held.clear();clearPointerDirections();queuedDirection=null;route=[];
+  if(started&&state.phase!=='complete')dispatch({type:'pause'});
+  panel='subjects';
+  showDialog(heading('הרפתקה חדשה','מה מתרגלים עכשיו?')+`<label for="new-subject">נושא לתרגול</label><select id="new-subject">${MAZE_QUIZZES.map(quiz=>`<option value="${escapeText(quiz.id)}">${text(quiz.title)}</option>`).join('')}</select><p class="small-note">ההרפתקה הנוכחית תישמר בלשונית הזו. הרפתקה חדשה מתחילה במבוך אחר.</p><p id="subject-error" role="status"></p>`+button('new-subject-start','להתחיל הרפתקה חדשה')+button('resume-subject','לחזור להרפתקה השמורה בנושא הזה',false)+button('cancel-subject','חזרה למשחק',false));
+  dialog.classList.remove('gift-sheet');
+  $('new-subject').value=MAZE_QUIZZES.find(quiz=>quiz.id!==content.id)?.id||content.id;
+  const update=()=>{try{$('resume-subject').hidden=!sessionStorage.getItem(SESSION_KEY+'-subject-'+$('new-subject').value);}catch{$('resume-subject').hidden=true;}};
+  update();$('new-subject').addEventListener('change',update);
+  bind('new-subject-start',()=>switchSubject(false));bind('resume-subject',()=>switchSubject(true));
+  bind('cancel-subject',()=>{panel=null;if(started){dispatch({type:'resume'});renderUi();}else closeDialog();});
+  $('new-subject').focus({preventScroll:true});
+}
+async function switchSubject(resume) {
+  const quizId=$('new-subject').value;
+  document.querySelectorAll('#dialog-content button,#new-subject').forEach(el=>el.disabled=true);
+  try {
+    if(!storageAvailable)throw new Error('Storage unavailable');
+    // Prepare all data first. Keep the current run intact if loading or archiving fails.
+    let next;
+    if(resume){
+      const key=sessionStorage.getItem(SESSION_KEY+'-subject-'+quizId);
+      next=sessionStorage.getItem(key);
+      const parsed=JSON.parse(next), normalized=normalizeMazeContent(parsed.content,{pinned:true});
+      if(normalized.id!==quizId||!restoreState(parsed.state,normalized.questions))throw new Error('Invalid archived run');
+    }else{
+      const nextContent=await loadMazeContent({quizId});
+      const index=MAZE_LAYOUTS.findIndex(layout=>layout.id===state.layoutId);
+      selectMazeLayout(MAZE_LAYOUTS[(index+1)%MAZE_LAYOUTS.length].id);
+      next=JSON.stringify({content:nextContent,state:createState(nextContent.questions)});
+    }
+    selectMazeLayout(state.layoutId);
+    const current=JSON.stringify({content,state}), key=SESSION_KEY+'-run-'+Date.now();
+    sessionStorage.setItem(key,current);
+    if(sessionStorage.getItem(key)!==current)throw new Error('Archive not verified');
+    sessionStorage.setItem(SESSION_KEY+'-subject-'+content.id,key);
+    switchingAdventure=true;
+    sessionStorage.setItem(SESSION_KEY,next);
+    location.reload();
+  }catch{
+    switchingAdventure=false;
+    selectMazeLayout(state.layoutId);
+    $('subject-error').textContent='לא הצלחנו לפתוח הרפתקה. המשחק הנוכחי נשאר כאן; אפשר לנסות שוב.';
+    document.querySelectorAll('#dialog-content button,#new-subject').forEach(el=>el.disabled=false);
+  }
+}
+$('new-adventure-button').addEventListener('click',showSubjectPicker);
+
 async function startSeparateExpedition(savedText, trigger) {
   trigger.disabled=true;
   try {
@@ -370,7 +480,8 @@ async function startSeparateExpedition(savedText, trigger) {
       if(sessionStorage.getItem(backupKey)!==savedText)throw new Error('Backup verification failed');
     } catch { markStorageUnavailable(); }
     // If archiving fails, save() stays disabled: the original record remains untouched.
-    content=nextContent;state=createState(content.questions);
+    content=nextContent;selectMazeLayout();state=createState(content.questions);
+    renderer ||= createMazeRenderer($('maze-canvas'));
     $('start-button').onclick=null;$('quiz-select').hidden=false;
     document.querySelector('.recovery-actions')?.remove();
     initializeIntro();start();
@@ -381,7 +492,6 @@ async function startSeparateExpedition(savedText, trigger) {
 }
 async function boot() {
   document.body.dataset.intro='true';
-  try{renderer=createMazeRenderer($('maze-canvas'));}catch{$('renderer-error').hidden=false;return;}
   try {
     let pinned=null, recoveryProblem=false, savedText=null;
     try{savedText=sessionStorage.getItem(SESSION_KEY);}catch{markStorageUnavailable();}
@@ -407,6 +517,7 @@ async function boot() {
       content=await loadMazeContent({quizId:supported?requested:DEFAULT_QUIZ_ID});state=createState(content.questions);
       if(!supported)state.notice='הקישור הפנה לתרגול לא מוכר. בחרנו תרגול זמין; אפשר לבחור אחר לפני הכניסה.';
     }
+    try{renderer=createMazeRenderer($('maze-canvas'));}catch{$('renderer-error').hidden=false;return;}
     initializeIntro();
   }catch{$('start-button').textContent='לנסות לטעון שוב';$('start-button').disabled=false;$('start-button').onclick=()=>location.reload();$('notice').textContent='חומר התרגול לא נטען. אפשר לנסות שוב בלי לאבד התקדמות.';}
 }

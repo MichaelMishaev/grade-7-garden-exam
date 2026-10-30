@@ -37,3 +37,49 @@ details>summary::-webkit-details-marker{display:none}details>summary::before{con
 .cell-sheet.trap-entry{border-color:#9f7f4f;background:#15262cf2;max-height:none}
 .trap-entry #dialog-content{text-align:center;padding:19px 20px 11px}.trap-entry .dialog-kicker{justify-content:center}.trap-entry h2{font-size:25px;line-height:1.2;margin-bottom:5px}.trap-entry p.trap-entry-message{font-size:13px;margin:7px 0 14px}.trap-entry .button{min-width:160px}.trap-entry #encounter-menu{margin-top:7px}
 @media(max-height:520px) and (orientation:landscape){.trap-entry #dialog-content{padding:14px}.trap-entry h2{font-size:20px}.trap-entry p.trap-entry-message{margin:5px 0 10px}.cell-sheet.trap-entry{max-height:calc(100dvh - 121px)}}
+
+/* A cleared trap awards a keepsake, with one clear action and no timed dismissal. */
+.layout-name{color:var(--gold);font-size:13px!important;margin:8px 0!important}
+#new-adventure-button{margin-top:10px;width:100%}
+#new-subject{width:100%;min-height:48px;margin:10px 0;background:#142730;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit}
+#new-subject:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#subject-error{color:#ffb5a5}
+dialog.gift-sheet{text-align:center;border-color:var(--gold);width:min(calc(100% - 28px),440px)}
+.gift-sheet .dialog-kicker{justify-content:center}.gift-sheet .dialog-kicker span:last-child{display:none}
+.gift-sheet h2{font-size:27px}.gift-sheet h3.gift-name{color:var(--gold);font-size:23px;margin:0 0 8px}.gift-sheet p.gift-description{font-size:14px;line-height:1.6}.gift-sheet .button{width:100%;min-height:52px}
+.gift-scene{position:relative;height:180px;display:grid;place-items:center;overflow:hidden;isolation:isolate}
+.gift-gem{z-index:1;width:90px;height:90px;display:grid;place-items:center;color:#fff2ca;background:#885f28;border:3px solid #f7d083;border-radius:26px;box-shadow:0 0 35px #f3bf6255,inset 0 0 20px #ffd88e44;font-size:78px;line-height:1;animation:gift-arrive 420ms cubic-bezier(.18,.8,.25,1) both}
+.gift-rays{position:absolute;inset:0;background:radial-gradient(ellipse,#edbb5b33,transparent 65%)}
+.gift-scene i{position:absolute;top:48%;left:50%;width:7px;height:12px;border-radius:2px;background:#f2c477;transform:rotate(calc(var(--i)*30deg)) translateY(-75px);animation:gift-spark 850ms ease-out both;animation-delay:calc(var(--i)*20ms)}
+.gift-scene i:nth-child(odd){background:#88d1b9}
+@keyframes gift-arrive{from{opacity:.6;transform:translateY(25px) scale(.7) rotate(-12deg)}to{opacity:1;transform:none}}
+@keyframes gift-spark{from{opacity:0;transform:rotate(calc(var(--i)*30deg)) translateY(-25px) scale(.4)}50%{opacity:1}to{opacity:0;transform:rotate(calc(var(--i)*30deg)) translateY(-110px) rotate(80deg)}}
+@media(prefers-reduced-motion:reduce){.gift-gem,.gift-scene i{animation:none}.gift-scene i{opacity:1}}
+@media(max-height:520px){.gift-scene{height:100px}.gift-gem{width:65px;height:65px;font-size:52px}.gift-sheet h2{font-size:21px}.gift-sheet #dialog-content{padding:16px}}
+
+.gift-gem{width:112px;height:116px;border:0;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 5px 18px #e9b75e80)}
+@media(max-height:520px){.gift-gem{width:74px;height:78px}.gift-gem svg{width:74px;height:78px}}
+
+/* A finished expedition feels like an escape, with a clear way home. */
+dialog:has(.completion-screen){width:min(calc(100% - 24px),560px);border-color:#b59358;background:#14242c}
+#dialog-content:has(>.completion-screen){padding:0}
+.completion-picture{width:100%;aspect-ratio:2/1;background-size:100% 300%;background-repeat:no-repeat;background-color:#243b40;border-radius:22px 22px 0 0}
+.completion-copy{padding:21px 24px 18px;text-align:center}
+.completion-copy .dialog-kicker{justify-content:center;font-size:11px;margin-bottom:6px}
+.completion-copy .dialog-kicker>span:last-child{display:none}
+.completion-copy h2{font-size:29px;line-height:1.3;margin:0 0 8px;color:#fff5dd}
+.completion-copy p.completion-message{font-size:14px;margin:0;line-height:1.6}
+.completion-copy p.completion-stars{margin:7px 0 0;color:var(--gold);font-size:24px;line-height:1.1;letter-spacing:4px;direction:ltr}
+.completion-results{padding:15px 0 17px;gap:0}
+.completion-results>div{padding:0 7px;border:0;border-radius:0}
+.completion-results>div+div{border-inline-start:1px solid #42606a}
+.completion-results strong{font-size:25px;color:#fff3ce;line-height:1.2}
+.completion-results small{font-size:11px}
+.completion-actions{display:grid;gap:9px}
+.completion-actions .button{width:100%;min-height:48px;font-size:14px}
+.completion-actions a.dialog-link{margin:0;padding:12px;text-decoration:none;display:flex;align-items:center;justify-content:center;color:#18272c}
+.completion-actions #review-result{justify-self:center}
+.completion-copy p.completion-score-note{margin:9px 0 0;line-height:1.6}
+.completion-copy .review-item{text-align:start}
+@media(max-width:350px){.completion-copy{padding:16px 17px 14px}.completion-copy h2{font-size:25px}.completion-results strong{font-size:23px}.completion-copy p.completion-message{font-size:13px}}
+@media(max-height:520px) and (orientation:landscape){.completion-picture{aspect-ratio:3/1;background-size:100% 450%}.completion-copy{padding:15px 21px}.completion-copy h2{font-size:25px}}
