@@ -17,6 +17,8 @@ let movement=null, queuedDirection=null, pointerDirection=null, pendingInteract=
 let interaction = createInteractions();
 const trappedPhases = new Set(['question','feedback','capture','review','review-feedback']);
 const held = new Set();
+const directionPointers = new Map();
+function clearPointerDirections(){directionPointers.clear();pointerDirection=null;}
 const activeRooms = () => encountersFor(content.questions);
 const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,guidePath,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
 function interactionContext(){const room=state.assignments[state.activeEncounter]||[];return {phase:state.phase,paused:state.paused,reducedMotion:reducedMotion.matches,reviewIndex:state.review?.index||0,answered:room.filter(id=>state.answers[id]).length,total:room.length};}
@@ -69,7 +71,7 @@ function dispatch(action) {
   state = next;
   if(movement)movement=syncMovement(movement,state.player);
   if(state.phase!=='explore'){
-    held.clear();pointerDirection=null;queuedDirection=null;pendingInteract=false;
+    held.clear();clearPointerDirections();queuedDirection=null;pendingInteract=false;
     if(movement)movement={...createMovement(state.player),heading:movement.heading};
   }
   if (oldPhase === 'explore' && trappedPhases.has(state.phase)) interaction=createInteractions();
@@ -154,7 +156,7 @@ function renderSummary(reviewOnly=false) {
 }
 function openPanel(kind) {
   if (!started || state.phase==='complete') return;
-  stopAuto(); route=[]; held.clear(); pointerDirection=null;queuedDirection=null; panel=kind; dispatch({type:'pause'}); renderUi();
+  stopAuto(); route=[]; held.clear(); clearPointerDirections();queuedDirection=null; panel=kind; dispatch({type:'pause'}); renderUi();
 }
 function closePanel() { panel=null; dispatch({type:'resume'}); renderUi(); }
 function renderPanel() {
@@ -214,7 +216,7 @@ function step(name) {
 }
 function handleInteract(){
   if(!started||state.paused||state.phase!=='explore')return;
-  if(movement?.target){pendingInteract=true;held.clear();pointerDirection=null;route=[];queuedDirection=null;return;}
+  if(movement?.target){pendingInteract=true;held.clear();clearPointerDirections();route=[];queuedDirection=null;return;}
   pendingInteract=false;
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
   if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human')openPanel('world');}
@@ -257,8 +259,12 @@ $('journal-button').addEventListener('click',()=>openPanel('journal'));
 $('world-map-button').addEventListener('click',()=>openPanel('map'));
 $('interact-button').addEventListener('click',handleInteract);
 document.querySelectorAll('[data-direction]').forEach(el=>{
-  el.addEventListener('pointerdown',event=>{if(event.button!==0||el.disabled)return;event.preventDefault();el.setPointerCapture(event.pointerId);pointerDirection=el.dataset.direction;step(pointerDirection);});
-  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,()=>{pointerDirection=null;});
+  el.addEventListener('pointerdown',event=>{if(event.button!==0||el.disabled)return;event.preventDefault();el.setPointerCapture(event.pointerId);directionPointers.set(event.pointerId,el.dataset.direction);pointerDirection=el.dataset.direction;step(pointerDirection);});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,event=>{
+    if(!directionPointers.delete(event.pointerId))return;
+    pointerDirection=[...directionPointers.values()].at(-1)||null;
+    if(type!=='pointerup')queuedDirection=null;
+  });
   el.addEventListener('click',event=>{if(event.detail===0)step(el.dataset.direction);});
 });
 dialog.addEventListener('cancel',event=>{event.preventDefault();if(panel)closePanel();else if(state.phase==='explore')closeDialog();});
@@ -272,12 +278,12 @@ window.addEventListener('keydown',event=>{
   if(event.key.toLowerCase()==='f'&&started&&!dialog.open){if(document.fullscreenElement)document.exitFullscreen?.();else document.querySelector('.game-shell').requestFullscreen?.().catch(()=>{});}
 });
 window.addEventListener('keyup',event=>held.delete(keyDirection[event.key]||keyDirection[event.key.toLowerCase()]));
-window.addEventListener('blur',()=>{held.clear();pointerDirection=null;route=[];});
+window.addEventListener('blur',()=>{held.clear();clearPointerDirections();queuedDirection=null;route=[];});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started&&!state.paused&&state.phase!=='complete')openPanel('pause');});
 $('maze-canvas').addEventListener('click',event=>{
   if(!started||dialog.open||state.phase!=='explore')return;
   const destination=renderer.cellFromPointer(event.clientX,event.clientY);
-  if(destination&&isWalkable(destination.x,destination.y)){held.clear();pointerDirection=null;queuedDirection=null;const from=movement?.target||state.player;route=pathTo(from,destination)||[];if(movement?.target)route.unshift({...movement.target});}
+  if(destination&&isWalkable(destination.x,destination.y)){held.clear();clearPointerDirections();queuedDirection=null;const from=movement?.target||state.player;route=pathTo(from,destination)||[];if(movement?.target)route.unshift({...movement.target});}
 });
 function advance(ms) {
   if(!state||!started)return;

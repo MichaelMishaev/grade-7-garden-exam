@@ -50,3 +50,11 @@ GLM QA findings resolved: successful supplied-excerpt critique confirmed the asy
 ## Living-world revision0.4.0
 
 User: morepersons/animals/interactions, largermaze, more realisticmovement. Implemented23x17connectedmap preservingoldcells;2humans3animals+pump/lamp/bench persistentworldstate;foxdrink/followBFS;guidepaths;continuousphysicalmovement withheldvelocity,braking,turns,distancegait.71unitchecks,180browserchecks,286rootpassed/8DBskipped. Allcap/scoring/cage/save regressions pass. Rootinspectedmobileworld+standardclient screenshots. MazeHTMLcache revalidation tested; keeppriorpublishedassets forcachetransition. Releaseexactcommit trackedseparately.
+
+## Living-world mobile critic follow-up — 2026-10-30
+
+User requested local GLM critic QA for characters, animals, movement, stuck players and lost progress. Independent actual multi-touch reproduction failed against the deployed-source baseline: lifting either direction finger stopped the other held direction. Track each pointer independently; clear all pointers on pause/capture/interact/focus loss, and discard queued input on canceled touches or blur. No world, academic, question or Afterbell logic changed.
+
+Regression: `tests/world-critic-browser.mjs` uses actual CDP touch input in 390×844 and 844×390, plus deterministic before-frame interruption checks. Baseline failed the first assertion; fixed source and final built asset pass all 22 checks. World/browser rerun passes 37 checks including all eight discoveries, animal drinking/following, capture/review/reload persistence and zero POSTs/errors. All 71 game unit checks pass; repository 286 pass, 8 database checks skipped. Build `index-B1HdjKO3.js`; retain previous published assets. Standard web-game client reached the scout; screenshot/state inspected. Its sole console error is the expected local disabled-API 404 `/api/quizzes/facts`; bundled fallback remains playable. Physical-device performance is not claimed.
+
+GLM file-reading pass exited 1 with `Error: Reached max turns (14)` and no usable critique. The supplied-source, no-tools pass exceeded eight minutes without output and was stopped (helper exit 143). No usable GLM review was received; no other provider was substituted. All executed mobile tests and findings above are independent Codex verification, not GLM browser testing.

@@ -1,7 +1,7 @@
 {
   "feature_id": "MAZE-001",
   "slug": "small-maze",
-  "current_version": "0.4.0",
+  "current_version": "0.4.1",
   "current_status": "approved",
   "history": [
     {
@@ -60,6 +60,16 @@
       "summary": "Expand connected maze23x17; add two people, three animals and persistent world interactions; continuous acceleration/braking movement with mobile verification and save compatibility.",
       "sources": [
         "SRC-11"
+      ]
+    },
+    {
+      "version": "0.4.1",
+      "date": "2026-10-30",
+      "actor": "Codex",
+      "change_type": "qa-fix",
+      "summary": "Fix overlapping mobile direction fingers and queued canceled input. Independent 59 mobile browser checks and 71 game unit checks pass; requested local GLM attempts returned no usable review (turn limit and bounded timeout).",
+      "sources": [
+        "SRC-12"
       ]
     }
   ]

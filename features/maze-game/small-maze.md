@@ -4,7 +4,7 @@ title: Small maze and capture recovery
 slug: small-maze
 status: approved
 phase: local-prototype
-version: 0.4.0
+version: 0.4.1
 created: 2026-10-30
 updated: 2026-10-30
 ---
@@ -29,6 +29,7 @@ This record describes the first implemented local playable slice; it is not a pr
 - SRC-07 — Michael, implementation request: add another game button, preserve the old game, implement and test mobile first. This supersedes the original assumption of entering through the existing Afterbell world.
 - SRC-08 — Michael: every trap has 1–3 questions, never more; show a more visual first-person view inside the cage while trapped.
 - SRC-11 — Michael: more interactions with people and animals, a somewhat larger maze with more routes and discoveries, and more realistic movement.
+- SRC-12 — Michael: use local GLM as a critic for the new characters, animals and movement on mobile; find and fix stuck-player and lost-progress bugs.
 - SRC-10 — Michael: use local GLM as a mobile cage QA critic, focusing on stuck players, progress loss and the three-question trap limit; fix confirmed issues.
 - SRC-09 — Michael: use a fresh coding agent to add more interactions.
 - SRC-06 — Michael: use parallel critics to identify trapped-player bugs, dead ends and similar major failures.
@@ -292,3 +293,11 @@ World mobile screenshots: `output/maze/world/scout-guidance-mobile.png`, `garden
 Release guard: maze HTML now revalidates like Afterbell HTML; hashed assets remain cacheable. A focused HTTP test first reproduced the maze entry's stale-cache header and then passed the corrected behavior for both games. The previous published maze asset pair remains available across this transition so already-cached entries can load.
 
 The prior deployed baseline was `c4ad29a`. This expansion follows the existing phone-test release target; exact new commit/deployment/live evidence is saved in the release receipt. No previous GLM critique is represented as a review of these new world mechanics.
+
+## Living-world mobile critic follow-up — 2026-10-30
+
+Two input defects confirmed independently: overlapping direction fingers canceled each other when either finger lifted; cancellation or focus loss before the next frame retained a queued step. Direction inputs now track pointer IDs independently, preserve a remaining held finger, and clear queued canceled input. Pause, capture, interaction and focus interruption clear pointer state safely. Existing character, animal, academic and save rules remain unchanged.
+
+`tests/world-critic-browser.mjs` first failed against the previous built game, then passed all **22** assertions against fixed source and build `index-B1HdjKO3.js`. Actual touch events cover both overlapping-finger release orders, cancellation and subsequent movement at390×844 and844×390; before-frame cancellation/blur cases use deterministic lifecycle events. Pause/resume/reload retain the committed position, progress and1–3-question trap bound. The **37** world checks also pass, including all eight discoveries, water/fox behavior and capture/review/reload persistence. Both reports have zero page errors and zero POSTs. **71** game unit tests pass; repository **286** pass and **8** database-dependent checks skip. No database, exam, email or Afterbell change. Standard web-game client screenshot/state inspected; its expected local disabled-API404 uses the bundled fallback. Physical-phone performance remains unverified.
+
+GLM status is **no usable review**, not a QA pass: local helper file-reading attempt exited1 at its14-turn limit; a supplied-source no-tools attempt produced no output over eight minutes and was stopped (exit143). No alternative provider used. Findings and all browser execution above are independent Codex work. Local helper logs are `/tmp/maze-world-glm-qa.log` and `/tmp/maze-world-glm-excerpt.log`; reproducible browser evidence is in `output/maze/world-critic/` and `output/maze/world/`. Release follows the existing authorized phone-test deployment, with exact commit/provider/live checks recorded separately.
