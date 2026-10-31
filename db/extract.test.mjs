@@ -9,15 +9,15 @@ const perParent = Object.groupBy(content.questions, (q) => q.exam_id ?? q.quiz_i
 const refs = new Map(content.study_references.map((r) => [r.id, r]));
 
 test('extracts every subject, exam, quiz, reference and question from the source files', () => {
-  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [2, 2, 3, 7, 4, 129]);
+  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [2, 2, 3, 7, 4, 112]);
   assert.deepEqual(Object.fromEntries(Object.entries(perParent).map(([k, v]) => [k, v.length])), {
     'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, facts: 6, questions: 6, instructions: 6,
-    'physics-basics': 11, 'physics-units': 11, 'physics-precision': 11, 'physics-pole': 11
+    'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5
   });
 });
 
 test('ids are unique and every question belongs to exactly one parent', () => {
-  assert.equal(new Set(content.questions.map((q) => q.id)).size, 129);
+  assert.equal(new Set(content.questions.map((q) => q.id)).size, 112);
   for (const q of content.questions) assert.equal(Number(q.exam_id !== null) + Number(q.quiz_id !== null), 1);
 });
 
@@ -88,13 +88,12 @@ test('every question follows a reference of its own subject, at a part that exis
   for (const q of content.questions.filter((x) => x.exam_id)) assert.equal(refs.get(q.reference_id).exam_id, q.exam_id, q.id);
 });
 
-test('the 44 physics practice questions point at the expected pages of the summary', () => {
-  const pages = (quiz) => perParent[quiz].map((q) => Number(q.reference_part.slice(-1)));
-  assert.deepEqual(pages('physics-basics'), [1, 1, 1, 3, 3, 3, 1, 1, 1, 3, 3]);
-  assert.ok(pages('physics-units').every((p) => p === 2));
-  assert.ok(pages('physics-precision').every((p) => p === 4));
-  assert.deepEqual(pages('physics-pole'), [5, 5, 6, 6, 6, 5, 5, 6, 6, 5, 6]);
-  assert.ok(content.questions.filter((q) => q.quiz_id?.startsWith('physics-')).every((q) => q.reference_id === 'physics-pdf'));
+test('the 27 physics practice tasks point at their original teacher chapters', () => {
+  for (const [chapter, quiz] of ['physics-basics', 'physics-units', 'physics-precision', 'physics-pole'].entries()) {
+    assert.ok(perParent[quiz].every(q => q.reference_id === 'physics-site' && q.reference_part === `פרק ${chapter + 1}`));
+  }
+  const practice = content.questions.filter(q => q.quiz_id?.startsWith('physics-'));
+  assert.deepEqual(practice.reduce((counts, q) => ({ ...counts, [q.type]: (counts[q.type] || 0) + 1 }), {}), { mcq: 9, open: 7, fill: 11 });
 });
 
 test('the reference lists in practice.js and physics-exam.js agree with subject.html', () => {

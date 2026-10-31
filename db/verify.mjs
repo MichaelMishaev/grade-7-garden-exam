@@ -12,7 +12,7 @@ export async function verify(sql, content = extractContent()) {
     if (!applied.has(file)) problems.push(`migration ${file} not applied`);
   }
   for (const table of ['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions']) {
-    const [{ count }] = await sql`SELECT count(*)::int AS count FROM ${sql(table)}`;
+    const [{ count }] = await sql`SELECT count(*)::int AS count FROM ${sql(table)} ${table === 'questions' ? sql`WHERE NOT retired` : sql``}`;
     if (count !== content[table].length) problems.push(`${table}: ${count} rows in db, ${content[table].length} in source`);
   }
   const codes = new Map((await sql`SELECT id, code FROM exams`).map((r) => [r.id, r.code]));
@@ -23,7 +23,7 @@ export async function verify(sql, content = extractContent()) {
     if (!row) problems.push(`reference ${r.id} missing in db`);
     else if (Object.keys(r).some((k) => JSON.stringify(row[k] ?? null) !== JSON.stringify(r[k] ?? null))) problems.push(`reference ${r.id} differs from source`);
   }
-  const rows = new Map((await sql`SELECT id, source_hash FROM questions`).map((r) => [r.id, r.source_hash]));
+  const rows = new Map((await sql`SELECT id, source_hash FROM questions WHERE NOT retired`).map((r) => [r.id, r.source_hash]));
   for (const q of content.questions) {
     if (!rows.has(q.id)) problems.push(`question ${q.id} missing in db`);
     else if (rows.get(q.id) !== q.source_hash) problems.push(`question ${q.id} differs from source`);

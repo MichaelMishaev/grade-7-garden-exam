@@ -89,3 +89,45 @@ test('with reduced motion there is only the pause, then the next question', { sk
   assert.equal(await text(page), first);
   await page.waitForFunction((old) => document.getElementById('question-text').textContent !== old, first, { timeout: 2500 });
 }, { reducedMotion: 'reduce' }));
+
+test('physics numeric confirmation locks, auto-advances, and restores read-only values on back', { skip }, () => withPage(async ({ page }) => {
+  await page.goto(new URL('/practice.html?quiz=physics-units&source=inline', page.url()).href);
+  const first = await text(page);
+  assert.equal(await page.locator('#confirm-answer').isDisabled(), true);
+  await page.locator('#numeric-answer').fill('325');
+  await page.locator('#text-answer').fill('3.25 כפול 100');
+  await page.locator('#numeric-answer').press('Enter');
+  assert.equal(await page.locator('#numeric-answer').isDisabled(), true);
+  await page.waitForFunction(old => document.getElementById('question-text').textContent !== old, first, { timeout: 3000 });
+  await page.locator('#back-button').click();
+  assert.equal(await page.locator('#numeric-answer').inputValue(), '325');
+  assert.equal(await page.locator('#numeric-answer').isDisabled(), true);
+  assert.equal(await page.locator('#text-answer').isDisabled(), true);
+  assert.equal(await page.locator('#text-answer').inputValue(), '3.25 כפול 100');
+  await page.locator('#next-button').click();
+  assert.equal(await page.locator('#numeric-answer').isDisabled(), false);
+}));
+
+test('mixed physics round reviews written answers without verdicts and posts only graded history', { skip }, () => withPage(async ({ page, posts }) => {
+  await page.goto(new URL('/practice.html?quiz=physics-pole&source=inline', page.url()).href);
+  for (const value of [null, '10', null, null, '7']) {
+    if (value === null) {
+      await page.locator('#text-answer').fill('הסבר לבדיקה מקומית');
+      await page.locator('#text-answer').press('Enter');
+      assert.equal(await page.locator('#feedback').isHidden(), true);
+    } else await page.locator('#numeric-answer').fill(value);
+    await page.locator('#confirm-answer').click();
+    assert.equal(await page.locator('#text-answer').isDisabled(), true);
+    if (value === null) assert.equal(await page.locator('#feedback').evaluate(el => el.classList.contains('self-check')), true);
+    await page.locator('#next-button').click();
+  }
+  assert.match(await page.locator('#result-score').textContent(), /^100 מתוך 100/);
+  assert.match(await page.locator('#result-count').textContent(), /2 מתוך 2/);
+  assert.match(await page.locator('#result-count').textContent(), /3 תשובות כתובות/);
+  assert.equal(await page.locator('#review-list li').count(), 5);
+  assert.equal(await page.locator('#review-list .wrong').count(), 0);
+  assert.equal(posts.length, 1);
+  assert.equal(posts[0].answers.length, 2);
+  assert.deepEqual(posts[0].answers.map(a => a.answer), ['10', '7']);
+  assert.equal(globalThis.PracticeHistory.validatePracticeResult(posts[0]).ok, true);
+}));

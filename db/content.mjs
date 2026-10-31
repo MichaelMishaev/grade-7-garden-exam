@@ -10,7 +10,7 @@ const examReferences = (sql, examId) =>
   sql`SELECT ${referenceColumns(sql)} FROM study_references WHERE exam_id = ${examId} ORDER BY sort_order`;
 
 const withQuestions = async (sql, column, id) =>
-  (await sql`SELECT * FROM questions WHERE ${sql(column)} = ${id} ORDER BY position`).map(question);
+  (await sql`SELECT * FROM questions WHERE ${sql(column)} = ${id} AND NOT retired ORDER BY position`).map(question);
 
 export async function listSubjects(sql) {
   return sql`SELECT id, title, description, art_path FROM subjects ORDER BY sort_order`;
@@ -30,7 +30,7 @@ export async function getQuiz(sql, id) {
   if (!quiz) return null;
   // The study material this quiz's questions point at.
   const references = await sql`SELECT ${referenceColumns(sql)} FROM study_references
-    WHERE id IN (SELECT reference_id FROM questions WHERE quiz_id = ${id}) OR quiz_id = ${id} ORDER BY sort_order`;
+    WHERE id IN (SELECT reference_id FROM questions WHERE quiz_id = ${id} AND NOT retired) OR quiz_id = ${id} ORDER BY sort_order`;
   return { ...quiz, references, questions: await withQuestions(sql, 'quiz_id', id) };
 }
 
@@ -49,6 +49,6 @@ export async function contentVersion(sql) {
     (SELECT string_agg(t::text, ',' ORDER BY id) FROM exams t),
     (SELECT string_agg(t::text, ',' ORDER BY id) FROM quizzes t),
     (SELECT string_agg(t::text, ',' ORDER BY id) FROM study_references t),
-    (SELECT string_agg(id || source_hash, ',' ORDER BY id) FROM questions))) AS version`;
+    (SELECT string_agg(id || source_hash, ',' ORDER BY id) FROM questions WHERE NOT retired))) AS version`;
   return version;
 }

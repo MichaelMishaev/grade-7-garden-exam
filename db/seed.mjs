@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 import { connect } from './client.mjs';
 import { extractContent } from './extract.mjs';
 
-// Inserts or updates content rows from the source files. Never deletes: rows missing from the source are only reported.
+// Inserts or updates content rows from the source files. Never deletes: superseded practice questions are retired in place; other missing rows are reported.
 export async function seed(sql, content = extractContent()) {
   const report = {};
   await sql.begin(async (tx) => {
@@ -35,6 +35,11 @@ export async function seed(sql, content = extractContent()) {
     await upsert('questions', content.questions,
       ['id', 'exam_id', 'quiz_id', 'position', 'type', 'topic', 'difficulty', 'prompt', 'choices', 'correct', 'explanation_he', 'explanation_en',
         'reference_id', 'reference_part', 'source_hash'], 'source_hash');
+    const knownQuestions = content.questions.map(q => q.id);
+    const knownQuizzes = content.quizzes.map(q => q.id);
+    await tx`UPDATE questions SET retired = false WHERE retired AND id = ANY(${knownQuestions})`;
+    const retired = await tx`UPDATE questions SET retired = true WHERE NOT retired AND quiz_id = ANY(${knownQuizzes}) AND id <> ALL(${knownQuestions})`;
+    report.questions.retired = retired.count;
   });
   return report;
 }

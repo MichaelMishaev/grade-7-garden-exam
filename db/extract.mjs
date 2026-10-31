@@ -94,8 +94,8 @@ export function extractContent(root = defaultRoot) {
     ...libraryQuestions.map(examQuestion('hebrew-v2-library')),
     ...physicsQuestions.map(examQuestion('physics-v1-assessment')),
     ...Object.entries(quizSource).flatMap(([quizId, quiz]) => quiz.questions.map((q, i) => ({
-      id: `${quizId}-${pad(i + 1)}`, exam_id: null, quiz_id: quizId, position: i + 1, type: 'mcq',
-      topic: null, difficulty: null, prompt: q.text, choices: q.choices, correct: q.correct,
+      id: `${quizId}-${pad(i + 1)}`, exam_id: null, quiz_id: quizId, position: i + 1, type: q.type || 'mcq',
+      topic: null, difficulty: null, prompt: q.text, choices: q.choices ?? null, correct: q.correct,
       explanation_he: q.he ?? null, explanation_en: q.en ?? null, ...ref(q.ref)
     })))
   ].map((q) => ({ ...q, source_hash: hash([q.id, q.exam_id, q.quiz_id, q.position, q.type, q.topic, q.difficulty, q.prompt, q.choices, q.correct, q.explanation_he, q.explanation_en, q.reference_id, q.reference_part]) }));

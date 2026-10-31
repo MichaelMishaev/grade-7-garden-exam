@@ -32,8 +32,15 @@ test('every inline quiz is represented in the extracted content', () => {
 for (const quiz of content.quizzes) {
   test(`API-shaped ${quiz.id} maps back to the inline quiz`, () => {
     const data = apiQuiz(quiz);
-    assert.ok(quizMatches(data, inline[quiz.id].questions.length));
-    assert.deepEqual(quizFromApi(data), inline[quiz.id]);
+    if (quiz.id.startsWith('physics-')) {
+      // Physics keeps inline figures; accept DB content only when its typed fields match.
+      const fn = practiceJs.slice(practiceJs.indexOf('function physicsQuizMatches'), practiceJs.indexOf('const readBest'));
+      const matches = runInNewContext(fn + '\nphysicsQuizMatches;', { ContentApi, inlineQuiz: inline[quiz.id] });
+      assert.equal(matches(data), true);
+    } else {
+      assert.ok(quizMatches(data, inline[quiz.id].questions.length));
+      assert.deepEqual(quizFromApi(data), inline[quiz.id]);
+    }
   });
 }
 

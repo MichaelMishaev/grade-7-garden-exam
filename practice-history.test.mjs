@@ -50,11 +50,11 @@ test('buildPayload returns null without a name or for an unknown quiz', () => {
 });
 
 test('a valid round passes and is returned cleaned with the quiz code', () => {
-  const checked = validatePracticeResult(round('physics-pole', 8));
+  const checked = validatePracticeResult(buildPayload({ quizId: 'physics-pole', name: 'בדיקה', score: 50, stars: 1, answers: [{ index: 1, answer: '10', correct: true }, { index: 4, answer: '0', correct: false }] }));
   assert.equal(checked.ok, true);
   assert.equal(checked.value.quizCode, 'PRA-007');
-  assert.equal(checked.value.score, 73);
-  assert.equal(checked.value.answers.length, 11);
+  assert.equal(checked.value.score, 50);
+  assert.equal(checked.value.answers.length, 2);
 });
 
 test('validation rejects bad shapes, wrong counts, duplicates, foreign ids and inconsistent score or stars', () => {

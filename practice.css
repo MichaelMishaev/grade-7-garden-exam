@@ -115,3 +115,16 @@ a:focus-visible, button:focus-visible { outline: 3px solid #173f2b; outline-offs
 @keyframes feedback-fade { from { opacity: 0; } to { opacity: 1; } }
 .source-line { margin-top: 12px !important; padding-top: 10px; border-top: 1px solid rgba(39, 53, 65, .12); color: #4d5f6b; font-size: 14px; }
 .source-line a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
+
+/* Teacher measurement tasks reuse the existing practice card and controls. */
+#question-figure svg { display: block; width: 100%; height: auto; margin-block: 20px; direction: ltr; }
+#written-answer { display: grid; gap: 12px; }
+#written-answer label { font-weight: 700; line-height: 1.6; }
+#written-answer input, #written-answer textarea { display: block; width: 100%; min-height: 48px; padding: 12px; border: 2px solid #dce3e7; border-radius: 12px; font: inherit; color: inherit; background: #fff; }
+#written-answer textarea { resize: vertical; }
+#written-answer :disabled { cursor: default; opacity: .7; }
+#written-answer input:focus-visible, #written-answer textarea:focus-visible, #question-context summary:focus-visible { outline: 3px solid #173f2b; outline-offset: 3px; }
+#question-context { margin-block: 16px; line-height: 1.7; }
+#question-context summary { min-height: 44px; cursor: pointer; }
+.feedback.self-check strong::before { content: '✎'; background: #51606a; }
+.response-panel:has(.feedback.self-check:not([hidden])) { border-color: #dce3e7; background: #f2f6f8; }

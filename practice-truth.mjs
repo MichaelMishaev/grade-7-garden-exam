@@ -2,6 +2,7 @@
 // choice index the page reports), and the score and stars are computed from that, never taken from the browser.
 import { extractContent } from './db/extract.mjs';
 import './quiz-core.js';
+import './numeric-answer.js';
 
 let keys;
 function keyFor(quizId) {
@@ -15,7 +16,7 @@ export function judgePractice(value) {
   const key = keyFor(value.quizId);
   const answers = value.answers.map((a) => {
     const q = key.get(a.questionId);
-    return { ...a, correct: Boolean(q && Number.isInteger(a.choice) && a.choice < (q.choices?.length ?? 0) && a.choice === q.correct) };
+    return { ...a, correct: Boolean(q && (q.type === 'fill' ? globalThis.NumericAnswer.checkNumber(a.answer, q.correct) === true : Number.isInteger(a.choice) && a.choice >= 0 && a.choice < (q.choices?.length ?? 0) && a.choice === q.correct)) };
   });
   const { scoreQuiz, starsFor } = globalThis.QuizCore;
   const { earned, percent } = scoreQuiz(answers.map((a) => ({ id: a.questionId, type: 'mcq', difficulty: 'medium' })),

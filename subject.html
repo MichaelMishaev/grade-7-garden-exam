@@ -108,10 +108,10 @@
             ] }
         ],
         quizzes: [
-          ['physics-basics', 'מדידה ושיטות מדידה', 'מדידה ישירה ועקיפה ועובי דף', '1'],
-          ['physics-units', 'המרת יחידות אורך', 'מטרים, סנטימטרים ומילימטרים', '2'],
-          ['physics-precision', 'מודדים נכון', 'קריאת סרגל, דיוק ובחירת כלי', '3'],
-          ['physics-pole', 'גובה של עמוד', 'זווית של 45° ומדידה עקיפה', '4']
+          ['physics-basics', 'יחידות וסדרי גודל', 'בחירת יחידות והשוואת גדלים', '1'],
+          ['physics-units', 'המרות יחידות', 'מטרים, סנטימטרים ומילימטרים', '2'],
+          ['physics-precision', 'מודדים כמו פיזיקאים', 'סרגל, עובי דף וליפופי תיל', '3'],
+          ['physics-pole', 'מיישמים ומתכננים', 'יחידות, הזמנת לוח ומדידת גרגרים', '4']
         ]
       }
     };
@@ -127,7 +127,7 @@
     document.getElementById('subject-art').src = isPhysics ? 'assets/atom.png' : 'assets/books.png';
     if (isPhysics) {
       document.getElementById('practice-section').hidden = false;
-      document.querySelector('#practice-section .quiz-list').innerHTML = subject.quizzes.map(([id, title, detail, number]) => `<a class="quiz-row" href="practice.html?quiz=${id}"><span class="arrow" aria-hidden="true">←</span><span class="lesson-number" aria-hidden="true">${number}</span><span class="quiz-copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)} · 11 שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span><span class="quiz-icon" aria-hidden="true">?</span></a>`).join('');
+      document.querySelector('#practice-section .quiz-list').innerHTML = subject.quizzes.map(([id, title, detail, number]) => `<a class="quiz-row" href="practice.html?quiz=${id}"><span class="arrow" aria-hidden="true">←</span><span class="lesson-number" aria-hidden="true">${number}</span><span class="quiz-copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)} · ${{ 'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5 }[id]} שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span><span class="quiz-icon" aria-hidden="true">?</span></a>`).join('');
     }
     const list = document.getElementById('variant-list');
     if (subject.variants.length === 0) {
@@ -248,7 +248,7 @@
         let best = null;
         try {
           const quizKey = new URLSearchParams(row.getAttribute('href').split('?')[1]).get('quiz');
-          const raw = localStorage.getItem('prepx-best-' + quizKey);
+          const raw = localStorage.getItem('prepx-best-' + quizKey + (quizKey.startsWith('physics-') ? '-sarit-v1' : ''));
           if (raw !== null && /^\d{1,3}$/.test(raw.trim())) best = Number(raw.trim());
         } catch (e) { best = null; }
         if (best === null || best > 100 || typeof QuizCore === 'undefined') return;
@@ -264,7 +264,7 @@
     const { loadContent, subjectFromApi, useApi } = window.ContentApi || {};
     if (loadContent && useApi()) {
       const inline = subjects[subjectKey];
-      loadContent(`subjects/${subjectKey}`, null, { valid: data => subjectFromApi(data, inline) !== null })
+      loadContent(`subjects/${subjectKey}`, null, { valid: data => { const mapped = subjectFromApi(data, inline); return mapped !== null && (!isPhysics || ContentApi.sameData(mapped.quizzes, inline.quizzes)); } })
         .then(data => render(data ? subjectFromApi(data, inline) : inline), () => render(inline));
     } else {
       render(subjects[subjectKey]);

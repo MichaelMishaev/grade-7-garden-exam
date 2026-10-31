@@ -16,10 +16,10 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
   const sql = await connect(url);
   try {
     await sql`DROP SCHEMA public CASCADE`; await sql`CREATE SCHEMA public`; // test database only
-    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql']);
+    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
-    assert.equal(first.questions.inserted, 129);
+    assert.equal(first.questions.inserted, 112);
     assert.equal(first.study_references.inserted, 4);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
@@ -37,6 +37,22 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.ok((await verify(sql)).includes('migration 002_references.sql not applied'));
     await sql`INSERT INTO schema_migrations (version) VALUES ('002_references.sql')`;
     assert.deepEqual(await verify(sql), []);
+
+    // Upgrade an existing catalog without removing historical questions, then restore it.
+    const currentContent = extractContent();
+    const legacyQuestion = { ...currentContent.questions.find(q => q.quiz_id === 'physics-units'), id: 'physics-units-11', position: 11, source_hash: 'legacy-preserved' };
+    const legacyContent = { ...currentContent, questions: [...currentContent.questions, legacyQuestion] };
+    await seed(sql, legacyContent);
+    assert.equal((await content.getQuiz(sql, 'physics-units')).questions.length, 6);
+    assert.equal((await seed(sql)).questions.retired, 1);
+    assert.deepEqual(await verify(sql), []);
+    assert.equal((await content.getQuiz(sql, 'physics-units')).questions.length, 5);
+    assert.equal((await sql`SELECT count(*)::int AS count FROM questions`)[0].count, 113);
+    assert.deepEqual({ ...(await sql`SELECT retired, source_hash FROM questions WHERE id = 'physics-units-11'`)[0] }, { retired: true, source_hash: 'legacy-preserved' });
+    assert.equal((await seed(sql)).questions.retired, 0);
+    await seed(sql, legacyContent);
+    assert.equal((await content.getQuiz(sql, 'physics-units')).questions.length, 6, 'a returning source question reactivates');
+    await seed(sql);
 
     const source = extractContent();
     const libraryAnswers = source.questions.filter((q) => q.exam_id === 'hebrew-v2-library').slice(0, 20).map((q, i) => ({
@@ -72,7 +88,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.equal(await content.contentVersion(sql), before);
 
     const quiz = await content.getQuiz(sql, 'physics-pole');
-    assert.equal(quiz.questions.length, 11);
+    assert.equal(quiz.questions.length, 5);
     const exam = await content.getExam(sql, 'hebrew-v2-library');
     assert.equal(exam.questions.length, 20);
     assert.ok(exam.passage_html.includes('<p>'));
@@ -88,8 +104,8 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.equal(physics.references[0].parts.length, 6);
     assert.deepEqual(physics.questions[11].correct, { value: 325, tolerance: 1e-8, unit: 'ס״מ' });
     assert.deepEqual(physics.questions[16].ref, { id: 'physics-pdf', part: 'עמוד 4' });
-    assert.deepEqual(quiz.references.map((r) => r.id), ['physics-pdf']);
-    assert.deepEqual(quiz.questions[0].ref, { id: 'physics-pdf', part: 'עמוד 5' });
+    assert.deepEqual(quiz.references.map((r) => r.id), ['physics-site']);
+    assert.deepEqual(quiz.questions[0].ref, { id: 'physics-site', part: 'פרק 4' });
     assert.deepEqual((await content.getSubject(sql, 'physics')).exams.map((e) => [e.id, e.references.map((r) => r.id)]),
       [['physics-v1-assessment', ['physics-pdf', 'physics-site']]]);
     // a reference change is detected by verify and the content version, and the reseed restores it

@@ -40,12 +40,12 @@ test('with the database off it validates, answers stored:false and sends no emai
 test('with the database writing, the cleaned result is stored with the quiz code', () => {
   const db = fakeDb();
   return withServer(async ({ post, sent }) => {
-    const response = await post(result('physics-units', 8));
+    const response = await post(buildPayload({ quizId: 'physics-units', name: 'בדיקה', score: 100, stars: 3, answers: [325, 5.7, 2400, 9.6, 85].map((value, index) => ({index, answer: String(value), correct: true})) }));
     assert.deepEqual(await response.json(), { success: true, stored: true });
     assert.equal(db.calls.length, 1);
     assert.equal(db.calls[0].quizCode, 'PRA-005');
     assert.equal(db.calls[0].quizId, 'physics-units');
-    assert.equal(db.calls[0].answers.length, 11);
+    assert.equal(db.calls[0].answers.length, 5);
     assert.equal(sent.length, 0);
   }, { db });
 });

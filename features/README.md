@@ -6,3 +6,5 @@ Partial catalog of maze features. Every feature must include a written specifica
 |---|---|---|---|---|
 | MAZE-001 | [Small maze and capture recovery](maze-game/small-maze.md) | approved | Implemented; mobile QA verified; release by exact commit | Local prototype |
 | MAZE-002 | [Short arcade run: bridge and boss](maze-game/arcade-run.md) | approved | Implemented; automated and independent QA; release by exact commit | Implementation |
+
+| PHY-PRACTICE | [Teacher question parity](physics-practice-reference.md) | approved | Production release in progress | Release |

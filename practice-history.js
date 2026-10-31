@@ -5,10 +5,10 @@
     'facts': { code: 'PRA-001', count: 6 },
     'questions': { code: 'PRA-002', count: 6 },
     'instructions': { code: 'PRA-003', count: 6 },
-    'physics-basics': { code: 'PRA-004', count: 11 },
-    'physics-units': { code: 'PRA-005', count: 11 },
-    'physics-precision': { code: 'PRA-006', count: 11 },
-    'physics-pole': { code: 'PRA-007', count: 11 }
+    'physics-basics': { code: 'PRA-004', count: 11, open: [5, 10] },
+    'physics-units': { code: 'PRA-005', count: 5, numeric: [0, 1, 2, 3, 4] },
+    'physics-precision': { code: 'PRA-006', count: 6, numeric: [0, 1, 2, 4], open: [3, 5] },
+    'physics-pole': { code: 'PRA-007', count: 5, numeric: [1, 4], open: [0, 2, 3] }
   });
 
   // Pause between a clicked answer and the next question (docs/TESTING.md §3).
@@ -36,7 +36,7 @@
     if (!clean || !Object.hasOwn(QUIZZES, quizId)) return null;
     return {
       quiz: quizId, name: clean, score, stars,
-      answers: answers.map(a => ({ questionId: questionId(quizId, a.index), choice: a.choice, correct: a.correct }))
+      answers: answers.map(a => ({ questionId: questionId(quizId, a.index), ...(typeof a.answer === 'string' ? { answer: a.answer } : { choice: a.choice }), correct: a.correct }))
     };
   }
 
@@ -49,22 +49,25 @@
     const bad = { ok: false };
     if (!isObject(payload) || !sameKeys(payload, ['quiz', 'name', 'score', 'stars', 'answers'])) return bad;
     if (typeof payload.quiz !== 'string' || !Object.hasOwn(QUIZZES, payload.quiz)) return bad;
-    const { code, count } = QUIZZES[payload.quiz];
+    const { code, count, numeric = [], open = [] } = QUIZZES[payload.quiz];
     const name = cleanName(payload.name);
     if (!name) return bad;
     if (!Number.isInteger(payload.score) || payload.score < 0 || payload.score > 100) return bad;
     if (!Number.isInteger(payload.stars) || payload.stars < 0 || payload.stars > 3) return bad;
-    if (!Array.isArray(payload.answers) || payload.answers.length !== count) return bad;
+    if (!Array.isArray(payload.answers) || payload.answers.length !== count - open.length) return bad;
     const seen = new Set();
     const answers = [];
     for (const item of payload.answers) {
-      if (!isObject(item) || !sameKeys(item, ['questionId', 'choice', 'correct'])) return bad;
+      if (!isObject(item)) return bad;
       const match = typeof item.questionId === 'string' ? /^(.+)-(\d{2})$/.exec(item.questionId) : null;
       const number = match ? Number(match[2]) : 0;
       if (!match || match[1] !== payload.quiz || number < 1 || number > count || seen.has(item.questionId)) return bad;
-      if (!Number.isInteger(item.choice) || item.choice < 0 || item.choice > 9 || typeof item.correct !== 'boolean') return bad;
+      if (open.includes(number - 1) || typeof item.correct !== 'boolean') return bad;
+      const typed = numeric.includes(number - 1);
+      if (!sameKeys(item, typed ? ['questionId', 'answer', 'correct'] : ['questionId', 'choice', 'correct'])) return bad;
+      if (typed ? typeof item.answer !== 'string' || !item.answer.trim() || item.answer.length > 100 : !Number.isInteger(item.choice) || item.choice < 0 || item.choice > 9) return bad;
       seen.add(item.questionId);
-      answers.push({ questionId: item.questionId, choice: item.choice, correct: item.correct });
+      answers.push({ questionId: item.questionId, choice: typed ? -1 : item.choice, ...(typed ? { answer: item.answer } : {}), correct: item.correct });
     }
     const { scoreQuiz, starsFor } = root.QuizCore;
     const questions = answers.map(a => ({ id: a.questionId, type: 'mcq', difficulty: 'medium' }));
