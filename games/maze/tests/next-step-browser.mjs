@@ -15,7 +15,7 @@ async function start(){await page.waitForFunction(()=>window.render_game_to_text
 const read=()=>page.evaluate(()=>JSON.parse(window.render_game_to_text()));
 try{
 await page.goto('http://127.0.0.1:4399/games/maze/play/index.html');await start();
-assert(await page.locator('#exit-next-step').isVisible());assert((await read()).guidePath.length>0);await page.screenshot({path:'output/next-step-guidance.png',fullPage:true});console.log('PASS resumed traps show free exit route and guidance');
+assert(await page.locator('#exit-next-step').isVisible());assert.equal(await page.locator('#stage-exit').getAttribute('aria-current'),'step');assert.equal(await page.locator('#stage-traps').getAttribute('data-done'),'true');assert.match(await page.locator('#action-badge').textContent(),/השער פתוח/);assert((await read()).guidePath.length>0);await page.screenshot({path:'output/next-step-guidance.png',fullPage:true});console.log('PASS resumed traps show free exit route and guidance');
 await page.reload();await start();assert(await page.locator('#exit-next-step').isVisible());const before=await read();
 await page.locator('#guide-exit').tap();
 for(let i=0;i<500&&(await read()).phase!=='complete';i++)await page.evaluate(()=>window.advanceTime(100));
@@ -25,5 +25,16 @@ assert(await page.locator('#completion-home').isVisible());assert(await page.eva
 await page.screenshot({path:'output/next-step-finish.png',fullPage:true});console.log('PASS guidance reaches finish and boss link retains subject');assert.deepEqual(errors,[]);
 const fresh=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
 await fresh.route('**/api/**',r=>r.fulfill({status:200,body:'{}',contentType:'application/json'}));
-const intro=await fresh.newPage();await intro.goto('http://127.0.0.1:4399/games/maze/play/index.html');await intro.waitForFunction(()=>window.render_game_to_text&&!document.querySelector('#start-button').disabled,null,{polling:50});await intro.locator('#start-button').tap();assert(await intro.locator('#exit-next-step').isHidden());await fresh.close();console.log('PASS fresh run keeps normal exploration');
+const intro=await fresh.newPage();await intro.goto('http://127.0.0.1:4399/games/maze/play/index.html');await intro.waitForFunction(()=>window.render_game_to_text&&!document.querySelector('#start-button').disabled,null,{polling:50});await intro.locator('#start-button').tap();assert(await intro.locator('#exit-next-step').isHidden());assert.equal(await intro.locator('#stage-traps').getAttribute('aria-current'),'step');
+assert.match(await intro.locator('#interact-button').textContent(),/למלכודת הבאה/);
+await intro.locator('#interact-button').tap();assert.equal(await intro.locator('#interact-button').textContent(),'לעצור כאן');
+await intro.evaluate(()=>window.advanceTime(100));
+await intro.locator('#interact-button').tap();await intro.evaluate(()=>window.advanceTime(500));
+assert.notEqual(await intro.locator('#interact-button').textContent(),'לעצור כאן');
+for(const [width,height] of [[390,844],[320,568]]){
+ await intro.setViewportSize({width,height});await intro.evaluate(()=>window.advanceTime(0));
+ assert(await intro.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await intro.screenshot({path:`output/action-cues-${width}.png`,fullPage:true});
+}
+await fresh.close();console.log('PASS fresh mission badges, guided walking, stop action and mobile layout');
 }finally{await browser.close();}

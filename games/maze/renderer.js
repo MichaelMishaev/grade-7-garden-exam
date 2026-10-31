@@ -528,7 +528,7 @@ export function createMazeRenderer(canvas) {
       }
     });
     bowlWater.visible = !!state.world?.waterFilled;
-    const crumbs = state.world?.scoutGuided || state.rewardPurchases?.includes('compass') ? guidePath.slice(0, 48) : [];
+    const crumbs = guidePath.slice(0, 48);
     breadcrumbs.count = crumbs.length;
     crumbs.forEach((point, index) => {
       matrix.makeRotationX(-Math.PI / 2); matrix.setPosition(point.x, 0.025, point.y); breadcrumbs.setMatrixAt(index, matrix);

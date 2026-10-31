@@ -164,3 +164,5 @@ UX PASS automated: RTL, readable sample/full-bank distinction, tap/keyboard cont
 Subject selector clarity: grouped all game topic pickers under עברית / פיזיקה, with subject prefixes on selected options. Quiz IDs and saved state unchanged. Rebuilt maze, arcade and Afterbell; focused mobile category/switching checks.
 
 Next-step clarity: free highlighted exit route and persistent three-seal guidance panel; interaction walks to gate; finish promotes subject-preserving bridge/boss challenge. Saved-run mobile fixture reached exit without changing coins; all 119 unit tests pass.
+
+Action cues: added traps/gate/boss progress strip with completed/current/locked text; contextual nearby-action and route badges; explicit next-trap guidance and stop control. Fixed mid-step stop restarting navigation and removed redundant renderer purchase gate on supplied breadcrumbs. Mobile 390px/320px saved/fresh run, refresh, guided exit and stop checks pass; 119 unit tests pass. Local build only.

@@ -47,7 +47,7 @@ function renderGreeting(){
     bubble.dataset.sequence=String(active.sequence);
   }
 }
-const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,answerReaction,guidePath,greeting:visibleGreeting(),trapEntry:trapEntry?1-trapEntry.remaining/trapEntryDuration:null,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
+const viewOptions = () => ({intro:!started,reducedMotion:reducedMotion.matches,encounters:activeRooms(),interaction,answerReaction,guidePath:route.length?route:guidePath,greeting:visibleGreeting(),trapEntry:trapEntry?1-trapEntry.remaining/trapEntryDuration:null,movement:movement?{x:movement.position.x,y:movement.position.y,speed:movement.speed,heading:movement.heading,moving:movement.moving||movement.speed>0}:undefined});
 function interactionContext(){const room=state.assignments[state.activeEncounter]||[];return {phase:state.phase,paused:state.paused,reducedMotion:reducedMotion.matches,reviewIndex:state.review?.index||0,answered:room.filter(id=>state.answers[id]).length,total:room.length};}
 function sceneControls(){return `<details class="cell-tools" id="cell-tools"><summary>לבדוק את הכלוב</summary><div class="cell-controls" aria-label="פעולות בתוך הכלוב">${['look-left','look-right','lantern','rattle','inspect'].map(action=>`<button type="button" data-cell-action="${action}" aria-label="${escapeText(interactionLabels[action])}"${action==='lantern'?` aria-pressed="${interaction.lanternRaised}"`:''}>${escapeText(({'look-left':'שמאלה','look-right':'ימינה',lantern:'פנס',rattle:'סורגים',inspect:'מנעול'})[action])}</button>`).join('')}</div><p id="cell-notice" class="cell-notice" role="status">${escapeText(interaction.notice||'בחרו פעולה כדי להסתכל סביב.')}</p></details>`;}
 function interactWithCell(action){
@@ -280,6 +280,17 @@ function renderUi() {
   $('rewards-button').setAttribute('aria-label',`${rewardBalance(state)} יהלומים. פתיחת האוסף והשדרוגים`);
   $('seals').textContent=`${state.seals.length} / 3`;
   $('offline-badge').hidden=!content.offline;
+  $('mission-trail').hidden=!started;
+  const finished=state.phase==='complete',allTraps=progress(state,content.questions).complete;
+  $('trap-stage-count').textContent=`${state.resolved.length} הושלמו`;
+  for(const [id,current,done] of [['stage-traps',!allTraps,allTraps],['stage-exit',allTraps&&!finished,finished],['stage-boss',finished,false]]){
+    const el=$(id);el.dataset.done=String(done);
+    if(current)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');
+    el.querySelector('span').textContent=done?'✓':({'stage-traps':'1','stage-exit':'2','stage-boss':'3'})[id];
+  }
+  $('stage-exit').querySelector('small').textContent=finished?'הושלם':allTraps?'פתוח · אפשר לצאת':'אחרי המלכודות';
+  $('stage-boss').querySelector('small').textContent=finished?'האתגר הבא זמין':'אחרי היציאה';
+  $('action-badge').hidden=!started||state.phase!=='explore'||state.paused;
   const pr=progress(state,content.questions);
   guidePath=[];
   if(state.world.scoutGuided||state.rewardPurchases.includes('compass')){for(const room of activeRooms().filter(e=>!state.resolved.includes(e.id))){const p=pathTo(state.player,room);if(p&&(!guidePath.length||p.length<guidePath.length))guidePath=p;}}
@@ -289,6 +300,7 @@ function renderUi() {
   $('objective-text').textContent=pr.complete?'כל החותמים נאספו! לחצו ״לקחת אותי לשער״.':`מלכודות ${pr.trapsResolved} מתוך ${pr.trapsTotal} · ${pr.answered} מתוך ${pr.total} שאלות`;
   $('notice').textContent=state.notice||`מפגשים בעולם: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}. הסייר מחכה בשבילים, ובגן המזרחי יש עוד דמויות ובעלי חיים.`;
   document.querySelectorAll('#movement-joystick,#interact-button').forEach(el=>el.disabled=!started||state.paused||state.phase!=='explore');
+  updateExploreContext();
   if(!started)return;
   if(panel){renderPanel();return;}
   if(state.paused){panel='pause';renderPanel();return;}
@@ -306,12 +318,17 @@ function step(name) {
 }
 function handleInteract(){
   if(!started||state.paused||state.phase!=='explore')return;
+  if(route.length){route=[];pendingInteract=false;queuedDirection=null;held.clear();clearPointerDirections();updateExploreContext();return;}
   if(movement?.target){pendingInteract=true;held.clear();clearPointerDirections();route=[];queuedDirection=null;return;}
   pendingInteract=false;
   if(progress(state,content.questions).complete){guideToExit();return;}
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
   if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human'||entity.id==='rabbit')openPanel('world');renderer?.render(state,viewOptions());}
-  else dispatch({type:'interact'});
+  else if(nearbyTrap())dispatch({type:'interact'});
+  else {
+    const paths=activeRooms().filter(room=>!state.resolved.includes(room.id)).map(room=>pathTo(state.player,room)).filter(path=>path?.length).sort((a,b)=>a.length-b.length);
+    if(paths[0]){held.clear();clearPointerDirections();queuedDirection=null;route=paths[0];updateExploreContext();}
+  }
 }
 function guideToExit(){
   if(!started||state.paused||state.phase!=='explore'||dialog.open||!progress(state,content.questions).complete)return;
@@ -319,12 +336,17 @@ function guideToExit(){
   const from=movement?.target||state.player;
   route=pathTo(from,EXIT)||[];
   if(movement?.target)route.unshift({...movement.target});
+  updateExploreContext();
 }
 $('guide-exit').addEventListener('click',guideToExit);
+function nearbyTrap(){return activeRooms().find(room=>!state.resolved.includes(room.id)&&Math.abs(room.x-state.player.x)+Math.abs(room.y-state.player.y)<=1);}
 function updateExploreContext(){
   if(!started||state.phase!=='explore'||state.paused)return;
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
-  const label=progress(state,content.questions).complete?'לקחת אותי לשער ←':entity?.actionLabel||'לבדוק מקרוב';
+  const complete=progress(state,content.questions).complete;
+  const label=route.length?'לעצור כאן':complete?'לקחת אותי לשער ←':entity?.actionLabel|| (nearbyTrap()?'להיכנס למלכודת':'למלכודת הבאה ←');
+  const badge=route.length?'➜ בדרך · אפשר לגרור כדי לשנות כיוון':complete?'✓ השער פתוח — אפשר להתקדם':entity?'✦ מפגש קרוב · אפשר לפעול':nearbyTrap()?'✦ מלכודת קרובה · אפשר להיכנס':'➜ הצעד הבא: למצוא מלכודת';
+  if($('action-badge').textContent!==badge)$('action-badge').textContent=badge;
   if($('interact-button').textContent!==label)$('interact-button').textContent=label;
 }
 function advanceWalking(ms){
