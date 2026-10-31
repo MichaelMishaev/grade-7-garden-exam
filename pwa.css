@@ -1,0 +1,13 @@
+.install-app { position: absolute; inset-inline-start: 0; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; color: var(--green-dark); background: var(--green-soft); border: 2px solid #bbed9a; border-radius: 15px; box-shadow: 0 3px 0 #a5db86; cursor: pointer; }
+.install-app[hidden] { display: none; }
+.install-app:active { transform: translateY(2px); box-shadow: 0 1px 0 #a5db86; }
+.install-app:focus-visible, .install-help button:focus-visible { outline: 3px solid #7025ff; outline-offset: 4px; }
+.home-page .site-header .prepx-brand { max-width: calc(100% - 128px); }
+.install-help { box-sizing: border-box; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 32px); padding: 28px; color: var(--text, #203225); background: #fff; border: 2px solid #bbed9a; border-radius: 24px; box-shadow: 0 16px 60px #172c2733; text-align: start; font-family: inherit; }
+.install-help::backdrop { background: #14271db3; }
+.install-help img { display: block; width: 180px; max-width: 100%; height: auto; margin: 0 auto 24px; }
+.install-help h2 { font-size: 22px; line-height: 1.4; margin: 0 0 16px; }
+.install-help p { line-height: 1.7; margin: 0 0 20px; }
+.install-help .install-note { color: #526057; font-size: 14px; }
+.install-help button { width: 100%; min-height: 48px; border: 2px solid #bbed9a; border-radius: 14px; background: var(--green-soft); color: var(--green-dark); font: inherit; font-weight: 700; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .install-app:active { transform: none; } }

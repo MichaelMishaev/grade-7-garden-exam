@@ -22,6 +22,7 @@ const types = {
   '.js': 'text/javascript; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.pdf': 'application/pdf',
   '.txt': 'text/plain; charset=utf-8'
 };
@@ -487,7 +488,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
   try {
     const body = await readFile(file);
     const gameEntry = ['/games/afterbell/play/', '/games/maze/play/'].some(prefix => pathname.startsWith(prefix)) && extname(file) === '.html';
-    const cache = gameEntry ? 'no-cache' : 'public, max-age=300';
+    const cache = pathname === '/sw.js' || pathname === '/manifest.webmanifest' ? 'no-cache' : gameEntry ? 'no-cache' : 'public, max-age=300';
     response.writeHead(200, { 'Content-Type': type, 'Cache-Control': cache });
     response.end(request.method === 'HEAD' ? undefined : body);
   } catch {
