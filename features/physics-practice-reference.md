@@ -58,12 +58,9 @@ practice behavior (automatic advance, read-only back, history and final review).
 - Screenshots were visually inspected after animations settled. Evidence:
   `output/playwright/physics-reference-sync/` (local only, excluded from commits).
 
-This is implemented and locally verified, not committed, pushed or deployed.
-The full physics assessment was not changed. Production database content was not
-modified. Database verification above used fresh isolated databases; upgrading an
-existing content database may retain obsolete practice rows under the additive
-seed policy, so its content needs reconciliation before claiming deployed DB
-parity. The browser rejects those stale API quizzes and uses verified local data.
+The initial implementation above was local only. The subsequent production
+integration and verified release are recorded below. The full physics assessment
+was not changed.
 
 ## Production integration scope
 
@@ -87,3 +84,23 @@ read-only back values, written review and mixed-type history. All four mobile
 rounds and the dependent conversion retry passed again. Migration/seed/verify
 passed locally; obsolete rows retire, reseeding is idempotent and returning rows
 reactivate without deletion. Production rollout authorized by Michael.
+
+## Verified production release — 2026-10-31
+
+- Runtime commit: `4e63f7396871326c4061e3f1944f134a13e48629` on `main`.
+- Railway deployment: `2edc5ccb-4b2a-4dc2-a0e9-f06c27b8fffe`, SUCCESS.
+- Live site: https://hitech.agnon.online/subject.html?subject=physics.
+- Migration 006 applied before rollout. Production seeding updated all 27 practice
+  tasks and retired 17 obsolete rows in place. `db/verify.mjs`: `db matches source`.
+- Live script, page and history-helper bytes match this release. The public APIs
+  return 11/5/6/5 tasks with the exact prompts, types, choices, keys, explanations
+  and references. `/api/health` returns `ok: true, db: up`.
+- A real browser at 390×844 completed all four live rounds. Numeric wrong/reask,
+  full and mistakes-only retry, self-comparison models, scores, source links,
+  revised best-score keys and a Hebrew practice regression passed. Zero horizontal
+  overflow and zero JavaScript errors. All POSTs blocked; no email or student
+  submission was generated. Local live evidence is in
+  `output/playwright/physics-reference-sync/live-browser.log` and `live-*.png`.
+
+Status: specified, implemented, tested and deployed. Physical-device testing and
+independent student/teacher acceptance were not performed.
