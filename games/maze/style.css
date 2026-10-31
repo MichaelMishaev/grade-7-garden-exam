@@ -89,3 +89,7 @@ dialog:has(.completion-screen){width:min(calc(100% - 24px),560px);border-color:#
 body[data-encounter=true] .rewards-bar{display:none}
 
 .arcade-mode-link{display:block;min-height:44px;padding:11px 12px;margin:10px 0;border:1px solid var(--gold);border-radius:10px;text-align:center;color:var(--gold);font-size:12px;line-height:1.7;text-decoration:none}
+
+.next-step{padding:16px;border:1px solid #f2c477;border-radius:18px;background:#192d34;color:#fff3d9;margin:12px 0}.next-step[hidden]{display:none}.next-step strong{display:block;font-size:1.15rem}.next-step p{margin:8px 0 12px;color:#d0dce0}.next-step .button{width:100%;min-height:48px}
+
+.completion-actions #completion-home{color:var(--text)}

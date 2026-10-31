@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#0c161c">
   <title>מבוך הצללים · PrepX</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230c161c%27/%3E%3Cpath d=%27M8 25V8h16v17h-8V14h3%27 fill=%27none%27 stroke=%27%23f2c477%27 stroke-width=%273%27/%3E%3C/svg%3E">
-  <script type="module" crossorigin src="./assets/maze-4_eM18kV.js"></script>
+  <script type="module" crossorigin src="./assets/maze-wuTGU-t3.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/three.module-BvdW_sF7.js">
-  <link rel="stylesheet" crossorigin href="./assets/maze-CNpDOMPV.css">
+  <link rel="stylesheet" crossorigin href="./assets/maze-Bu10h4nw.css">
 </head>
 <body>
   <main class="game-shell">
@@ -25,6 +25,11 @@
     <button id="rewards-button" class="rewards-bar" type="button" disabled aria-label="יהלומים, אוסף ושדרוגים">
       <span><span aria-hidden="true">◆</span> <bdi id="diamonds">0</bdi> יהלומים</span><span>האוסף והשדרוגים <span aria-hidden="true">←</span></span>
     </button>
+    <section id="exit-next-step" class="next-step" aria-labelledby="next-step-title" hidden>
+      <strong id="next-step-title">כל שלושת החותמים שלכם! עכשיו יוצאים.</strong>
+      <p>עקבו אחרי השביל המואר לשער. אחריו מחכה אתגר חדש: שלושה גשרים ובוס.</p>
+      <button id="guide-exit" class="button primary" type="button">לקחת אותי לשער ←</button>
+    </section>
     <section class="viewport" aria-label="עולם המבוך">
       <canvas id="maze-canvas" tabindex="0" aria-label="מבוך תלת־ממדי. תנועה עם החצים או WASD. אפשר גם ללחוץ על שביל. לחצו E כדי לבדוק מקום סמוך."></canvas>
       <div class="scene-caption"><span class="location-dot"></span><span id="location-label">בפתח מבוך הצללים</span><span id="offline-badge" hidden>מצב לא מקוון</span></div>

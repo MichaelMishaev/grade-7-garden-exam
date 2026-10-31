@@ -218,12 +218,12 @@ function renderSummary(reviewOnly=false) {
   const stars=globalThis.QuizCore?.starsFor(pr.score)||0;
   const rows=reviewOnly?content.questions.filter(q=>state.answers[q.id]).map(q=>`<div class="review-item"><strong>${state.answers[q.id].correct?'✓':'↘'} ${text(q.prompt)}</strong><p>התשובה שלכם: ${text(q.choices[state.answers[q.id].choice])}</p><p>התשובה הנכונה: ${text(q.choices[q.correct])}</p>${explanationHtml(q)}</div>`).join(''):'';
   showDialog(`<section class="completion-screen" data-completion-art="${state.completionArt}"><div class="completion-picture" role="img" aria-label="${escapeText(art.alt)}" style="background-image:url('${escapeText(completionAtlas)}');background-position:center ${art.position}"></div><div class="completion-copy">`+
-    heading('ההרפתקה הושלמה',text(art.title))+`<p class="completion-message">${text(art.message)}</p><p class="completion-stars" aria-label="${stars} כוכבים מתוך 3">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</p><div class="result-grid completion-results"><div><strong>${pr.score}</strong><small>ציון ידע מתוך 100</small></div><div><strong>${state.coins}</strong><small>מטבעות</small></div><div><strong>${state.captureCount}</strong><small>היחלצויות</small></div></div><div class="completion-actions"><a class="dialog-link button primary" id="completion-home" href="/index.html">בחזרה הביתה ↗</a>${button('completion-rewards','האוסף והשדרוגים',false)}${button('change-subject','הרפתקה חדשה · החלפת נושא',false)}${reviewOnly?button('back-to-celebration','חזרה לחגיגה',false):'<button id="review-result" class="reading-button">לעבור על התשובות</button>'}</div><p class="small-note completion-score-note">הציון מבוסס על התשובות הראשונות. ההיחלצות אינה משנה אותו.</p>${rows}</div></section>`);
+    heading('ההרפתקה הושלמה',text(art.title))+`<p class="completion-message">${text(art.message)}</p><p class="completion-stars" aria-label="${stars} כוכבים מתוך 3">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</p><div class="result-grid completion-results"><div><strong>${pr.score}</strong><small>ציון ידע מתוך 100</small></div><div><strong>${state.coins}</strong><small>מטבעות</small></div><div><strong>${state.captureCount}</strong><small>היחלצויות</small></div></div><div class="completion-actions"><a class="dialog-link button primary" id="next-challenge" href="./arcade.html?quiz=${encodeURIComponent(content.id)}">האתגר הבא: גשרים ובוס ←</a><p>חוצים 3 גשרים, עונים על 3 שאלות ואז נלחמים בשומר.</p><a class="dialog-link button" id="completion-home" href="/index.html">בחזרה הביתה ↗</a>${button('completion-rewards','האוסף והשדרוגים',false)}${button('change-subject','הרפתקה חדשה · החלפת נושא',false)}${reviewOnly?button('back-to-celebration','חזרה לחגיגה',false):'<button id="review-result" class="reading-button">לעבור על התשובות</button>'}</div><p class="small-note completion-score-note">הציון מבוסס על התשובות הראשונות. ההיחלצות אינה משנה אותו.</p>${rows}</div></section>`);
   bind('completion-rewards',()=>openPanel('rewards'));
   bind('review-result',()=>renderSummary(true));
   bind('back-to-celebration',()=>renderSummary(false));
   bind('change-subject',showSubjectPicker);
-  $('completion-home').focus({preventScroll:true});
+  $('next-challenge').focus({preventScroll:true});
 }
 
 function openPanel(kind) {
@@ -283,9 +283,10 @@ function renderUi() {
   const pr=progress(state,content.questions);
   guidePath=[];
   if(state.world.scoutGuided||state.rewardPurchases.includes('compass')){for(const room of activeRooms().filter(e=>!state.resolved.includes(e.id))){const p=pathTo(state.player,room);if(p&&(!guidePath.length||p.length<guidePath.length))guidePath=p;}}
-  if(!guidePath.length&&pr.complete&&state.rewardPurchases.includes('compass'))guidePath=pathTo(state.player,EXIT)||[];
+  if(pr.complete)guidePath=pathTo(state.player,EXIT)||[];
+  $('exit-next-step').hidden=!started||!pr.complete||state.phase!=='explore'||state.paused;
   $('location-label').textContent=inCell?'בתוך הכלוב · מבט מגוף ראשון':pr.complete?'שער היציאה מחכה':MAZE_LAYOUTS.find(layout=>layout.id===state.layoutId).title;
-  $('objective-text').textContent=pr.complete?'סיימתם את המלכודות. מצאו את השער הזוהר.':`מלכודות ${pr.trapsResolved} מתוך ${pr.trapsTotal} · ${pr.answered} מתוך ${pr.total} שאלות`;
+  $('objective-text').textContent=pr.complete?'כל החותמים נאספו! לחצו ״לקחת אותי לשער״.':`מלכודות ${pr.trapsResolved} מתוך ${pr.trapsTotal} · ${pr.answered} מתוך ${pr.total} שאלות`;
   $('notice').textContent=state.notice||`מפגשים בעולם: ${Object.keys(state.world.interactions).length} מתוך ${WORLD_ENTITIES.length}. הסייר מחכה בשבילים, ובגן המזרחי יש עוד דמויות ובעלי חיים.`;
   document.querySelectorAll('#movement-joystick,#interact-button').forEach(el=>el.disabled=!started||state.paused||state.phase!=='explore');
   if(!started)return;
@@ -307,14 +308,23 @@ function handleInteract(){
   if(!started||state.paused||state.phase!=='explore')return;
   if(movement?.target){pendingInteract=true;held.clear();clearPointerDirections();route=[];queuedDirection=null;return;}
   pendingInteract=false;
+  if(progress(state,content.questions).complete){guideToExit();return;}
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
   if(entity){dispatch({type:'world-interact',entityId:entity.id});if(entity.kind==='human'||entity.id==='rabbit')openPanel('world');renderer?.render(state,viewOptions());}
   else dispatch({type:'interact'});
 }
+function guideToExit(){
+  if(!started||state.paused||state.phase!=='explore'||dialog.open||!progress(state,content.questions).complete)return;
+  held.clear();clearPointerDirections();queuedDirection=null;
+  const from=movement?.target||state.player;
+  route=pathTo(from,EXIT)||[];
+  if(movement?.target)route.unshift({...movement.target});
+}
+$('guide-exit').addEventListener('click',guideToExit);
 function updateExploreContext(){
   if(!started||state.phase!=='explore'||state.paused)return;
   const entity=nearbyWorldEntity(state.player,state.world,state.elapsedMs);
-  const label=entity?.actionLabel||'לבדוק מקרוב';
+  const label=progress(state,content.questions).complete?'לקחת אותי לשער ←':entity?.actionLabel||'לבדוק מקרוב';
   if($('interact-button').textContent!==label)$('interact-button').textContent=label;
 }
 function advanceWalking(ms){
