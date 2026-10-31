@@ -32,7 +32,7 @@ test('worker leaves API and non-navigation requests alone and recovers failed na
   vm.runInNewContext(await readFile('sw.js', 'utf8'), {
     URL,
     self: { registration: { scope: 'https://example.com/prepx/' }, location: { origin: 'https://example.com' }, addEventListener: (name, fn) => { listeners[name] = fn; } },
-    fetch: async () => { requests++; throw new Error('offline'); },
+    fetch: async (_request, options) => { assert.equal(options.cache, 'no-store'); requests++; throw new Error('offline'); },
     caches: { match: async url => { assert.equal(url, 'https://example.com/prepx/offline.html'); return offline; } }
   });
   const invoke = request => {
