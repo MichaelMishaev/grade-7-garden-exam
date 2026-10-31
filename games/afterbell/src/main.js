@@ -23,7 +23,7 @@ let guidedNpc=0, guidedEquipment=null, participantName='', draftStored=false, re
 let quiz=snapshot.quizzes[0], round=null, mode='menu', activeNpc=null, activeQuestion=null, source='snapshot', feedbackTimer=null, toastTimer=null, autoAdvance=null, sound=false, audio=null, world=null, saveCounter=0, finishPromise=null, dialogReturn=null, loadingGeneration=0;
 const dialog=$('dialog');
 const quizSelect=$('quiz');
-quizSelect.innerHTML=snapshot.quizzes.map(q=>`<option value="${q.id}">${esc(q.title)}</option>`).join('');
+quizSelect.innerHTML=Object.entries({hebrew:'עברית',physics:'פיזיקה'}).map(([subject,label])=>`<optgroup label="${label}">${snapshot.quizzes.filter(q=>q.subject_id===subject).map(q=>`<option value="${esc(q.id)}">${label} · ${esc(q.title)}</option>`).join('')}</optgroup>`).join('');
 const requested=new URLSearchParams(location.search).get('quiz');
 if(snapshot.quizzes.some(q=>q.id===requested))quizSelect.value=requested;
 $('player-name').value=storage.get('prepx-afterbell-name')||'';

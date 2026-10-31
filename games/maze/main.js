@@ -428,7 +428,7 @@ function frame(now) {
 function initializeIntro() {
   movement=createMovement(state.player);guidePath=[];
   const select=$('quiz-select');
-  select.innerHTML=MAZE_QUIZZES.map(quiz=>`<option value="${escapeText(quiz.id)}">${text(quiz.title)}</option>`).join('');
+  select.innerHTML=Object.entries({hebrew:'עברית',physics:'פיזיקה'}).map(([subject,label])=>`<optgroup label="${label}">${MAZE_QUIZZES.filter(quiz=>quiz.subjectId===subject).map(quiz=>`<option value="${escapeText(quiz.id)}">${label} · ${text(quiz.title)}</option>`).join('')}</optgroup>`).join('');
   select.value=content.id;
   const existing=Object.keys(state.answers).length>0||state.visited.length>1;
   select.disabled=existing;
@@ -490,7 +490,7 @@ function showSubjectPicker() {
   stopAuto();held.clear();clearPointerDirections();queuedDirection=null;route=[];
   if(started&&state.phase!=='complete')dispatch({type:'pause'});
   panel='subjects';
-  showDialog(heading('הרפתקה חדשה','מה מתרגלים עכשיו?')+`<label for="new-subject">נושא לתרגול</label><select id="new-subject">${MAZE_QUIZZES.map(quiz=>`<option value="${escapeText(quiz.id)}">${text(quiz.title)}</option>`).join('')}</select><p class="small-note">ההרפתקה הנוכחית תישמר בלשונית הזו. הרפתקה חדשה מתחילה במבוך אחר.</p><p id="subject-error" role="status"></p>`+button('new-subject-start','להתחיל הרפתקה חדשה')+button('resume-subject','לחזור להרפתקה השמורה בנושא הזה',false)+button('cancel-subject','חזרה למשחק',false));
+  showDialog(heading('הרפתקה חדשה','מה מתרגלים עכשיו?')+`<label for="new-subject">נושא לתרגול</label><select id="new-subject">${Object.entries({hebrew:'עברית',physics:'פיזיקה'}).map(([subject,label])=>`<optgroup label="${label}">${MAZE_QUIZZES.filter(quiz=>quiz.subjectId===subject).map(quiz=>`<option value="${escapeText(quiz.id)}">${label} · ${text(quiz.title)}</option>`).join('')}</optgroup>`).join('')}</select><p class="small-note">ההרפתקה הנוכחית תישמר בלשונית הזו. הרפתקה חדשה מתחילה במבוך אחר.</p><p id="subject-error" role="status"></p>`+button('new-subject-start','להתחיל הרפתקה חדשה')+button('resume-subject','לחזור להרפתקה השמורה בנושא הזה',false)+button('cancel-subject','חזרה למשחק',false));
   dialog.classList.remove('gift-sheet');
   $('new-subject').value=MAZE_QUIZZES.find(quiz=>quiz.id!==content.id)?.id||content.id;
   const update=()=>{try{$('resume-subject').hidden=!sessionStorage.getItem(SESSION_KEY+'-subject-'+$('new-subject').value);}catch{$('resume-subject').hidden=true;}};
