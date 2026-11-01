@@ -1,5 +1,16 @@
 Original prompt: Add a separate maze game button, preserve the old game, implement and test mobile first. Small tense maze with creatures and question traps, fictional coins, three hearts, capture and guided escape without restarting or erasing progress.
 
+## 2026-11-01 — boss firing animation and authorized release
+
+User explicitly requested fresh agents to add, test and push visible boss firing feedback, including the preceding joystick fix in this release. A fresh implementation agent and independent QA agent handled the change.
+
+Acceptance: an accepted shot visibly flies from the actual firing position, impacts the boss/shield, and settles before the final victory sheet; rejected shots do not animate/spend; pause freezes feedback; reduced motion retains a static hit confirmation; reload preserves accepted hits without replaying effects; scoring, rewards and saved academic state remain unchanged.
+
+- Three.js crystal/trail flight (240ms), then ring/shards/highlight/recoil (240ms); no extra library. Presentation state is transient and excluded from saves. Final victory rewards still settle immediately and exactly once.
+- Independent touch QA covers all three shots, actual canvas pixel changes, final impact visibility, repeated/rejected fire, pause/blur/resume, reload during/after flight and completed reload, reduced motion, scores and ledger.
+- Root inspected gameplay flight/final-impact and standard-client screenshots. Production bundle `arcade-C_4yaa8x.js`; old published assets retained for existing tabs. Standard client encountered the existing local quiz-proxy resource 500 and used the working snapshot fallback; API-mocked browser suites have zero page errors/outbound writes.
+- Game unit tests: 121 passed. Repository regression: 297 passed, 8 database-dependent skipped; fake private rubrics and mocked providers used. Built mobile joystick regression passed. No DB/exam/email changes or real external submissions.
+
 ## 2026-11-01 — straight arcade joystick movement
 
 User request: Fix unintended left/right drift while walking straight in the bridge arcade.

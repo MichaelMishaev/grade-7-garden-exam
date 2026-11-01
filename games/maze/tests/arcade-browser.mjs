@@ -59,6 +59,7 @@ try{
   if(hit===1){await reload(page);check('partial boss refresh preserves hit and remaining crystals',(await read(page)).boss.hits.length===1&&(await read(page)).crystals===2);}
  }
  check('all-wrong run wins and settles every gift plus bonus',(await read(page)).phase==='victory'&&(await read(page)).score===0&&(await read(page)).diamonds===4&&(await read(page)).claimed.length===3);
+ await advance(page,600); // Let the final accepted shot land before inspecting the victory sheet.
  await shot(page,'victory-no-purchases');await reload(page);check('victory payout survives reload exactly once',(await read(page)).diamonds===4);
  await page.locator('#victory-collection').tap();check('completed collection keeps all three gifts',await page.locator('.collection-gift').count()===3);await shot(page,'completed-collection');await page.locator('#close-panel').tap();
  await page.locator('#another-run').tap();await page.locator('#quiz-select').selectOption('physics-basics');await page.locator('#new-run').tap();await page.locator('#start-challenge').waitFor();
@@ -81,6 +82,7 @@ try{
  run=await setup({reducedMotion:'reduce'});page=run.p;await page.locator('#new-run').tap();await page.locator('#start-challenge').waitFor();await page.locator('#start-challenge').tap();await page.locator('#assist-button').tap();
  for(let i=0;i<3;i++){if(i)await page.locator('#start-challenge').tap();await hold(page,0,1,3400);await answer(page,true);await page.locator('#continue-feedback').tap();}
  await page.locator('#start-challenge').tap();for(let i=0;i<3;i++)await bossHit(page);check('reduced-motion run reaches victory',(await read(page)).phase==='victory');
+ await advance(page,600);
  for(const [width,height] of [[320,568],[844,390]]){await page.setViewportSize({width,height});await page.locator('#another-run').scrollIntoViewIfNeeded();check(`dialog fits and actions are reachable at ${width}x${height}`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)&&await page.locator('#arcade-dialog').evaluate(e=>e.scrollWidth<=e.clientWidth));await shot(page,'victory-'+width);}
  await run.context.close();
  for(const fault of ['read','write','corrupt']){

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {bridgeTile,bossPhase,attackLane,LANES} from './arcade-core.js';
+import {bossShotPose} from './boss-shot.js';
 export function createArcadeRenderer(canvas) {
   const gl=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'low-power'});
   gl.setPixelRatio(Math.min(devicePixelRatio||1,1.5));gl.outputColorSpace=THREE.SRGBColorSpace;
@@ -56,7 +57,13 @@ export function createArcadeRenderer(canvas) {
   const firing=LANES.map(x=>ring(.37,mats.gold,scene,x,.04,7.5));
   const gems=[];for(let i=0;i<3;i++)gems.push(make(new THREE.OctahedronGeometry(.16),mats.gold,scene,(i-1)*.6,.55,1));
   const particles=[];for(let i=0;i<18;i++)particles.push(make(new THREE.OctahedronGeometry(.07),i%2?mats.gold:mats.mint,scene,Math.sin(i*4)*2,1+i%4*.4,8+Math.cos(i*4)*2));
-  function render(state,{reducedMotion=false}={}){
+  const shotMat=new THREE.MeshBasicMaterial({color:'#fff0b7'});
+  const projectile=make(new THREE.OctahedronGeometry(.27),shotMat);
+  const trail=Array.from({length:4},()=>make(new THREE.OctahedronGeometry(.1),mats.mint));
+  const impactMat=new THREE.MeshBasicMaterial({color:'#fff0b7',transparent:true,opacity:.7,depthWrite:false});
+  const impact=ring(.8,impactMat,scene,0,1.5,11.7);
+  const shards=Array.from({length:12},(_,i)=>make(new THREE.OctahedronGeometry(.12),i%2?mats.gold:mats.mint));
+  function render(state,{reducedMotion=false,shot=null}={}){
     const r=canvas.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
     const ratio=r.width/r.height,vertical=Math.max(7.8,5.5/ratio);
     if(canvas.width!==Math.round(r.width*gl.getPixelRatio())||canvas.height!==Math.round(r.height*gl.getPixelRatio()))gl.setSize(r.width,r.height,false);
@@ -77,11 +84,36 @@ export function createArcadeRenderer(canvas) {
     const bp=bossPhase(state);zone.visible=state.phase==='boss'&&!state.assist&&['telegraph','attack'].includes(bp);
     zone.position.x=attackLane(state);zone.material.color.set(bp==='attack'?'#f18f83':'#f2c477');zone.material.opacity=bp==='attack'?.7:.28;
     firing.forEach(m=>m.visible=bossMode&&state.phase!=='victory');
-    segments.forEach((m,i)=>{m.visible=i>=state.boss.hits.length;m.rotation.z=i*Math.PI*2/3+(reducedMotion?0:Math.sin(time)*.04);});
-    boss.position.y=state.phase==='victory'?-.4:reducedMotion?0:Math.sin(time*2)*.06;
-    boss.rotation.z=state.phase==='victory'?.2:0;
+    const pose=bossShotPose(shot,reducedMotion),pendingImpact=pose&&pose.flight<1&&!reducedMotion;
+    segments.forEach((m,i)=>{m.visible=i>=state.boss.hits.length-(pendingImpact?1:0);m.rotation.z=i*Math.PI*2/3+(reducedMotion?0:Math.sin(time)*.04);});
+    const defeated=state.phase==='victory'&&!pendingImpact;
+    boss.position.y=defeated?-.4:reducedMotion?0:Math.sin(time*2)*.06;
+    boss.position.z=11.7+(pose?.recoil||0);
+    boss.rotation.z=(defeated?.2:0)+(pose?.recoil||0);
+    mats.purple.emissive.set(pose?.impactVisible?'#b78856':'#000000');
+    mats.purple.emissiveIntensity=pose?.impactVisible?(reducedMotion?.45:(1-pose.impact)*1.4):0;
+    projectile.visible=!!pose?.inFlight;
+    if(projectile.visible){
+      const t=pose.flight;
+      projectile.position.set(shot.from.x*(1-t),.9+.6*t+Math.sin(t*Math.PI)*.3,shot.from.z+(11.7-shot.from.z)*t);
+      projectile.rotation.set(t*Math.PI*2,t*Math.PI*3,0);
+    }
+    trail.forEach((m,i)=>{
+      const t=pose?Math.max(0,pose.flight-(i+1)*.065):0;m.visible=!!pose?.inFlight&&pose.flight>(i+1)*.065;
+      if(m.visible){m.position.set(shot.from.x*(1-t),.9+.6*t+Math.sin(t*Math.PI)*.3,shot.from.z+(11.7-shot.from.z)*t);m.scale.setScalar(1-i*.17);}
+    });
+    impact.visible=!!pose?.impactVisible;
+    impact.scale.setScalar(reducedMotion?1.25:1+(pose?.impact||0)*1.5);
+    impactMat.opacity=pose?.impactVisible?(reducedMotion?.6:(1-pose.impact)*.8):0;
+    shards.forEach((m,i)=>{
+      m.visible=!!pose?.impactVisible;
+      if(m.visible){const t=reducedMotion?.35:pose.impact,angle=i*Math.PI*2/shards.length;
+        m.position.set(Math.cos(angle)*(.6+t*1.6),1.5+Math.sin(angle)*(.5+t),11.7+Math.sin(i*2)*t*.8);
+        m.rotation.set(t*3+i,t*4,0);m.scale.setScalar(reducedMotion?1:1-t*.7);
+      }
+    });
     gems.forEach((m,i)=>{m.visible=!!state.answers[i]&&i>=state.boss.hits.length;m.rotation.y=time;});
-    particles.forEach((m,i)=>{m.visible=state.phase==='victory';m.rotation.y=time+i;});
+    particles.forEach((m,i)=>{m.visible=state.phase==='victory'&&!pendingImpact;m.rotation.y=time+i;});
     gl.render(scene,camera);
   }
   return {render,dispose(){scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});gl.dispose();}};

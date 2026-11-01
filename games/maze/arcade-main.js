@@ -1,6 +1,7 @@
 import {loadMazeContent,normalizeMazeContent,MAZE_QUIZZES,DEFAULT_QUIZ_ID} from './content.js';
 import {questionPresentation} from './question-presentation.js';
 import {createArcadeRenderer} from './arcade-renderer.js';
+import {acceptedBossShot,advanceBossShot,bossShotPose} from './boss-shot.js';
 import {ARCADE_KEY,ACTIVE_PHASES,createArcade,restoreArcade,arcadeTransition,arcadeQuestion,completed,crystals,diamonds,coins,arcadeScore,readyCharge,isSafe,bossPhase,canFire,attackLane,bridgeTile} from './arcade-core.js';
 const $=id=>document.getElementById(id),dialog=$('arcade-dialog'),media=matchMedia('(prefers-reduced-motion: reduce)');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9,7 +10,7 @@ const text=v=>esc(plain(v));
 const button=(id,label,primary=true,disabled=false)=>`<button type="button" class="button ${primary?'primary':''}" id="${id}"${disabled?' disabled':''}>${label}</button>`;
 const title=(small,heading)=>`<span class="arcade-run-label">${small}</span><h2 id="dialog-title">${heading}</h2>`;
 let state=null,lastCompleted=null,renderer=null,launched=false,panel='intro',storageAvailable=true,recovery=false,busy=false,previousFocus=null,hasSaved=false;
-let pointer=null,steer={dx:0,dz:0},lastTime=0,persistMs=0,inputReadyAt=0;
+let pointer=null,steer={dx:0,dz:0},lastTime=0,persistMs=0,inputReadyAt=0,shot=null;
 const held=new Set(),physicalKeys=new Set();
 const isActive=()=>launched&&state&&!state.paused&&!panel&&ACTIVE_PHASES.includes(state.phase);
 function clearInput(){const id=pointer;pointer=null;steer={dx:0,dz:0};held.clear();const el=$('movement-joystick');el.querySelector('.joystick-thumb').style.transform='translate(0px,0px)';if(id!==null&&el.hasPointerCapture(id))el.releasePointerCapture(id);}
@@ -21,6 +22,7 @@ function save(){
 }
 function apply(action){
   if(!state)return;const old=state,next=arcadeTransition(state,action);if(next===old)return;
+  if(action.type==='fire')shot=acceptedBossShot(old,next);
   state=next;if(next.generation!==old.generation)clearInput();
   const important=action.type!=='tick'||old.generation!==next.generation||old.phase!==next.phase||old.notice!==next.notice;
   if(important){save();renderUi(true);}else renderUi(false);
@@ -73,7 +75,7 @@ async function newRun(){
     if(content.questions.length<3)throw new Error('short-bank');
     if(state?.phase==='victory')lastCompleted=state;
     if(recovery){warnStorage();recovery=false;}
-    state=createArcade(content);launched=true;panel=null;save();renderUi(true);
+    shot=null;state=createArcade(content);launched=true;panel=null;save();renderUi(true);
   }catch{show(title('אי אפשר להתחיל את הסבב','נדרשות לפחות שלוש שאלות')+'<p>בחרו נושא אחר או חזרו למבוך המלא. השמירה הקודמת נשמרה.</p>'+button('back-intro','בחירת נושא אחר'));bind('back-intro',()=>{panel='intro';renderUi(true);});}
   finally{busy=false;}
 }
@@ -130,7 +132,7 @@ function renderUi(change){
   else if(panel==='pause'){
     show(title('הזמן נעצר','הדרך תחכה לכם')+'<p>הגבישים, המתנות והשלב נשארים איתכם. חזרה לסבב מתחילה בנקודה בטוחה.</p><div class="arcade-buttons">'+button('resume-button','להמשיך מאותו מקום')+button('pause-collection','לפתוח את האוסף',false)+button('choose-run','בחירת סבב או נושא',false)+'<a class="dialog-link" href="./index.html">למבוך המלא ←</a><a class="dialog-link" href="../../../index.html">חזרה ל־PrepX ↗</a></div>');
     bind('resume-button',closePanel);bind('pause-collection',()=>{panel='collection';renderUi(true);});bind('choose-run',()=>{launched=false;panel='intro';renderUi(true);});
-  }else if(state.phase==='question')renderQuestion();else if(state.phase==='feedback')renderFeedback();else if(isSafe(state))stagePanel();else if(state.phase==='victory')victory();else closeDialog();
+  }else if(state.phase==='question')renderQuestion();else if(state.phase==='feedback')renderFeedback();else if(isSafe(state))stagePanel();else if(state.phase==='victory'&&!shot)victory();else closeDialog();
 }
 const joystick=$('movement-joystick');
 function steerPointer(e){
@@ -157,20 +159,24 @@ window.addEventListener('keydown',e=>{
   if(key==='f'&&launched&&!dialog.open&&!e.repeat){if(document.fullscreenElement)document.exitFullscreen?.();else document.querySelector('.game-shell').requestFullscreen?.().catch(()=>{});}
 });
 window.addEventListener('keyup',e=>{physicalKeys.delete(e.key);held.delete(e.key.length===1?e.key.toLowerCase():e.key);});
-window.addEventListener('blur',()=>{physicalKeys.clear();clearInput();if(isActive())openPanel('pause');else save();});
+window.addEventListener('blur',()=>{physicalKeys.clear();clearInput();if(isActive()||shot&&launched&&!panel)openPanel('pause');else save();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){physicalKeys.clear();clearInput();if(launched)openPanel('pause');}});
 window.addEventListener('pagehide',()=>{clearInput();save();});
 dialog.addEventListener('cancel',e=>{e.preventDefault();if(panel==='intro')return;if(panel)closePanel();else openPanel('pause');});
 function advance(ms){
+  if(shot&&launched&&!state.paused&&!panel){
+    shot=advanceBossShot(shot,ms);
+    if(!shot&&state.phase==='victory')renderUi(true);
+  }
   if(!isActive())return;
   const vector=pointer!==null?steer:[...held].reduce((v,k)=>({dx:v.dx+keys[k][0],dz:v.dz+keys[k][1]}),{dx:0,dz:0});
   const length=Math.max(1,Math.hypot(vector.dx,vector.dz));
   apply({type:'tick',ms,dx:vector.dx/length,dz:vector.dz/length});
   persistMs+=ms;if(persistMs>=400){persistMs=0;save();}
 }
-function draw(){if(state)renderer?.render(state,{reducedMotion:media.matches});}
+function draw(){if(state)renderer?.render(state,{reducedMotion:media.matches,shot});}
 window.advanceTime=ms=>{for(let r=Math.min(60000,Math.max(0,ms));r>0;r-=16)advance(Math.min(16,r));draw();};
-window.render_game_to_text=()=>JSON.stringify(state?{coordinates:'arena x right; z forward/up toward boss; safe start z=1, landing z>=9.8, firing z=6.5..8.5',mode:state.mode,phase:state.phase,stage:state.stage,started:launched,panel,paused:state.paused,player:state.player,generation:state.generation,hearts:state.hearts,crystals:crystals(state),diamonds:diamonds(state),earned:state.claimed.length+(state.phase==='victory'?1:0),coins:coins(state),score:arcadeScore(state),answered:completed(state),selected:state.selected,quizId:state.content.id,source:state.content.source,claimed:state.claimed,purchases:state.purchases,slowMs:state.slowMs,activeMs:state.activeMs,recoverMs:state.recoverMs,clock:state.clock,assist:state.assist,failures:state.failures,boss:{...state.boss,phase:bossPhase(state),target:attackLane(state),canFire:canFire(state)},currentQuestion:state.phase==='question'||state.phase==='feedback'?{id:arcadeQuestion(state).id,options:state.choices[state.stage]}:null,storageAvailable,recovery,hasLastCompleted:!!lastCompleted,joystick:{active:pointer!==null,...steer}}:{phase:'loading'});
+window.render_game_to_text=()=>JSON.stringify(state?{coordinates:'arena x right; z forward/up toward boss; safe start z=1, landing z>=9.8, firing z=6.5..8.5',mode:state.mode,phase:state.phase,stage:state.stage,started:launched,panel,paused:state.paused,player:state.player,generation:state.generation,hearts:state.hearts,crystals:crystals(state),diamonds:diamonds(state),earned:state.claimed.length+(state.phase==='victory'?1:0),coins:coins(state),score:arcadeScore(state),answered:completed(state),selected:state.selected,quizId:state.content.id,source:state.content.source,claimed:state.claimed,purchases:state.purchases,slowMs:state.slowMs,activeMs:state.activeMs,recoverMs:state.recoverMs,clock:state.clock,assist:state.assist,failures:state.failures,boss:{...state.boss,phase:bossPhase(state),target:attackLane(state),canFire:canFire(state)},shot:shot?{...shot,...bossShotPose(shot,media.matches)}:null,currentQuestion:state.phase==='question'||state.phase==='feedback'?{id:arcadeQuestion(state).id,options:state.choices[state.stage]}:null,storageAvailable,recovery,hasLastCompleted:!!lastCompleted,joystick:{active:pointer!==null,...steer}}:{phase:'loading'});
 function frame(now){const dt=lastTime?Math.min(80,now-lastTime):0;lastTime=now;if(dt>0)advance(dt);draw();requestAnimationFrame(frame);}
 async function initialize(){
   let raw=null;
