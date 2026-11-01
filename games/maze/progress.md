@@ -1,5 +1,16 @@
 Original prompt: Add a separate maze game button, preserve the old game, implement and test mobile first. Small tense maze with creatures and question traps, fictional coins, three hearts, capture and guided escape without restarting or erasing progress.
 
+## 2026-11-01 — straight arcade joystick movement
+
+User request: Fix unintended left/right drift while walking straight in the bridge arcade.
+
+- Reproduced using actual mobile CDP touch input: an 8px sideways offset during a 44px upward drag produced horizontal input 0.1789.
+- Added a narrow cardinal-direction tolerance (cross-axis less than 35% of the main axis); deliberate diagonals and analog speed remain available. The thumb reflects the movement direction and recenters inside the existing 12px dead zone.
+- Added `tests/arcade-straight-browser.mjs` for both sideways offsets while moving up, backward/lateral movement, diagonals, dead zone, release, and a complete bridge crossing at 390x844. It fails on the original code and passes on the fix.
+- Source verification: 13 arcade unit tests, all 50 existing arcade browser checks, syntax and whitespace checks passed. Production build generated in ignored `output/maze/straight-build/`; gameplay screenshot inspected. Standard web-game client ran and its screenshot/state were inspected; its sole resource 500 comes from the unavailable local quiz API proxy, with bundled fallback functional. Focused browser checks mock that API and have zero page errors.
+- Isolated branch `codex/arcade-straight-movement`. No deployment or production changes. Database/exam/email gates do not apply to this input-only patch and were not run.
+- Final verification: focused mobile touch regression also passes against the production build at port 5197; all 119 game unit tests pass. No remaining scoped failures. Production release still requires the user's explicit authorization.
+
 ## Direction and reference lock
 
 - Existing Afterbell: original low-poly 3D world, bundled Hebrew font, dusk/lantern atmosphere; new maze remains a separate entry and state namespace.

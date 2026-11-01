@@ -133,7 +133,15 @@ function renderUi(change){
   }else if(state.phase==='question')renderQuestion();else if(state.phase==='feedback')renderFeedback();else if(isSafe(state))stagePanel();else if(state.phase==='victory')victory();else closeDialog();
 }
 const joystick=$('movement-joystick');
-function steerPointer(e){const b=joystick.getBoundingClientRect(),dx=e.clientX-b.left-b.width/2,dy=e.clientY-b.top-b.height/2,d=Math.hypot(dx,dy),radius=b.width/2-28,scale=d>radius?radius/d:1;joystick.querySelector('.joystick-thumb').style.transform=`translate(${dx*scale}px,${dy*scale}px)`;steer=d<12?{dx:0,dz:0}:{dx:dx/Math.max(radius,d),dz:-dy/Math.max(radius,d)};}
+function steerPointer(e){
+  const b=joystick.getBoundingClientRect(),dx=e.clientX-b.left-b.width/2,dy=e.clientY-b.top-b.height/2,d=Math.hypot(dx,dy),radius=b.width/2-28;
+  if(d<12){steer={dx:0,dz:0};joystick.querySelector('.joystick-thumb').style.transform='translate(0px,0px)';return;}
+  // Ignore small cross-axis offsets, while retaining deliberate diagonals.
+  const x=Math.abs(dx)<Math.abs(dy)*0.35?0:dx,y=Math.abs(dy)<Math.abs(dx)*0.35?0:dy;
+  const length=Math.hypot(x,y),scale=Math.min(1,d/radius)/length;
+  steer={dx:x*scale,dz:-y*scale};
+  joystick.querySelector('.joystick-thumb').style.transform=`translate(${steer.dx*radius}px,${-steer.dz*radius}px)`;
+}
 for(const event of ['contextmenu','selectstart'])joystick.addEventListener(event,e=>e.preventDefault());
 joystick.addEventListener('pointerdown',e=>{if(e.button!==0||joystick.disabled||pointer!==null||e.timeStamp<inputReadyAt)return;e.preventDefault();pointer=e.pointerId;held.clear();joystick.setPointerCapture(pointer);steerPointer(e);});
 joystick.addEventListener('pointermove',e=>{if(e.pointerId===pointer&&isActive()){e.preventDefault();steerPointer(e);}});
