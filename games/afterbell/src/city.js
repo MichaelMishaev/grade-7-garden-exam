@@ -51,7 +51,7 @@ function refresh(){
  $('action').hidden=d>4.3;
  const routeLabel=d<=4.3?'לבצע את הפעולה':world.moving()?'לעצור בדרך':'הובלה ליעד';
  if($('route').textContent!==routeLabel)$('route').textContent=routeLabel;
- const status=d<=4.3?'הגעתם! לחצו על ״'+o.action+'״.':p.district+' · '+Math.round(d)+' מטר · אפשר לנהוג או ללחוץ על הובלה.';
+ const status=d<=4.3?'הגעתם! לחצו על ״'+o.action+'״.':world.yielding()?'מאטים ונותנים זכות קדימה.':p.district+' · '+Math.round(d)+' מטר · אפשר לנהוג או ללחוץ על הובלה.';
  if($('status').textContent!==status)$('status').textContent=status;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
@@ -153,7 +153,7 @@ $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.c
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
 window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
-try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}});}
+try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},()=>toast('התנגשות ברכב · אפשר להמשיך לנסוע'));}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
 setInterval(refresh,100);drawRoles();loadQuiz();
 window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; city edges ±240 with waterfront at z=188',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio}});

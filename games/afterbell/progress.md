@@ -145,3 +145,6 @@ The van uses the shared city street grid for guided routes. Short access legs co
 
 ## Van garage
 Five cosmetic upgrades can share the van with the original roof beacon. The shop opens the garage when driving and the character section on foot. Chromium and WebKit bought the gear, removed and re-equipped the spoiler, restored the wallet after reload and drove to all eight landmarks with the upgrades installed.
+
+## Traffic contact
+Manual van contact checks oriented vehicle bounds, stops inward movement and gives one impact cue per sustained contact. Normal motion includes a damped suspension rebound and a brief puff of road dust. Guided routes follow directional lanes, predict moving traffic and yield or replan. Tests cover braking for a crossing car, bumper and side clearance, manual recovery, reduced motion, and traffic-aware trips to all eight destinations.

@@ -29,6 +29,26 @@ function access(point,blocked){
  return null;
 }
 
+// Long road segments use the same directional lanes as the ambient circuits.
+// Keep the planner's collision-checked corners and merge into the lane between them.
+function followLanes(start,points,outside){
+ const result=[];
+ for(const end of points){
+   const dx=end.x-start.x,dz=end.z-start.z;
+   const horizontal=Math.abs(dx)>12&&Math.abs(dz)<=4;
+   const vertical=Math.abs(dz)>12&&Math.abs(dx)<=4;
+   if(horizontal||vertical){
+     const sign=Math.sign(horizontal?dx:dz);
+     const lane=horizontal?Math.round(start.z/56)*56+2*sign:Math.round(start.x/56)*56-2*sign;
+     const enter=horizontal?{x:start.x+4*sign,z:lane}:{x:lane,z:start.z+4*sign};
+     const leave=horizontal?{x:end.x-4*sign,z:lane}:{x:lane,z:end.z-4*sign};
+     if(clearSegment(start,enter,outside)&&clearSegment(enter,leave,outside)&&clearSegment(leave,end,outside))result.push(enter,leave);
+   }
+   result.push(end);start=end;
+ }
+ return result;
+}
+
 export function drivingRoute(start,goal,blocked){
  if(blocked(start.x,start.z)||blocked(goal.x,goal.z))return null;
  if(distance(start,goal)<1)return [];
@@ -38,5 +58,5 @@ export function drivingRoute(start,goal,blocked){
  const outside=(x,z)=>!onRoad(x,z)||blocked(x,z);
  const road=findRoute(a,b,outside,grid);
  if(!road||!clearSegment(road.at(-1)||a,b,outside))return null;
- return [...entry.slice(1),...road,...exit.reverse()];
+ return [...entry.slice(1),...followLanes(a,[...road,b],outside),...exit.reverse().slice(1)];
 }

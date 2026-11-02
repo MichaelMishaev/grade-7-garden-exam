@@ -28,3 +28,6 @@ C10. Guided vehicle travel from the HUD, map, or a tapped destination joins a ne
 C11. Players can buy, equip and remove a scarf, glasses, a backpack and a roof beacon with earned coins. The first three appear on the hero and the beacon appears on the van. Ownership persists with the existing wallet.
 
 C12. The van shop sells five stackable cosmetic upgrades with distinct silhouettes or colors: rally stripes, a spoiler, neon underglow, a rear spare wheel, and a surfboard. Each can be removed and re-equipped without another charge. Driving players see vehicle stock first. Reload restores purchases and the fully decorated van can finish the same road routes.
+
+C13. A van striking moving traffic loses forward motion at contact and briefly rocks on its suspension. One continuous contact gives one impact cue. Steering away restores control; reduced-motion players receive a text cue without rocking.
+C14. Guided vans anticipate slower, crossing and opposing traffic, yield with the route intact, then resume or take a clear road detour. Walking, rewards and delivery progress are unaffected.

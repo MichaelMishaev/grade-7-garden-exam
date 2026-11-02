@@ -42,6 +42,9 @@ try{
   }
   const last=trail.at(-1);assert.ok(Math.hypot(last.x-goal.x,last.z-goal.z)<1,JSON.stringify({id,last}));
  }
+ const {brakeTicks,impacts}=(await state()).life;
+ assert.ok(brakeTicks>0,'guided van must brake for real traffic');
+ assert.equal(impacts,0,'guided trips must avoid impacts');
  assert.ok(samples>100);console.log('PASS nine purchases, saved gear and eight landmark routes;',samples,'mid-trip positions on roads');
  await p.screenshot({path:'output/city-van-beacon.png'});
 }finally{await b.close();}

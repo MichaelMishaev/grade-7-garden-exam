@@ -1,9 +1,10 @@
 import * as T from 'three';
 import {places,inCity,CITY_EDGE} from './city-data.js';
+import {vansTouch,safeSpeed} from './city-traffic.js';
 import {drivingRoute} from './city-roads.js';
 import {findRoute,clearSegment} from './navigation.js';
 
-export function cityWorld(host,onMove){
+export function cityWorld(host,onMove,onImpact){
  const scene=new T.Scene();scene.background=new T.Color('#a8dce2');scene.fog=new T.Fog('#b8e1df',225,430);
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));host.append(renderer.domElement);
  const camera=new T.OrthographicCamera(-1,1,1,-1,.1,650);
@@ -162,7 +163,7 @@ export function cityWorld(host,onMove){
  // Closed city-block circuits keep actors on the street or sidewalk at every turn.
  function circuit(g,x,z,size,speed,offset,dwell=0){
    return time=>{
-     const duration=size/speed+dwell,t=time+offset,leg=Math.floor(t/duration)%4;
+     const duration=size/speed+dwell,period=4*duration,t=((time+offset)%period+period)%period,leg=Math.floor(t/duration);
      const distance=Math.min(size,(t%duration)*speed);
      const corners=[[0,0],[size,0],[size,size],[0,size]],dx=[1,0,-1,0],dz=[0,1,0,-1];
      g.position.set(x+corners[leg][0]+dx[leg]*distance,0,z+corners[leg][1]+dz[leg]*distance);
@@ -172,7 +173,8 @@ export function cityWorld(host,onMove){
  const traffic=[],walkers=[],routes=[];
  for(let i=0;i<20;i++){
    const x=((i%5)-2)*56,z=(Math.floor(i/5)-2)*56;
-   const g=van(palette[i%6]);traffic.push(g);routes.push(circuit(g,x+2,z+2,52,6+i%3,i*4.1));
+   const g=van(palette[i%6]);traffic.push(g);g.userData.move=circuit(g,x+2,z+2,52,6+i%3,i*4.1);
+   Object.assign(g.userData,{clock:0,vx:0,vz:0});g.userData.move(0);
  }
  for(let i=0;i<32;i++){
    const x=(i%8-4)*56,z=(Math.floor(i/8)-2)*56;
@@ -211,28 +213,96 @@ export function cityWorld(host,onMove){
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const keys=new Set();let stick={x:0,z:0},px=places.home.x,pz=places.home.z+2,heading=0,time=0,destination=places.home,path=[],active=false,paused=false,driving=false,loaded=false,manual=false,jump=0,vy=0;
  const forward=new T.Vector3(-.58,0,-.815),right=new T.Vector3(.815,0,-.58);
+ const dust=new T.Group();
+ for(let i=0;i<5;i++)part(dust,ball,'#d5c4a5',0,0,0,.2,.2,.2);
+ scene.add(dust);dust.visible=false;
+ let impactAge=1,impactPower=0,impactSide=0,impacts=0,yieldTime=0,replanAt=0,braking=false,brakeTicks=0;
+ const contacts=new Set();
+ function impact(g,speed){
+   if(contacts.has(g))return;
+   contacts.add(g);impactAge=0;impactPower=Math.min(1,Math.max(.25,speed/31));impacts++;
+   impactSide=Math.sign((g.position.x-px)*Math.cos(heading)-(g.position.z-pz)*Math.sin(heading));
+   dust.position.set((px+g.position.x)/2,.6,(pz+g.position.z)/2);
+   onImpact();
+ }
+ function advanceTraffic(dt){
+   for(const g of traffic){
+     const m=g.userData,p=g.position,x=p.x,z=p.z,angle=g.rotation.y;
+     // At a blocked junction, a driver already yielding can back up to clear the van's turn.
+     const reversing=path.length&&m.reverseUntil>time;
+     const clockStep=reversing?-dt*.65:dt;
+     m.move(m.clock+clockStep);
+     const closer=(p.x-px)**2+(p.z-pz)**2<(x-px)**2+(z-pz)**2;
+     if(active&&driving&&closer&&vansTouch(px,pz,heading,p.x,p.z,g.rotation.y,path.length ? .18 : 0)){
+       if(!path.length)impact(g,Math.hypot(p.x-x,p.z-z)/dt);
+       else if(yieldTime>.65&&!reversing)m.reverseUntil=time+2.5;
+       p.set(x,0,z);g.rotation.y=angle;
+     }else m.clock+=clockStep;
+     m.vx=(p.x-x)/dt;m.vz=(p.z-z)/dt;
+     if(!vansTouch(px,pz,heading,p.x,p.z,g.rotation.y,.75))contacts.delete(g);
+   }
+ }
  function fit(){const h=active?(innerWidth<600?52:60):(innerWidth<600?98:128),w=h*innerWidth/innerHeight;camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
  function position(x,z){px=x;pz=z;path=[];}
  function go(x,z){const route=driving?drivingRoute({x:px,z:pz},{x,z},blocked):findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
  function update(dt,draw=true){
-   if(!paused)time+=dt;
+   if(!paused&&dt>0){time+=dt;impactAge+=dt;advanceTraffic(dt);}
+   braking=false;
    if(active&&!paused){
      let sx=stick.x+Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
      let sy=-stick.z+Number(keys.has('ArrowUp')||keys.has('KeyW'))-Number(keys.has('ArrowDown')||keys.has('KeyS'));
      let dx=sx*right.x+sy*forward.x,dz=sx*right.z+sy*forward.z;
      if(sx||sy)path=[];
-     while(path.length&&Math.hypot(path[0].x-px,path[0].z-pz)<.001)path.shift();
+     while(path.length&&Math.hypot(path[0].x-px,path[0].z-pz)<.001){const reached=path.shift();px=reached.x;pz=reached.z;}
      if(path.length){dx=path[0].x-px;dz=path[0].z-pz;}
      const len=Math.hypot(dx,dz);
-     if(len>.0001){const speed=driving?31:10,step=path.length?Math.min(len,speed*dt):speed*dt,nx=px+dx/len*step,nz=pz+dz/len*step;
-       if(path.length){if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}else path=[];}
+     if(len>.0001){
+       const angle=Math.atan2(dx,dz),guided=path.length>0;
+       let speed=driving?31:10;
+       if(driving&&guided){
+         const ahead=safeSpeed(px,pz,angle,speed,traffic);
+         braking=ahead.speed<speed;speed=ahead.speed;
+         if(braking&&dt>0)brakeTicks++;
+         yieldTime=speed<4?yieldTime+dt:0;
+         if(yieldTime>.9&&time>=replanAt&&ahead.obstruction){
+           replanAt=time+2;
+           const p=ahead.obstruction.position;
+           const clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
+           const detour=drivingRoute({x:px,z:pz},path.at(-1),(x,z)=>blocked(x,z)||Math.hypot(x-p.x,z-p.z)<clearance);
+           if(detour?.length){path=detour;speed=0;yieldTime=0;}
+         }
+       }else yieldTime=0;
+       if(driving&&!guided&&impactAge<.24)speed*=impactAge/.24;
+       const step=Math.min(guided?len:Infinity,speed*dt),nx=px+dx/len*step,nz=pz+dz/len*step;
+       const hit=driving&&traffic.find(g=>{
+         const p=g.position;
+         return vansTouch(nx,nz,angle,p.x,p.z,g.rotation.y) &&
+           Math.hypot(nx-p.x,nz-p.z)<=Math.hypot(px-p.x,pz-p.z);
+       });
+       if(hit){
+         if(guided)braking=true;
+         else if(dt>0){
+           const hx=hit.position.x-px,hz=hit.position.z-pz;
+           const closing=((dx/len*speed-hit.userData.vx)*hx+(dz/len*speed-hit.userData.vz)*hz)/Math.max(.01,Math.hypot(hx,hz));
+           impact(hit,Math.max(0,closing));
+         }
+       }
+       else if(guided){if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}else path=[];}
        else{if(!blocked(nx,pz))px=nx;if(!blocked(px,nz))pz=nz;}
-       heading=Math.atan2(dx,dz);
+       if(!hit)heading=angle;
      }
      vy-=20*dt;jump=Math.max(0,jump+vy*dt);if(!jump)vy=0;onMove(px,pz,dt);
    }
    avatar.position.set(px,jump,pz);avatar.rotation.y=heading;avatar.visible=active&&!driving;
    car.position.set(driving?px:px+3.6,0,driving?pz:pz+2);car.rotation.y=heading;car.visible=active&&driving;
+   const rebound=!reduced&&impactAge<.55?Math.sin(impactAge*26)*Math.exp(-impactAge*7)*impactPower:0;
+   dust.visible=car.visible&&!reduced&&impactAge<.38;
+   if(dust.visible)dust.children.forEach((p,i)=>{
+     const spread=(.4+impactPower)*impactAge*4;
+     p.position.set(Math.sin(i*2.4)*spread,impactAge*(1+i%2),Math.cos(i*2.4)*spread);
+     p.scale.setScalar((.19+.25*impactPower)*(1-impactAge/.38));
+   });
+   car.rotation.x=rebound*.18;car.rotation.z=-rebound*impactSide*.13;car.position.y=Math.abs(rebound)*.3;
    parcel.visible=active&&loaded;parcel.position.set(px+(driving?0:Math.sin(heading)),driving?3.9:2.1+jump,pz+(driving?0:Math.cos(heading)));
    marker.visible=ring.visible=active&&!!destination;
    if(destination){marker.position.set(destination.x,6+(reduced?0:Math.sin(time*3)*.5),destination.z);marker.rotation.y=time*.65;ring.position.set(destination.x,.5,destination.z);}
@@ -268,8 +338,8 @@ export function cityWorld(host,onMove){
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
-     return {cars:traffic.length,residents:walkers.length,planes:planes.length,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
-   },start(x,z){position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){if(driving===v)return;const goal=path.at(-1);driving=v;if(goal)go(goal.x,goal.z);},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
+     return {cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,brakeTicks,impactVisible:dust.visible,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
+   },yielding:()=>braking,start(x,z){impactAge=1;impacts=brakeTicks=yieldTime=replanAt=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){if(driving===v)return;const goal=path.at(-1);driving=v;if(goal)go(goal.x,goal.z);},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
    getPlayer:()=>({x:px,z:pz,y:jump}),project(p){const v=new T.Vector3(p.x,6,p.z).project(camera);return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2,visible:Math.abs(v.x)<.9&&Math.abs(v.y)<.85};},
    advance(ms){manual=true;for(let t=0;t<Math.min(ms,90000);t+=1000/60)update(1/60,false);update(0);},pixelRatio:renderer.getPixelRatio()};
 }
