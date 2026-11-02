@@ -1,8 +1,10 @@
 import { relayGoal } from './relay.js';
+import { scenarioGoal } from './scenarios.js';
 import { NPCS, EQUIPMENT, EXIT, progress, canEscape } from './core.js';
 import { ENVIRONMENT, puzzleSolved } from './environment-state.js';
 export function nextObjective(round, preferred, position=round.player) {
   if(canEscape(round))return {id:'exit',kind:'exit',...EXIT,title:'השער פתוח — יוצאים הביתה',hint:'לכו בעקבות השביל המואר ולחצו על כפתור היציאה ליד השער.',action:'לשער היציאה'};
+  if(round.scenario)return scenarioGoal(round);
   const unfinished=NPCS.map((n,i)=>i).filter(i=>!round.seals.includes(NPCS[i].id));
   if(round.relay)return relayGoal(round.relay,unfinished,preferred,position);
   const started=unfinished.filter(i=>round.understood.includes(NPCS[i].id)||round.items.includes(EQUIPMENT[i].id));
@@ -27,3 +29,12 @@ export const EQUIPMENT_CHECKS={
  antenna:{title:'כיוון האות',hint:'במחברת מסומן ערוץ 5. כוונו את החוגה עד שהאות יציב, ואז אשרו.'}
 };
 export function checkOperation(id,step,choice){return EQUIPMENT_CHECKS[id]?.sequence?.[step]===choice;}
+// Bonus objectives are also exclusive to an adventure; legacy drafts keep the old list.
+export function extraMissions(round){
+ if(!round?.scenario)return SIDE_MISSIONS;
+ const ids={evidence:'lamp',witness:'telescope',robot:'planter',survey:'door',freight:'recycling',optics:'bench',shadow:'solar',rescue:'water',relay:'bike',courier:'basketball'};
+ const e=ENVIRONMENT.find(e=>e.id===ids[round.scenario.id]);if(!e)return [];
+ const titles={lamp:'בדיקת התאורה בזירה',telescope:'תצפית בעקבות העד',planter:'עזרה בחממת הרובוטיקה',door:'סקר הכניסה למבנה',recycling:'פינוי אזור השילוח',bench:'עמדת תצפית יציבה',solar:'להחזיר אור למסלול הצללים',water:'מים לחיות הקמפוס',bike:'בדיקת אות גיבוי קולי',basketball:'תרגול קליעה בין משלוחים'};
+ const done=s=>e.id==='solar'?puzzleSolved(s):e.id==='water'?s.waterFilled:e.id==='planter'?s.watered:e.id==='recycling'?s.recycled:e.id==='basketball'?s.shots>0:e.id==='telescope'?s.observations>0:e.id==='bike'?s.bells>0:s.visited.includes(e.id);
+ return [{...e,title:titles[e.id],hint:e.description,done}];
+}

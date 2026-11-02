@@ -1,4 +1,5 @@
 import { charged, validRelay } from './relay.js';
+import { restoreScenario } from './scenarios.js';
 import { attemptId } from './browser-crypto.js';
 import { normalizeEnvironment } from './environment-state.js';
 export const NPCS = [
@@ -81,6 +82,11 @@ export function restoreRound(raw, quiz) {
     if (r.relay && !validRelay(r.relay)) return null;
     r.seals = NPCS.filter((n, i) => (r.relay ? charged(r.relay,i) : r.understood.includes(n.id) && r.items.includes(EQUIPMENT[i].id)) && progress(r, i).answered === progress(r, i).total).map(n => n.id);
     r.collected = Array.isArray(r.collected) ? [...new Set(r.collected.filter(n => Number.isInteger(n) && n >= 0 && n < 12))] : [];
+    if (r.scenario !== undefined) {
+      r.scenario = restoreScenario(r.scenario);
+      if (!r.scenario) return null;
+      r.seals = r.seals.filter(id => r.scenario.completed.includes(NPCS.findIndex(n => n.id === id)));
+    }
     r.environment = normalizeEnvironment(r.environment);
     return r;
   } catch { return null; }

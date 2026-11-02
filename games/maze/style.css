@@ -95,3 +95,27 @@ body[data-encounter=true] .rewards-bar{display:none}
 .completion-actions #completion-home{color:var(--text)}
 
 .mission-trail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;list-style:none;padding:0;margin:0 0 12px}.mission-trail li{display:grid;grid-template-columns:22px 1fr;align-items:center;gap:2px 5px;padding:9px 5px;background:#14252d;border:1px solid var(--line);border-radius:12px;min-width:0}.mission-trail li>span{grid-row:span 2;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#304650;color:#e3ecef;font-size:12px}.mission-trail strong{font-size:11px}.mission-trail small{font-size:9px;color:var(--muted)}.mission-trail [aria-current=step]{border-color:var(--gold);background:#263239}.mission-trail [aria-current=step]>span{background:var(--gold);color:#18232b}.mission-trail [data-done=true]>span{background:#a1dcc6;color:#122c24}.action-badge{display:block;color:#bcebd9;font-size:12px;font-weight:700;line-height:1.5;margin:0 0 8px}.action-controls{min-width:0}
+/* Reserve room for touch controls inside the browser's visible portrait area. */
+@media(max-width:699px) and (orientation:portrait){
+  body[data-intro=false][data-encounter=false] .game-shell{height:100dvh;min-height:0;display:flex;flex-direction:column;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+  body[data-intro=false][data-encounter=false] .game-shell>*{flex-shrink:0}
+  body[data-intro=false][data-encounter=false] .topbar{height:52px}
+  body[data-intro=false][data-encounter=false] .hud{padding:7px 0}
+  body[data-intro=false][data-encounter=false] .mission-trail{margin-bottom:8px}
+  body[data-intro=false][data-encounter=false] .mission-trail li{padding-block:6px}
+  body[data-intro=false][data-encounter=false] .rewards-bar{margin-bottom:8px}
+  body[data-intro=false][data-encounter=false] .viewport{flex:1 1 0;height:auto;min-height:100px;max-height:none}
+  body[data-intro=false][data-encounter=false] .controls{gap:14px;padding:10px 0 0}
+  body[data-intro=false][data-encounter=false] .joystick{width:120px;height:120px}
+  body[data-intro=false][data-encounter=false] #joystick-help,
+  body[data-intro=false][data-encounter=false] .notice{display:none}
+  body[data-intro=false][data-encounter=false] .action-badge{font-size:11px;margin-bottom:5px}
+  body[data-intro=false][data-encounter=false] .next-step{padding:8px;margin:0 0 8px}
+  body[data-intro=false][data-encounter=false] .next-step strong{font-size:13px}
+  body[data-intro=false][data-encounter=false] .next-step p{display:none}
+  body[data-intro=false][data-encounter=false] .next-step .button{min-height:44px;margin-top:6px;padding:8px;font-size:13px}
+}
+@media(max-width:699px) and (max-height:650px) and (orientation:portrait){
+  /* The same exit action remains in the controls; avoid a duplicate panel. */
+  body[data-intro=false][data-encounter=false] #exit-next-step{display:none}
+}

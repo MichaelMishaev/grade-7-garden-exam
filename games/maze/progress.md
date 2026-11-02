@@ -188,3 +188,5 @@ Subject selector clarity: grouped all game topic pickers under עברית / פי
 Next-step clarity: free highlighted exit route and persistent three-seal guidance panel; interaction walks to gate; finish promotes subject-preserving bridge/boss challenge. Saved-run mobile fixture reached exit without changing coins; all 119 unit tests pass.
 
 Action cues: added traps/gate/boss progress strip with completed/current/locked text; contextual nearby-action and route badges; explicit next-trap guidance and stop control. Fixed mid-step stop restarting navigation and removed redundant renderer purchase gate on supplied breadcrumbs. Mobile 390px/320px saved/fresh run, refresh, guided exit and stop checks pass; 119 unit tests pass. Local build only.
+
+Mobile joystick fit: portrait play uses 100dvh flex layout, preserves 120px joystick and action buttons, and lets the maze use remaining height. Short screens omit duplicate exit panel while keeping the contextual exit action. Fresh and three-seal fixtures pass full-control-bounds checks at 390x720, 360x640, 320x568, 390x600 plus actual touch movement. Local only.

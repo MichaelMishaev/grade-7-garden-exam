@@ -9,7 +9,10 @@
     "start": "node service.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.mjs",
-    "sync-content": "node scripts/sync-content.mjs"
+    "test:browser:scenarios": "node tests/qa-scenarios.mjs",
+    "sync-content": "node scripts/sync-content.mjs",
+    "test:browser:built": "node tests/qa-scenarios-built.mjs",
+    "test:browser:isolation": "node tests/qa-scenario-isolation.mjs"
   },
   "dependencies": {
     "js-sha256": "0.11.1",

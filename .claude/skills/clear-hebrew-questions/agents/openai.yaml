@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clear Hebrew Questions"
+  short_description: "Clear Hebrew questions for students aged 12–13"
+  default_prompt: "Use $clear-hebrew-questions to create questions like my examples, in clear Hebrew for students aged 12–13, with simple formatting and the same learning difficulty."

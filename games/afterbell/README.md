@@ -2,6 +2,8 @@
 
 A separate Hebrew RTL, open-world 3D practice game in the PrepX solution. Starlight Relay is the primary adventure. Each new run selects a different edition of the dusk campus relay. Students choose beacon order, collect sparks, jump through a ring or use its ground switch, align mirrors and complete their selected practice set to light a constellation. In the original blackout adventure, students meet three classmates in any order, interpret what they need, recover equipment, complete an existing practice set and restore the exit systems. Nineteen rabbits, foxes, birds and ducks roam independently around the campus. The player and classmates have human proportions and the environment uses a restrained dusk palette, concrete/glass buildings and natural trees. The environment identifies **בית הספר שי עגנון · כיתה ז׳ איינשטיין · כיתת הייטק**.
 
+The field-case selector offers ten additional adventures. Each has three distinct field tasks, a subject recommendation and its own optional objective. The player can also start the original blackout adventure or resume a saved game.
+
 All game code lives in `games/afterbell/`. The home page links to the game through a dedicated card and stylesheet. The existing server delegates only `/api/afterbell/*` to the game service; exam pages and submission behavior retain their existing implementation. No Railway configuration changes are needed.
 
 ## Run
@@ -39,14 +41,35 @@ Open `http://192.168.1.139:4320/` on the phone. The address depends on the compu
 ## Learning and controls
 
 - Clear three-step introduction, numbered system/map markers, selectable destination, equipment clues and a direction arrow.
-- Keyboard: WASD/arrows move, Space jumps, Shift runs, E talks, Escape pauses, F toggles fullscreen. Click the ground to walk. On phones, use the touch joystick, jump button and nearby-character action.
-- The whole selected quiz is distributed across the three classmates. Visit them in any order. Understand their needs, find the missing card/backup unit/antenna, then complete the assigned questions to restore their station. Mistakes never remove points or lives.
+- Keyboard: WASD/arrows move, Space jumps, Shift runs, C toggles quiet crouching, Q dashes with a cooldown, E interacts, Escape pauses, F toggles fullscreen. Carrying equipment slows movement and disables dash. Click the ground to walk. On phones, use the touch joystick, jump button and nearby-character action.
+- The whole selected quiz is distributed across the three scenario stages. Complete the field task, then answer that stage’s questions at the same location. Older drafts still use the three classmates and their original equipment errands. Mistakes never remove points or lives.
 - The first answer locks. Feedback explains the answer and links its source. It advances after 1.5 seconds, with an option to pause and read. The journal and completion screen provide read-only review.
 - Academic scores use the existing difficulty weights, out of 100. Stars follow 50/75/90 thresholds. Fireflies and social dialogue do not inflate the academic score.
 - The gate requires all questions answered and all three systems restored. Completed full rounds update `prepx-best-<quiz>` on the current origin. Separate origins have separate browser storage.
 - No countdown, jump scares, paid features, external AI or public leaderboard. Environmental clues are fictional game content; academic questions are never replaced with invented material.
 
-## Clear next steps and field challenges
+## Ten adventures
+
+The start screen recommends a scenario for the selected study set; every adventure remains selectable. Paired recommendations rotate after a new round. The scenario and field progress are saved with the current per-tab adventure. These fictional field puzzles do not add academic points or replace the source question bank.
+
+| Adventure | Field actions |
+| --- | --- |
+| תיק הראיות | Inspect six scene objects, link evidence to conclusions, reconstruct four events |
+| העד שנעלם | Branching interviews, contradictory timetable entries, physical hideout search |
+| חילוץ הרובוט | Program a 5×5 maze, repair four circuit connections, escort a moving robot |
+| מודדי הקמפוס | Align ruler endpoints, trace a parcel and calculate area, convert map scale |
+| משלוח במידות | Repair a manifest, balance weights, rotate and pack three shapes |
+| המעבדה המדויקת | Focus/expose an image, eliminate parallax, sample and reject an outlier |
+| סוד הצללים | Position light/predict shadow, compare shadow proportions, record a sundial |
+| מחזירים את השועל | Earn physical trust, construct a shelter, manage calm/water/rest |
+| האות האחרון | Synchronize waveforms, compose grouped Morse, reconnect a damaged network |
+| שליחי הלילה | Plan a budgeted route, complete a four-movement course, deliver coded parcels |
+
+All **30 field task types are exclusive to their adventure**, and each adventure also has a different optional bonus objective. New rounds cannot activate hidden legacy equipment errands; noticeboards describe the current adventure. Shared form controls do not imply a shared puzzle. Numbered world rings, minimap markers, distinct task props, guidance, stage slots and the journal identify the active task. Robot escort requires the companion to arrive; fox trust accumulates only through quiet proximity; the courier course checks actual jumps/dash/landing. Prior unfinished revision-1 puzzles reset to the wider task while completed stages and locked source answers are preserved. Wrong operations explain how to retry, with no academic penalty. The final gate still requires all source questions and all three stages. The detailed specification and acceptance criteria are in `docs/features/afterbell-scenarios.md` at the repository root.
+
+`node tests/qa-scenarios.mjs` tests ten desktop and ten 390×844 mobile adventures against the Vite server (`AFTERBELL_URL`, default port 5177). It mocks content and result saves; no teacher email or production history is written. Academic feedback timers are shortened in the harness; production still uses 1.5 seconds. Revision-2 reports/screenshots use `output/playwright/scenarios-r2/`; historical revision-1 results do not verify this revision. Unit/recovery tests are included in `npm test`. `npm run test:browser:isolation` checks all ten bonus assignments, current noticeboard copy, absence of hidden legacy errands, and compatibility with old saved rounds.
+
+## Legacy adventures and optional field challenges
 
 The closest unfinished teammate is selected at the start. The objective explicitly changes from meeting that teammate, to locating equipment, to returning it, and finally to the exit. Resuming an adventure prefers unfinished work already started. Players can still choose another station or explore freely.
 
@@ -99,6 +122,11 @@ npm audit
 ```
 
 `tests/browser.mjs` exercises desktop and 390×844 touch, real WebGL rendering, movement/jumping, wildlife, pause, dialogue, locked wrong/correct answers, reload, read-only review, equipment collection, all quests in a different order, the exit and a saved result. Run `node tests/qa-relay.mjs` with the local dev and game servers running to exercise all beacon mechanics, saved progress, score locking, replay and the finale. Dedicated QA scripts cover mobile environmental actions and source/storage failure recovery. It also checks offline and reduced-motion behavior. `tests/qa-guided-trip.mjs` checks a complete guided equipment round trip in the built app (no development hooks, no result/email POSTs); set `PREPX_QA_URL` to verify a hosted build. `tests/qa-mission.mjs` verifies the objective lifecycle, safe guidance, all field puzzles, five side missions and reload recovery; its route-only mode checks all eleven actual-world destinations. Screenshots and reports are ignored under `output/`. Test-only positioning exists only in Vite development with `?test=1`; production builds remove that code.
+
+
+`tests/qa-scenarios.mjs` exercises all ten current adventures on desktop and 390×844 touch: field retries, movement restrictions, question locking, completion gates, reload, guidance and mocked saves. `npm run test:browser:built` verifies the nested build (default port 4328) through normal controls without positioning hooks: all seven subject recommendations, the larger robot maze, evidence inspection, physical fox trust, the completion button and locked source answers. Screenshots/reports are under `output/` and must not be committed. Older `browser.mjs`, `qa-mission.mjs` and `qa-guided-trip.mjs` describe the legacy equipment flow; use a legacy saved-round fixture when investigating that flow. The new default browser command covers the current scenario experience.
+
+Test-only positioning exists only in Vite development with `?test=1`; production builds remove that code. Production/public QA must intercept result submissions unless a real result is explicitly authorized.
 
 Verified locally on 2026-10-29: **16 core/service tests**, **43 full-story browser checks**, **18 functional recovery checks**, **154 mobile checks**, and **18 final mobile visual checks** passed with no browser/page errors in the completed QA runs. The unchanged web-game skill client also passed the final start, movement, jump and rendered-scene smoke check. Screenshots and game state were inspected. The mobile checks use browser emulation at 390×844 and 360×780; physical-device acceptance and production deployment are separate.
 
