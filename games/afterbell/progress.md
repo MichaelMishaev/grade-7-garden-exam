@@ -148,3 +148,8 @@ Five cosmetic upgrades can share the van with the original roof beacon. The shop
 
 ## Traffic contact
 Manual van contact checks oriented vehicle bounds, stops inward movement and gives one impact cue per sustained contact. Normal motion includes a damped suspension rebound and a brief puff of road dust. Guided routes follow directional lanes, predict moving traffic and yield or replan. Tests cover braking for a crossing car, bumper and side clearance, manual recovery, reduced motion, and traffic-aware trips to all eight destinations.
+
+## City districts and dispatch
+The map now connects the original neighborhoods with a northern station, court and firehouse, an eastern shipyard, freight terminal and ferry. The dispatch board reports fights, electrical fires, crashes and roadworks at eight sites. Crews arrive and clear scenes; nearby walkers give them space, and real traffic queues, yields and reroutes. The shift clock restores the current calls on reload. An observation camera keeps on-scene activity visible from the selected shoulder.
+
+Verification includes all four incident types in mobile Chromium and WebKit, all six new destinations, queue formation and release, and returning to the original home landmark. The full-stack library AI grading retry retains the same pre-existing expected-failed/actual-none mismatch.

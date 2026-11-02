@@ -31,3 +31,13 @@ C12. The van shop sells five stackable cosmetic upgrades with distinct silhouett
 
 C13. A van striking moving traffic loses forward motion at contact and briefly rocks on its suspension. One continuous contact gives one impact cue. Steering away restores control; reduced-motion players receive a text cue without rocking.
 C14. Guided vans anticipate slower, crossing and opposing traffic, yield with the route intact, then resume or take a clear road detour. Walking, rewards and delivery progress are unaffected.
+
+## Neighborhoods and city dispatch
+The player can explore beyond the original grid during a shift, monitor simulated local events and visit a safe observation point. The low-poly city uses original models. Incidents run on the shift clock and do not change academic scoring or require intervention from a student.
+
+| ID | Acceptance check |
+|---|---|
+| C15 | The map and physical road grid agree in the added districts. Travel from an original address to new landmarks and back, on foot and by guided van. Old shifts still resume. |
+| C16 | A non-graphic fight, a fire, a traffic accident and a jam each show a distinct cause, scene, response and clearance. Responders and bystanders change behavior across phases. |
+| C17 | Affected traffic slows, queues or takes a detour. A cleared scene releases its road restriction. |
+| C18 | Hebrew city dispatch shows the incident location, current status and an observation route. The mission remains available and reload preserves the simulation clock. |

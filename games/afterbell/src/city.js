@@ -4,7 +4,7 @@ import {items,emptyWallet,pay,toggleItem} from './city-wallet.js';
 import snapshot from './content-snapshot.json';
 import {validQuiz,makeRound,answer,progress,academicScore,starsFor,restoreRound} from './core.js';
 import {quizFingerprint} from './fingerprint.js';
-import {roles,places,objective,currentJob,inCity} from './city-data.js';
+import {roles,places,objective,currentJob,inCity,CITY_BOUNDS,northSouthStreets,eastWestStreets,streetEnds} from './city-data.js';
 import {cityWorld} from './city-world.js';
 
 const $=id=>document.getElementById(id);
@@ -13,6 +13,8 @@ const DRAFT='prepx-festival-city-v1';
 const read=(store,key)=>{try{return store.getItem(key);}catch{return null;}};
 const put=(store,key,v)=>{try{store.setItem(key,v);}catch{}};
 let mode='menu',quiz=snapshot.quizzes[0],source='snapshot',role='courier',round,city,world,loadId=0,saveClock=0,timer,feedback=null;
+let followedEvent=null;
+const incidentPhase={reported:'דיווח ראשוני',responding:'צוות בדרך',working:'צוות במקום',clearing:'חזרה לשגרה'};
 function toast(msg){$('notice').textContent=msg;clearTimeout(timer);timer=setTimeout(()=>$('notice').textContent='',2600);}
 function save(){if(city&&round)put(sessionStorage,DRAFT,JSON.stringify({city,round}));}
 function restore(){
@@ -53,6 +55,13 @@ function refresh(){
  if($('route').textContent!==routeLabel)$('route').textContent=routeLabel;
  const status=d<=4.3?'הגעתם! לחצו על ״'+o.action+'״.':world.yielding()?'מאטים ונותנים זכות קדימה.':p.district+' · '+Math.round(d)+' מטר · אפשר לנהוג או ללחוץ על הובלה.';
  if($('status').textContent!==status)$('status').textContent=status;
+ const events=world.events(),count=String(events.length);
+ if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);}
+ const selected=events.find(e=>e.id===followedEvent);
+ if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
+ const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
+ const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]:'';
+ $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
 let wallet=emptyWallet();
@@ -99,7 +108,7 @@ function start(resume){
   const lastKey='prepx-city-shift-'+role,edition=read(localStorage,lastKey)==='0'?1:0;put(localStorage,lastKey,String(edition));
   city={role,edition,stage:0,phase:'pickup',x:places.home.x,z:places.home.z+2,driving:false};
  }
- $('welcome').hidden=true;$('hud').hidden=false;mode='explore';world.start(city.x,city.z);syncWallet();updateTarget();refresh();save();
+ $('welcome').hidden=true;$('hud').hidden=false;mode='explore';followedEvent=null;world.start(city.x,city.z,round.elapsed);syncWallet();updateTarget();refresh();save();
  if(city.phase==='quiz')question();if(city.phase==='complete')finish();
 }
 $('entry').onsubmit=e=>{e.preventDefault();start(false);};$('player-name').oninput=()=>$('player-name').setCustomValidity('');$('resume').onclick=()=>start(true);
@@ -132,11 +141,33 @@ $('action').onclick=interact;
 $('route').onclick=()=>{if(mode!=='explore')return;const p=places[objective(city).place];if(Math.hypot(city.x-p.x,city.z-p.z)<=4.3){interact();return;}if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
 $('vehicle').onclick=()=>{if(mode!=='explore')return;city.driving=!city.driving;world.drive(city.driving);save();updateTarget();refresh();toast(city.driving?roles[city.role].vehicle+' מוכן לנסיעה':'חזרה להליכה');};
 function map(){
- const marks=Object.entries(places).map(([id,p],i)=>`<circle cx="${p.x}" cy="${p.z}" r="8" fill="${id===objective(city).place?'#e97551':'#27675e'}"/><text x="${p.x}" y="${p.z+4}" font-size="12" fill="white" text-anchor="middle">${i+1}</text>`).join('');
- sheet(`<span class="kicker">מפרץ הדר · מפת העיר</span><h2 id="sheet-title">לאן נוסעים?</h2><svg class="district-map" viewBox="-240 -240 480 480" role="img" aria-label="מיקום השחקן ושמונה יעדים"><rect x="-240" y="185" width="480" height="55" fill="#74bec9"/>${Array.from({length:8},(_,i)=>`<path d="M${i*56-224} -240v425 M-240 ${i*56-224}h480" stroke="#eee5cf" stroke-width="6"/>`).join('')}${marks}<circle cx="${city.x}" cy="${city.z}" r="5" fill="#ffcf54" stroke="#403b31"/></svg>${Object.entries(places).map(([id,p],i)=>`<button data-place="${id}">${i+1} · ${p.name} — ${p.district} ${id===objective(city).place?'★ יעד המשימה':''}</button>`).join('')}<button id="close-map" class="cta">חזרה לעיר</button>`,'map');
+ const {west,east,north,south}=CITY_BOUNDS,width=east-west,height=south-north+32;
+ const target=objective(city).place,entries=Object.entries(places);
+ const incidents=world.events?.()||[];
+ const roads=[...northSouthStreets.map(x=>`M${x} ${streetEnds.north}V${streetEnds.south}`),...eastWestStreets.map(z=>`M${west} ${z}H${east}`)].join(' ');
+ const marks=entries.map(([id,p],i)=>`<circle cx="${p.x}" cy="${p.z}" r="12" fill="${id===target?'#b74929':'#27675e'}"/><text x="${p.x}" y="${p.z+5}" font-size="16" fill="white" text-anchor="middle">${i+1}</text>`).join('');
+ const alerts=incidents.map(event=>`<g transform="translate(${event.x} ${event.z})"><title>${esc(event.title)}</title><path d="M0 -9L9 8H-9Z" fill="#a53428" stroke="white"/><text y="5" font-size="11" text-anchor="middle" fill="white">!</text></g>`).join('');
+ const stops=entries.map(([id,p],i)=>`<button data-place="${id}">${i+1} · ${p.name} — ${p.district} ${id===target?'★ יעד המשימה':''}</button>`).join('');
+ sheet(`<span class="kicker">מפרץ הדר · מפת העיר</span><h2 id="sheet-title">לאן נוסעים?</h2><svg class="district-map" style="display:block;height:auto;max-height:340px" viewBox="${west-4} ${north-4} ${width+8} ${height+8}" role="img" aria-label="מיקום השחקן, ${entries.length} יעדים ואירועי העיר"><rect x="${west}" y="${north}" width="${width}" height="128" fill="#c5ddc8"/><rect x="224" y="-224" width="128" height="224" fill="#cad6cf"/><rect x="224" y="0" width="128" height="188" fill="#ead8b6"/><rect x="${west}" y="${south}" width="${width}" height="32" fill="#74bec9"/><path d="${roads}" stroke="#eee5cf" stroke-width="6"/>${marks}${alerts}<circle cx="${city.x}" cy="${city.z}" r="5" fill="#ffcf54" stroke="#403b31"/></svg><p>● אתם כאן · ★ יעד המשימה${incidents.length?' · ⚠ אירועים פעילים':''}</p>${stops}<button id="close-map" class="cta">חזרה לעיר</button>`,'map');
  document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{closeSheet();const p=places[b.dataset.place];if(!world.go(p.x,p.z))toast('לא נמצא מסלול ליעד הזה. נסו להתקרב לרחוב.');});$('close-map').onclick=closeSheet;
 }
 $('map').onclick=map;
+function dispatch(){
+ if(mode!=='explore')return;
+ const events=world.events();
+ const reports=events.map((event,i)=>{
+  const distance=Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z));
+  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+ }).join('');
+ sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
+ $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};
+ document.querySelectorAll('[data-observe]').forEach(b=>b.onclick=()=>{
+  const event=events[Number(b.dataset.observe)],{observer}=event;closeSheet();
+  if(!world.go(observer.x,observer.z))toast('הגישה חסומה כרגע. אפשר לנסות שוב בהמשך.');
+  else{world.observe(event.id);followedEvent=event.id;toast('בדרך לנקודת תצפית · המשימה נשמרת.');}
+ });
+}
+$('dispatch').onclick=dispatch;
 async function finish(){
  const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();
  const bestKey='prepx-best-'+quiz.id;if(score>Number(read(localStorage,bestKey)||0))put(localStorage,bestKey,String(score));
@@ -151,10 +182,10 @@ let pointer=null;
 function stick(e){const r=$('joystick').getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/30,z=(e.clientY-r.top-r.height/2)/30,d=Math.max(1,Math.hypot(x,z));world.setStick(x/d,z/d);$('joystick').firstElementChild.style.transform=`translate(${x/d*24}px,${z/d*24}px)`;}
 $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.currentTarget.setPointerCapture(pointer);stick(e);};$('joystick').onpointermove=e=>{if(pointer===e.pointerId)stick(e);};
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
-window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
+window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
 try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},()=>toast('התנגשות ברכב · אפשר להמשיך לנסוע'));}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
 setInterval(refresh,100);drawRoles();loadQuiz();
-window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; city edges ±240 with waterfront at z=188',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio}});
+window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; x -240 to 352, z -352 to 188 at the waterfront',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio}});
 window.advanceTime=ms=>{world?.advance(ms);refresh();};
