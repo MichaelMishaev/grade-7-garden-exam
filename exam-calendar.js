@@ -1,10 +1,5 @@
-export function israelDate(now = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(now);
-  const value = type => parts.find(part => part.type === type).value;
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
+import { israelDate } from './exam-date-chip.js?v=1';
+export { israelDate };
 
 if (typeof document !== 'undefined') {
   const upcoming = document.getElementById('calendar-upcoming-rows');
