@@ -22,3 +22,7 @@ Students earn 5 coins per correct first answer and 15 when a delivery's question
 | C7 | Buying equips an affordable item once. Owned items can be removed and equipped freely. Insufficient funds disable purchase. |
 | C8 | A cap and jacket change the walking hero. The optional guide drone follows walking and driving players and points toward the current destination. |
 | C9 | Cars traverse both street axes, residents walk and stop on sidewalks, and planes fly over the city while the hero is stationary. Opening a modal pauses the simulation. |
+
+## City streets and new stock
+C10. Guided vehicle travel from the HUD, map, or a tapped destination joins a nearby street, stays on the road network between access points, and reaches the selected address. A blocked street requires a road detour. Manual steering can interrupt the trip. Walking keeps its pedestrian routes.
+C11. Players can buy, equip and remove a scarf, glasses, a backpack and a roof beacon with earned coins. The first three appear on the hero and the beacon appears on the van. Ownership persists with the existing wallet.

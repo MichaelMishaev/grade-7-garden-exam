@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {places,inCity,CITY_EDGE} from './city-data.js';
+import {drivingRoute} from './city-roads.js';
 import {findRoute,clearSegment} from './navigation.js';
 
 export function cityWorld(host,onMove){
@@ -125,6 +126,15 @@ export function cityWorld(host,onMove){
  const avatar=person('#df745d'),car=van('#e99943'),parcel=new T.Group();
  part(parcel,box,'#ffe0a1',0,0,0,1.2,1.05,1);part(parcel,box,'#bc7950',0,.54,0,.2,.08,1.05);scene.add(avatar,car,parcel);
  const cap=new T.Group();part(cap,box,'#129c9e',0,4.38,0,1.46,.43,1.26);part(cap,box,'#166869',0,4.22,.78,1.52,.16,.62);avatar.add(cap);cap.visible=false;
+ const accessories={scarf:new T.Group(),glasses:new T.Group(),pack:new T.Group(),beacon:new T.Group()};
+ const {scarf,glasses,pack,beacon}=accessories;
+ part(scarf,box,'#c54339',0,2.99,0,1.46,.36,1.16);part(scarf,box,'#f5b751',.36,2.61,.54,.38,.63,.18);
+ part(glasses,box,'#35689a',0,3.65,.58,1.38,.14,.15);
+ for(const side of [-1,1])part(glasses,box,'#233442',side*.34,3.62,.63,.52,.34,.16);
+ part(pack,box,'#e16e36',0,2.05,-.69,1.46,1.46,.72);part(pack,box,'#9d482c',0,1.76,-1.05,1.1,.67,.22);
+ part(beacon,box,'#374b50',0,3.57,-1.35,1.52,.22,.85);part(beacon,tube,'#ffc640',0,3.91,-1.35,.55,.56,.55);
+ avatar.add(scarf,glasses,pack);car.add(beacon);
+ for(const mesh of Object.values(accessories))mesh.visible=false;
  const drone=new T.Group();
  part(drone,ball,'#f3ba4e',0,0,0,.85,.65,.85);
  for(const side of [-1,1])part(drone,tube,'#326c71',side*.93,.28,0,.55,.12,.55);
@@ -184,7 +194,7 @@ export function cityWorld(host,onMove){
  const forward=new T.Vector3(-.58,0,-.815),right=new T.Vector3(.815,0,-.58);
  function fit(){const h=active?(innerWidth<600?52:60):(innerWidth<600?98:128),w=h*innerWidth/innerHeight;camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
  function position(x,z){px=x;pz=z;path=[];}
- function go(x,z){const route=findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
+ function go(x,z){const route=driving?drivingRoute({x:px,z:pz},{x,z},blocked):findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
  function update(dt,draw=true){
    if(!paused)time+=dt;
    if(active&&!paused){
@@ -235,11 +245,12 @@ export function cityWorld(host,onMove){
      car.children[0].material.color.set(color);
      const jacket=gear.includes('jacket')?'#9236ab':color;
      for(const i of [0,4,7])avatar.children[i].material.color.set(jacket);
+     for(const [id,mesh] of Object.entries(accessories))mesh.visible=gear.includes(id);
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
      return {cars:traffic.length,residents:walkers.length,planes:planes.length,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
-   },start(x,z){position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){driving=v;},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
+   },start(x,z){position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){if(driving===v)return;const goal=path.at(-1);driving=v;if(goal)go(goal.x,goal.z);},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
    getPlayer:()=>({x:px,z:pz,y:jump}),project(p){const v=new T.Vector3(p.x,6,p.z).project(camera);return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2,visible:Math.abs(v.x)<.9&&Math.abs(v.y)<.85};},
    advance(ms){manual=true;for(let t=0;t<Math.min(ms,90000);t+=1000/60)update(1/60,false);update(0);},pixelRatio:renderer.getPixelRatio()};
 }

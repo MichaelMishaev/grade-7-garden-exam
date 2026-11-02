@@ -1,7 +1,11 @@
 export const items = [
   {id:'cap', name:'כובע מצחייה', detail:'כובע טורקיז עם מצחייה רחבה.', price:10},
   {id:'jacket', name:'מעיל פסטיבל', detail:'מעיל סגול לצוות הפסטיבל.', price:20},
-  {id:'drone', name:'רחפן ניווט', detail:'מלווה אתכם ברגל וברכב ומכוון את החץ ליעד.', price:35}
+  {id:'drone', name:'רחפן ניווט', detail:'מלווה אתכם ברגל וברכב ומכוון את החץ ליעד.', price:35},
+  {id:'scarf', name:'צעיף פסים', detail:'צעיף אדום עם פס זהוב.', price:8},
+  {id:'glasses', name:'משקפי שמש', detail:'משקפיים כהים עם מסגרת כחולה.', price:12},
+  {id:'pack', name:'תיק שליחים', detail:'תיק גב כתום עם כיס קדמי.', price:18},
+  {id:'beacon', name:'פנס גג', detail:'פנס ענברי לגג רכב המשמרת.', price:25}
 ];
 
 export function emptyWallet() {

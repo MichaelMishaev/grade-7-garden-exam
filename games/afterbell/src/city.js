@@ -131,7 +131,7 @@ $('vehicle').onclick=()=>{if(mode!=='explore')return;city.driving=!city.driving;
 function map(){
  const marks=Object.entries(places).map(([id,p],i)=>`<circle cx="${p.x}" cy="${p.z}" r="8" fill="${id===objective(city).place?'#e97551':'#27675e'}"/><text x="${p.x}" y="${p.z+4}" font-size="12" fill="white" text-anchor="middle">${i+1}</text>`).join('');
  sheet(`<span class="kicker">מפרץ הדר · מפת העיר</span><h2 id="sheet-title">לאן נוסעים?</h2><svg class="district-map" viewBox="-240 -240 480 480" role="img" aria-label="מיקום השחקן ושמונה יעדים"><rect x="-240" y="185" width="480" height="55" fill="#74bec9"/>${Array.from({length:8},(_,i)=>`<path d="M${i*56-224} -240v425 M-240 ${i*56-224}h480" stroke="#eee5cf" stroke-width="6"/>`).join('')}${marks}<circle cx="${city.x}" cy="${city.z}" r="5" fill="#ffcf54" stroke="#403b31"/></svg>${Object.entries(places).map(([id,p],i)=>`<button data-place="${id}">${i+1} · ${p.name} — ${p.district} ${id===objective(city).place?'★ יעד המשימה':''}</button>`).join('')}<button id="close-map" class="cta">חזרה לעיר</button>`,'map');
- document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{closeSheet();const p=places[b.dataset.place];world.go(p.x,p.z);});$('close-map').onclick=closeSheet;
+ document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{closeSheet();const p=places[b.dataset.place];if(!world.go(p.x,p.z))toast('לא נמצא מסלול ליעד הזה. נסו להתקרב לרחוב.');});$('close-map').onclick=closeSheet;
 }
 $('map').onclick=map;
 async function finish(){

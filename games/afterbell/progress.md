@@ -139,3 +139,6 @@ Local QA passed all 79 game tests with isolated PostgreSQL. Chromium and WebKit 
 
 ## Phone camera pickup
 Replaced the dialog height cap with content-sized panels in a scrollable overlay. A constrained-height simulation reproduced the clipped heading before the fix. Touch QA verified exit, retry, aim and shutter in Chromium and WebKit at 390px, including a short-height Chromium check. Active play now shows 52 vertical world units on phones instead of 45.
+
+## Street driving and shop additions
+The van uses the shared city street grid for guided routes. Short access legs connect addresses to the streets. The shop now includes a scarf, sunglasses, a backpack and a van roof beacon. The city road browser check buys the four items, reloads the shift, visits all eight landmarks, and samples the van between access legs; the road planner test also blocks one street to force a detour.
