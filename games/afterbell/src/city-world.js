@@ -182,7 +182,7 @@ export function cityWorld(host,onMove){
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const keys=new Set();let stick={x:0,z:0},px=places.home.x,pz=places.home.z+2,heading=0,time=0,destination=places.home,path=[],active=false,paused=false,driving=false,loaded=false,manual=false,jump=0,vy=0;
  const forward=new T.Vector3(-.58,0,-.815),right=new T.Vector3(.815,0,-.58);
- function fit(){const h=active?(innerWidth<600?45:53):(innerWidth<600?98:128),w=h*innerWidth/innerHeight;camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
+ function fit(){const h=active?(innerWidth<600?52:60):(innerWidth<600?98:128),w=h*innerWidth/innerHeight;camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
  function position(x,z){px=x;pz=z;path=[];}
  function go(x,z){const route=findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
  function update(dt,draw=true){

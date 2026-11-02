@@ -7,7 +7,7 @@ const b=process.env.CITY_QA_ENGINE==='webkit'?await webkit.launch():await chromi
 const state=p=>p.evaluate(()=>JSON.parse(render_game_to_text()));
 await mkdir('output',{recursive:true});
 try{
- for(const [role,width] of [['courier',390],['tech',320],['press',1280]]){
+ for(const [role,width] of [['courier',390],['tech',320],['press',390],['press',1280]]){
   const p=await b.newPage({viewport:{width,height:width===320?568:844},isMobile:width<600,hasTouch:width<600});
   const errors=[];let saves=0;const selected=role==='tech'?snapshot.quizzes.find(q=>q.subject_id==='physics'):snapshot.quizzes.find(q=>q.id==='facts');
   p.on('pageerror',e=>errors.push(e.message));
@@ -27,7 +27,11 @@ try{
   const prepare=async()=>{
    if(role==='courier'){const place=await p.locator('#sheet-body p').first().innerText();const buttons=p.locator('[data-tool]');for(const btn of await buttons.all()){if(place.includes(await btn.innerText())){await btn.click();break;}}}
    else if(role==='tech'){await p.click('[data-tool="0"]');await p.click('[data-tool="1"]');}
-   else{await p.click('#lens');await p.click('#shutter');}
+   else{
+    const shutter=p.locator('#shutter');
+    assert.ok(await shutter.evaluate(el=>{const r=el.getBoundingClientRect();return el===document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);}), 'camera shutter is visible immediately');
+    await p.click('#lens');await shutter.click();
+   }
   };
   await p.click('#action');await prepare();assert.equal((await state(p)).phase,'deliver');assert.equal((await state(p)).answered,0);
   await p.click('#vehicle');assert.ok((await state(p)).driving);

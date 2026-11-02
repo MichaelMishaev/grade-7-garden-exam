@@ -136,3 +136,6 @@ The default entry opens a coastal roleplay city. Three jobs each support two shi
 Correct answers, completed deliveries, hero gear, a following assistant and autonomous city life. Acceptance criteria C6–C9 are in the Festival City feature record.
 
 Local QA passed all 79 game tests with isolated PostgreSQL. Chromium and WebKit exercised courier (390px), technician (320px), and reporter (1280px) shifts, including locked feedback, coins, gear purchases, companion proximity, moving street actors, reload and replay. Each shift submitted once to an intercepted endpoint.
+
+## Phone camera pickup
+Replaced the dialog height cap with content-sized panels in a scrollable overlay. A constrained-height simulation reproduced the clipped heading before the fix. Touch QA verified exit, retry, aim and shutter in Chromium and WebKit at 390px, including a short-height Chromium check. Active play now shows 52 vertical world units on phones instead of 45.
