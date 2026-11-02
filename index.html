@@ -20,6 +20,8 @@
   <meta name="twitter:image" content="https://hitech.agnon.online/assets/branding/share-preview.png">
   <title>בוחרים מבחן | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="exam-calendar.css?v=1">
+  <script type="module" src="exam-calendar.js?v=1"></script>
   <link rel="stylesheet" href="branding.css?v=2">
   <link rel="stylesheet" href="afterbell-entry.css?v=1">
   <link rel="stylesheet" href="maze-entry.css?v=1">
@@ -80,11 +82,16 @@
           </div>
           <a class="calendar-home" href="index.html"><span aria-hidden="true">→</span> חזרה לבית</a>
         </div>
-        <div class="calendar-table-wrap">
+        <div class="calendar-upcoming-heading">
+          <h3>המבחנים הקרובים</h3>
+          <p>היום והלאה, לפי סדר התאריכים</p>
+        </div>
+        <p id="calendar-empty" hidden>אין מבחנים נוספים בלוח כרגע.</p>
+        <div class="calendar-table-wrap" id="calendar-upcoming">
           <table class="calendar-table">
             <caption class="visually-hidden">לוח מבחנים לכיתה ז׳2 — מחצית א׳, 2026–2027</caption>
             <thead><tr><th scope="col">תאריך</th><th scope="col">יום</th><th scope="col">מקצוע</th></tr></thead>
-            <tbody>
+            <tbody id="calendar-upcoming-rows">
               <tr><td><time datetime="2026-10-21" dir="ltr">21.10.26</time></td><td>רביעי</td><th scope="row">מדעים</th></tr>
               <tr><td><time datetime="2026-10-26" dir="ltr">26.10.26</time></td><td>שני</td><th scope="row">מדעי המחשב</th></tr>
               <tr><td><time datetime="2026-10-29" dir="ltr">29.10.26</time></td><td>חמישי</td><th scope="row">עברית</th></tr>
@@ -103,6 +110,19 @@
             </tbody>
           </table>
         </div>
+        <details class="calendar-past" id="calendar-past" hidden>
+          <summary>
+            <span><strong>מבחנים קודמים <span id="calendar-past-count" class="calendar-count"></span></strong><small>הצגה לפי בחירה</small></span>
+            <span class="calendar-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <div class="calendar-table-wrap">
+            <table class="calendar-table">
+              <caption class="visually-hidden">מבחנים קודמים לכיתה ז׳2</caption>
+              <thead><tr><th scope="col">תאריך</th><th scope="col">יום</th><th scope="col">מקצוע</th></tr></thead>
+              <tbody id="calendar-past-rows"></tbody>
+            </table>
+          </div>
+        </details>
       </section>
     </main>
     <footer>בהצלחה בלמידה!</footer>
