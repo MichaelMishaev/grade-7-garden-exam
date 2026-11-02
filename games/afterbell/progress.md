@@ -84,3 +84,9 @@ Original prompt: Build a fast, well-designed, funny 3D exam-practice game as a s
 - Preserved prior published asset files alongside the new production bundle for cached HTML compatibility. Durable browser regression: tests/qa-visibility.mjs (PREPX_QA_URL defaults to local port 5183).
 - Unchanged official web-game client passed against a temporary mocked-content fixture at the gate: explorer moves and jumps with the cutaway visible; screenshot/state inspected, no browser error artifact. Temporary fixture removed.
 - Michael authorized testing and pushing this fix. Fast-forwarded the feature branch to origin/main 0e97c97 before final verification: root 285 passed / 8 skipped; game 26 passed / 1 skipped; 10 mobile/desktop visibility scenarios and movement/jump/guide checks passed, zero browser errors. Production bundle regenerated with previous cache-transition assets preserved.
+
+## Starlight Relay · November 2
+- The scenario agent proposed a free-order campus light relay. Claude Code reviewed the interaction model before integration and identified save validation, short quizzes, consecutive layouts, accessible ring height and route reachability as acceptance cases.
+- Built three authored editions, moving the physical challenges between landmarks. The classic blackout is still selectable. Both modes share the existing question, feedback, score and history pipeline.
+- Local verification covered all authored destinations, a full 11-question physics relay, mobile jump and switch, mirror retry, mid-challenge reload, replay, the saved result and constellation. Fixed incidental spark collection changing the chosen destination. The classic browser suite passed 43 checks. The compiled app also opened a database-backed quiz and accepted keyboard interaction at the mirror.
+- Student feedback on replay enjoyment and production rollout remain open.

@@ -1,3 +1,4 @@
+import { createRelayLights } from './relay-world.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { NPCS, EXIT } from './core.js';
@@ -245,6 +246,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   for(let i=0;i<3;i++){const g=critter('duck','#8f947b');g.scale.setScalar(1.05);scene.add(g);animals.push({g,type:'duck',angle:i*2,speed:.3,turn:0});}
   const fireflies=Array.from({length:12},(_,i)=>{const positions=[[-4,12],[-8,4],[-14,-3],[-9,-12],[4,-10],[10,-2],[18,2],[19,11],[9,21],[-7,20],[-23,-1],[5,-23]];const [x,z]=positions[i];return {x,z,mesh:ball(x,1.1,z,.055,'#c9c693',scene,1,true)};});
   const destination=mesh(new THREE.RingGeometry(.26,.30,24),'#c1c9b4',0,.12,0,scene,true);destination.rotation.x=-Math.PI/2;destination.visible=false;
+  const relayLights=createRelayLights(scene,reduced);
   const keys=new Set();let joystick={x:0,z:0},target=null,active=false,paused=false,velocityY=0,jumpY=0,worldTime=0,manual=false,environment=normalizeEnvironment(),observing=false,seatedPose=false;
   const guide={goal:null,endpoint:null,route:[],following:false,arrived:false,blocked:false,anchor:null,lastPlan:-10};
   let walkRoute=[],walkKind=null,lastTrail=-1;
@@ -299,7 +301,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   // Lower camera reads as being inside a place, while retaining the same input basis.
   const followOffset=new THREE.Vector3(11.5,12.5,15.55);
   function update(dt,draw=true){
-    if(!paused)worldTime+=dt;
+    if(!paused){worldTime+=dt;relayLights.tick(worldTime);}
     if(active&&!paused){let dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joystick.x;let dz=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+joystick.z;let mx=dx*.806+dz*.592,mz=-dx*.592+dz*.806;
       if(dx||dz){standUp();observing=false;stopGuide();}
       else if(walkKind){
@@ -332,10 +334,10 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setPaused(true);container.dispatchEvent(new CustomEvent('worldlost'));});
   update(0);
-  return {setActive,setPaused,jump,guideTo,followGuide,stopGuide,guidance,setJoystick(x,z){joystick={x,z};if(x||z)stopGuide();},setPlayer(x,z){if(environment.seated)standUp();observing=false;stopGuide();player.position.set(x,0,z);cameraTarget.set(x,1,z);if(guide.goal)planGuide();},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
+  return {hideRelay(){relayLights.sync({});},setActive,setPaused,jump,guideTo,followGuide,stopGuide,guidance,setJoystick(x,z){joystick={x,z};if(x||z)stopGuide();},setPlayer(x,z){if(environment.seated)standUp();observing=false;stopGuide();jumpY=velocityY=0;player.position.set(x,0,z);cameraTarget.set(x,1,z);if(guide.goal)planGuide();},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
     setEnvironment:applyEnvironment,observe(value){observing=value;stopGuide();keys.clear();joystick={x:0,z:0};},isObserving:()=>observing,environmentAnimation:()=>campus.animation,performance:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio()}),
     project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight,visible:p.z<1&&Math.abs(p.x)<1&&Math.abs(p.y)<1};},
-    setProgress(round){fireflies.forEach((f,i)=>f.mesh.visible=!round.collected.includes(i));npcMeshes.forEach((n,i)=>n.marker.visible=!round.seals.includes(NPCS[i].id));for(const [id,g]of equipment)g.visible=!(round.items||[]).includes(id);stations.forEach((s,i)=>{const done=round.seals.includes(NPCS[i].id);s.screen.material=mat(done?'#91aa8b':'#a4784e',true);s.light.intensity=done?12:0;});seals.forEach((s,i)=>s.material=mat(round.seals.length>i?'#a7c1a0':'#9f684f',true));leaves.forEach((g,i)=>g.rotation.y=round.seals.length===3?(i===0?-1.35:1.35):0);exitLight.intensity=round.seals.length===3?10:0;},
+    setProgress(round){relayLights.sync(round);fireflies.forEach((f,i)=>f.mesh.visible=!round.collected.includes(i));npcMeshes.forEach((n,i)=>n.marker.visible=!round.relay&&!round.seals.includes(NPCS[i].id));for(const [id,g]of equipment)g.visible=!round.relay&&!(round.items||[]).includes(id);stations.forEach((s,i)=>{const done=round.seals.includes(NPCS[i].id);s.screen.material=mat(done?'#91aa8b':'#a4784e',true);s.light.intensity=done?12:0;});seals.forEach((s,i)=>s.material=mat(round.seals.length>i?'#a7c1a0':'#9f684f',true));leaves.forEach((g,i)=>g.rotation.y=round.seals.length===3?(i===0?-1.35:1.35):0);exitLight.intensity=round.seals.length===3?10:0;},
     advanceTime(ms){manual=true;for(let t=0;t<Math.min(ms,60000);t+=1000/60)update(1/60,false);renderer.render(scene,camera);},resumeRealtime(){manual=false;last=performance.now();},blocked,dispose(){renderer.dispose();}
   };
 }
