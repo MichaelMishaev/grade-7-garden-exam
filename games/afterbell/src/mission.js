@@ -1,8 +1,10 @@
+import { relayGoal } from './relay.js';
 import { NPCS, EQUIPMENT, EXIT, progress, canEscape } from './core.js';
 import { ENVIRONMENT, puzzleSolved } from './environment-state.js';
 export function nextObjective(round, preferred, position=round.player) {
   if(canEscape(round))return {id:'exit',kind:'exit',...EXIT,title:'השער פתוח — יוצאים הביתה',hint:'לכו בעקבות השביל המואר ולחצו על כפתור היציאה ליד השער.',action:'לשער היציאה'};
   const unfinished=NPCS.map((n,i)=>i).filter(i=>!round.seals.includes(NPCS[i].id));
+  if(round.relay)return relayGoal(round.relay,unfinished,preferred,position);
   const started=unfinished.filter(i=>round.understood.includes(NPCS[i].id)||round.items.includes(EQUIPMENT[i].id));
   const candidates=started.length?started:unfinished;
   const index=unfinished.includes(preferred)?preferred:candidates.sort((a,b)=>Math.hypot(position.x-NPCS[a].x,position.z-NPCS[a].z)-Math.hypot(position.x-NPCS[b].x,position.z-NPCS[b].z))[0];

@@ -10,3 +10,5 @@ Partial catalog of maze features. Every feature must include a written specifica
 | PHY-PRACTICE | [Teacher question parity](physics-practice-reference.md) | approved | Deployed; live mobile QA verified | Released |
 
 | PWA-INSTALL | [Install PrepX](../docs/features/pwa-install.md) | approved | Implemented; regression QA in progress | Implementation |
+
+| AB-RELAY | [Starlight Relay](afterbell-starlight.md) | Local implementation | Playtesting | Game |

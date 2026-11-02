@@ -4,3 +4,17 @@
 @media(max-width:600px){.playing .quest-panel h2{grid-row:1}.playing .quest-panel .seal-slots{grid-row:1/3}.playing .quest-panel .direction{grid-row:2}.playing .quest-panel #quest-sub{grid-row:3}.playing .quest-panel .mission-controls{grid-row:4}.playing .quest-panel .quest-bottom{grid-row:5}.playing .map-toggle{top:244px}.playing .map-panel{top:295px}.playing .quest-panel #quest-sub{max-height:36px;overflow:auto}}
 .playing .quest-panel{z-index:4}.playing .map-panel{z-index:3}.playing .world-labels{clip-path:inset(84px 0 0 0)}
 @media(max-width:600px){.playing .world-labels{clip-path:inset(56px 0 0 0)}}
+
+.relay-star{color:#edcb89;font-size:64px;text-align:center}
+.relay-sequence{display:flex;gap:1.6em;flex-wrap:wrap;padding-inline-start:1.6em;color:#e7cb98}
+@media(prefers-reduced-motion:no-preference){
+  .relay-star{animation:relay-rise .7s ease-out both}
+  @keyframes relay-rise{from{transform:translateY(12px) scale(.65);opacity:.2}to{transform:translateY(0) scale(1);opacity:1}}
+}
+.relay-finale{display:block;width:min(70%,240px);height:80px;margin:0 auto;color:#efd39a}
+.relay-finale polyline{fill:none;stroke:currentColor;stroke-width:1}
+.relay-finale path{fill:currentColor}
+@media(prefers-reduced-motion:no-preference){
+  .relay-finale polyline{stroke-dasharray:250;animation:relay-draw 1.4s ease-out both}
+  @keyframes relay-draw{from{stroke-dashoffset:250}to{stroke-dashoffset:0}}
+}
