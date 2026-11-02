@@ -19,7 +19,14 @@ test('compact home shows three dates; calendar expands, closes and rolls over in
     await page.clock.install({ time: new Date('2026-11-02T12:00:00Z') });
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const rows = page.locator('#calendar-upcoming-rows tr:visible');
-    assert.equal(await rows.count(), 3);
+    const framedRowCount = () => rows.evaluateAll(nodes => {
+      const frame = document.getElementById('calendar-upcoming').getBoundingClientRect();
+      return nodes.filter(row => {
+        const rect = row.getBoundingClientRect();
+        return rect.top >= frame.top && rect.bottom <= frame.bottom;
+      }).length;
+    });
+    assert.equal(await framedRowCount(), 3);
     assert.equal(await rows.first().locator('time').getAttribute('datetime'), '2026-11-02');
     assert.equal(await page.locator('.calendar-today-badge').textContent(), 'היום');
     assert.equal(await page.locator('#calendar-past-rows').isVisible(), false);
@@ -42,12 +49,12 @@ test('compact home shows three dates; calendar expands, closes and rolls over in
     await page.keyboard.press('Escape');
     await page.locator('#exam-calendar #calendar-content').waitFor();
     assert.equal(await page.locator('#calendar-dialog').isVisible(), false);
-    assert.equal(await rows.count(), 3);
+    assert.equal(await framedRowCount(), 3);
     assert.equal(await page.locator('.calendar-expand').evaluate(el => el === document.activeElement), true);
     await page.locator('.calendar-show-all').click();
     await page.locator('.calendar-close').click();
     await page.locator('#exam-calendar #calendar-content').waitFor();
-    assert.equal(await rows.count(), 3);
+    assert.equal(await framedRowCount(), 3);
     assert.equal(await page.locator('body').evaluate(el => el.classList.contains('calendar-is-open')), false);
     await page.clock.setSystemTime(new Date('2026-11-02T21:59:59Z'));
     await page.clock.fastForward(61_000);

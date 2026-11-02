@@ -19,7 +19,9 @@
 #calendar-upcoming-rows td:last-child { text-align: end; }
 #calendar-upcoming-rows th, #calendar-upcoming-rows td { padding: 13px 10px; font-size: 14px; }
 #calendar-upcoming thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.exam-calendar #calendar-upcoming-rows tr:nth-child(n+4) { display: none; }
+#calendar-upcoming-rows tr { height: 48px; }
+.exam-calendar #calendar-upcoming { max-height: 148px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+#calendar-upcoming:focus-visible { outline: 3px solid #1587c2; outline-offset: 3px; }
 .calendar-today { background: #f0fbdf; }
 .calendar-today th:first-child { box-shadow: inset -3px 0 #3d9721; }
 .calendar-today-badge { display: inline-block; padding: 3px 6px; margin-inline-start: 5px; border-radius: 8px; background: #347d1d; color: white; font-size: 11px; white-space: nowrap; }
