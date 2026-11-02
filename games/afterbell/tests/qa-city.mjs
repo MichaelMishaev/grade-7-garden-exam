@@ -62,7 +62,7 @@ try{
    coins+=15;
    await p.waitForFunction(n=>JSON.parse(render_game_to_text()).wallet.coins===n,coins);
    if(i===1){
-    await p.click('#shop');await p.click('[data-item="drone"]');coins-=35;
+    await p.click('#shop');await p.click('#hero-stock');await p.click('[data-item="drone"]');coins-=35;
     await p.waitForFunction(()=>JSON.parse(render_game_to_text()).wallet.equipped.includes('drone'));
     await p.screenshot({path:'output/city-store-'+width+'.png'});
     await p.click('#leave-shop');await p.reload();await p.click('#resume');
@@ -70,7 +70,7 @@ try{
     await near();await p.click('#vehicle');await p.keyboard.down('ArrowRight');await p.evaluate(()=>advanceTime(600));await p.keyboard.up('ArrowRight');await near();await p.click('#vehicle');
    }
    if(i===2){
-    await p.click('#shop');
+    await p.click('#shop');await p.click('#hero-stock');
     for(const [id,price] of [['cap',10],['jacket',20]]){
      const item=p.locator('[data-item="'+id+'"]');
      await item.click();coins-=price;await item.filter({hasText:'להסיר'}).waitFor();

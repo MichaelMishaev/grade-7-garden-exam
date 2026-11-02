@@ -5,7 +5,12 @@ export const items = [
   {id:'scarf', name:'צעיף פסים', detail:'צעיף אדום עם פס זהוב.', price:8},
   {id:'glasses', name:'משקפי שמש', detail:'משקפיים כהים עם מסגרת כחולה.', price:12},
   {id:'pack', name:'תיק שליחים', detail:'תיק גב כתום עם כיס קדמי.', price:18},
-  {id:'beacon', name:'פנס גג', detail:'פנס ענברי לגג רכב המשמרת.', price:25}
+  {id:'beacon', name:'פנס גג', detail:'פנס ענברי לגג רכב המשמרת.', price:25, vehicle:true},
+  {id:'stripes', name:'פסי ראלי', detail:'שני פסים כחולים על מכסה המנוע והגג.', price:10, vehicle:true},
+  {id:'spare', name:'גלגל שטח', detail:'גלגל חלופי עם חישוק אלמוג בגב הרכב.', price:14, vehicle:true},
+  {id:'spoiler', name:'כנף מרוץ', detail:'כנף אחורית שחורה עם קצוות אדומים.', price:20, vehicle:true},
+  {id:'underglow', name:'תאורת ניאון', detail:'פסי טורקיז והילה מאירה מתחת לרכב.', price:24, vehicle:true},
+  {id:'surfboard', name:'גלשן המפרץ', detail:'גלשן ורוד עם סנפיר על מתקן צד בגג.', price:30, vehicle:true}
 ];
 
 export function emptyWallet() {

@@ -134,6 +134,25 @@ export function cityWorld(host,onMove){
  part(pack,box,'#e16e36',0,2.05,-.69,1.46,1.46,.72);part(pack,box,'#9d482c',0,1.76,-1.05,1.1,.67,.22);
  part(beacon,box,'#374b50',0,3.57,-1.35,1.52,.22,.85);part(beacon,tube,'#ffc640',0,3.91,-1.35,.55,.56,.55);
  avatar.add(scarf,glasses,pack);car.add(beacon);
+ const stripes=new T.Group(),spare=new T.Group(),spoiler=new T.Group(),underglow=new T.Group(),surfboard=new T.Group();
+ for(const side of [-1,1]){
+   part(stripes,box,'#193c83',side*.65,2.01,2.27,.32,.05,1.42);
+   part(stripes,box,'#193c83',side*.65,3.51,-.42,.32,.05,3.62);
+   part(spoiler,box,'#394254',side*1.18,2.24,-2.72,.22,.84,.28);
+   part(spoiler,box,'#f34850',side*1.94,2.75,-2.72,.18,.54,.92);
+   const rail=part(underglow,box,'#16ffe6',side*1.81,.62,0,.15,.18,4.8);
+   rail.material.emissive.set('#16ffe6');
+ }
+ part(spoiler,box,'#253447',0,2.65,-2.72,3.96,.21,.9);
+ part(spare,tube,'#263142',0,1.42,-3.19,.86,.42,.86).rotation.x=Math.PI/2;
+ part(spare,tube,'#ed715d',0,1.42,-3.44,.48,.12,.48).rotation.x=Math.PI/2;
+ const halo=new T.Mesh(new T.RingGeometry(0,1,32),new T.MeshBasicMaterial({color:'#39ffdb',transparent:true,opacity:.36,depthWrite:false}));
+ halo.rotation.x=-Math.PI/2;halo.scale.set(2.68,3.72,1);halo.position.y=.49;underglow.add(halo);
+ for(const z of [-1.45,.75])part(surfboard,box,'#3c5361',1.27,3.65,z,1.12,.22,.27);
+ part(surfboard,ball,'#f74d90',1.37,3.94,-.34,.66,.22,2.56);
+ part(surfboard,roof,'#374280',1.37,4.26,-1.72,.23,.61,.64);
+ Object.assign(accessories,{stripes,spare,spoiler,underglow,surfboard});
+ car.add(stripes,spare,spoiler,underglow,surfboard);
  for(const mesh of Object.values(accessories))mesh.visible=false;
  const drone=new T.Group();
  part(drone,ball,'#f3ba4e',0,0,0,.85,.65,.85);

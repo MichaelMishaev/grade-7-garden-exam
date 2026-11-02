@@ -26,3 +26,5 @@ Students earn 5 coins per correct first answer and 15 when a delivery's question
 ## City streets and new stock
 C10. Guided vehicle travel from the HUD, map, or a tapped destination joins a nearby street, stays on the road network between access points, and reaches the selected address. A blocked street requires a road detour. Manual steering can interrupt the trip. Walking keeps its pedestrian routes.
 C11. Players can buy, equip and remove a scarf, glasses, a backpack and a roof beacon with earned coins. The first three appear on the hero and the beacon appears on the van. Ownership persists with the existing wallet.
+
+C12. The van shop sells five stackable cosmetic upgrades with distinct silhouettes or colors: rally stripes, a spoiler, neon underglow, a rear spare wheel, and a surfboard. Each can be removed and re-equipped without another charge. Driving players see vehicle stock first. Reload restores purchases and the fully decorated van can finish the same road routes.

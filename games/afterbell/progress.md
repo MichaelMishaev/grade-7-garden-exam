@@ -142,3 +142,6 @@ Replaced the dialog height cap with content-sized panels in a scrollable overlay
 
 ## Street driving and shop additions
 The van uses the shared city street grid for guided routes. Short access legs connect addresses to the streets. The shop now includes a scarf, sunglasses, a backpack and a van roof beacon. The city road browser check buys the four items, reloads the shift, visits all eight landmarks, and samples the van between access legs; the road planner test also blocks one street to force a detour.
+
+## Van garage
+Five cosmetic upgrades can share the van with the original roof beacon. The shop opens the garage when driving and the character section on foot. Chromium and WebKit bought the gear, removed and re-equipped the spoiler, restored the wallet after reload and drove to all eight landmarks with the upgrades installed.

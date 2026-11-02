@@ -73,17 +73,20 @@ function syncWallet(change){
  };
  return navigator.locks?navigator.locks.request(key,update):Promise.resolve(update());
 }
-function shop(){
+function shop(vehicle=city.driving){
  clearTimeout(timer);$('notice').textContent='';
- const listing=items.map(item=>{
+ const listing=items.filter(item=>Boolean(item.vehicle)===vehicle).map(item=>{
   const owned=wallet.owned.includes(item.id), equipped=wallet.equipped.includes(item.id);
   const label=equipped?'להסיר':owned?'לצייד':'לקנות · '+item.price+' 🪙';
   return `<div class="stock"><div><strong>${item.name}</strong><small>${item.detail}</small></div><button data-item="${item.id}" ${!owned&&wallet.coins<item.price?'disabled':''}>${label}</button></div>`;
  }).join('');
- sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות והשלמת מסירה ב־15.</p>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
+ sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות והשלמת מסירה ב־15.</p><div class="stock-tabs" role="group" aria-label="סוג הציוד"><button id="hero-stock" aria-pressed="${!vehicle}">ציוד לדמות</button><button id="van-stock" aria-pressed="${vehicle}">המוסך</button></div>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
+ for(const [id,showVan] of [['hero-stock',false],['van-stock',true]]){
+  $(id).onclick=()=>{shop(showVan);$(id).focus();};
+ }
  $('leave-shop').onclick=()=>{closeSheet();$('shop').focus();};
  document.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
-  b.disabled=true;await syncWallet(w=>toggleItem(w,b.dataset.item));if(mode==='shop'){shop();document.querySelector('[data-item="'+b.dataset.item+'"]').focus();}
+  b.disabled=true;await syncWallet(w=>toggleItem(w,b.dataset.item));if(mode==='shop'){shop(vehicle);document.querySelector('[data-item="'+b.dataset.item+'"]').focus();}
  });
 }
 $('shop').onclick=async()=>{await syncWallet();if(mode==='explore')shop();};
