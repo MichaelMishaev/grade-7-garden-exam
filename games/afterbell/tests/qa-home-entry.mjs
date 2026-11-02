@@ -24,11 +24,11 @@ try{
     check(`${name}: card links to nested production build`,await card.getAttribute('href')==='games/afterbell/play/index.html');
     check(`${name}: homepage remains Hebrew RTL`,await page.evaluate(()=>document.documentElement.lang==='he'&&document.documentElement.dir==='rtl'));
     check(`${name}: homepage has no horizontal overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    check(`${name}: learning links are intact`,await page.locator('.exam-list a').count()===2);
+    check(`${name}: learning links are intact`,await page.locator('a[href*="subject.html"]').count()>=2);
     await shot(page,`homepage-top-${name}`);
     await card.scrollIntoViewIfNeeded();
     check(`${name}: card fits width`,await card.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}));
-    check(`${name}: card action target is at least 44px`,await page.locator('.afterbell-action').evaluate(el=>{const r=el.getBoundingClientRect();return r.width>=44&&r.height>=44;}));
+    check(`${name}: card action target is at least 44px`,await card.evaluate(el=>{const r=el.getBoundingClientRect();return r.width>=44&&r.height>=44;}));
     check(`${name}: reduced motion disables card movement`,await card.evaluate(el=>getComputedStyle(el).transitionDuration==='0s'));
     await shot(page,`homepage-card-${name}`);
     if(profile.isMobile)await card.tap();else{await card.focus();await page.keyboard.press('Enter');}
@@ -44,16 +44,15 @@ try{
     await shot(page,`built-welcome-${name}`);
     await page.locator('#player-name').fill('בדיקת קישור');
     if(profile.isMobile)await page.locator('#start').tap();else await page.locator('#start').click();
-    if(profile.isMobile)await page.locator('#begin-adventure').tap();else await page.locator('#begin-adventure').click();
     await page.evaluate(()=>advanceTime(16));
     check(`${name}: synthetic round enters exploration`,await page.evaluate(()=>JSON.parse(render_game_to_text()).mode==='explore'));
     if(profile.isMobile){
-      check('Android touch controls are visible',await page.locator('#joystick').isVisible()&&await page.locator('#jump').isVisible());
+      check('Android touch controls are visible',await page.locator('#joystick').isVisible()&&await page.locator('#vehicle').isVisible());
       const cdp=await context.newCDPSession(page),r=await page.locator('#joystick').boundingBox(),x=r.x+r.width/2,y=r.y+r.height/2,before=await page.evaluate(()=>JSON.parse(render_game_to_text()).player);
       await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+32,y}]});await page.evaluate(()=>advanceTime(600));await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
       const after=await page.evaluate(()=>JSON.parse(render_game_to_text()).player);check('Android production touch movement works',Math.hypot(before.x-after.x,before.z-after.z)>1);
       await page.evaluate(()=>advanceTime(500));const stopped=await page.evaluate(()=>JSON.parse(render_game_to_text()).player);check('Android production touch release stops movement',Math.hypot(stopped.x-after.x,stopped.z-after.z)<.01);
-      await page.locator('#jump').tap();await page.evaluate(()=>advanceTime(140));check('Android production touch jump works',await page.evaluate(()=>JSON.parse(render_game_to_text()).player.y>0));await page.evaluate(()=>advanceTime(1000));
+      await page.locator('#vehicle').tap();check('Android production vehicle control works',await page.evaluate(()=>JSON.parse(render_game_to_text()).driving));await page.evaluate(()=>advanceTime(1000));
     }else{
       const before=await page.evaluate(()=>JSON.parse(render_game_to_text()).player);await page.keyboard.down('ArrowLeft');await page.evaluate(()=>advanceTime(600));await page.keyboard.up('ArrowLeft');const after=await page.evaluate(()=>JSON.parse(render_game_to_text()).player);check('desktop production keyboard movement works',Math.hypot(before.x-after.x,before.z-after.z)>1);
     }

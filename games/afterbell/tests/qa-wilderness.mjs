@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {landmarks} from '../src/territory.js';
-const base=process.env.AFTERBELL_URL||'http://127.0.0.1:4347/games/afterbell/play/index.html';
+const base=process.env.AFTERBELL_URL||'http://127.0.0.1:4347/games/afterbell/play/campus.html';
 const browser=await chromium.launch({args:['--enable-webgl']});
 const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));

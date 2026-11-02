@@ -23,3 +23,9 @@
 .atlas-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid #77807355}
 .atlas-row div{flex:1}.atlas-row small{display:block;color:#c4ccc3;margin-top:4px}
 .atlas-row .secondary{padding:7px}
+
+/* Keep the old campus puzzle header fixed while its controls scroll on short phone screens. */
+#dialog[open]{display:flex;flex-direction:column;overflow:hidden}
+#dialog .dialog-top{flex:none}
+#dialog-body{flex:1 1 auto;min-height:0;overflow-y:auto}
+@media(max-width:600px){#dialog[open]{min-height:min(220px,75dvh)}}

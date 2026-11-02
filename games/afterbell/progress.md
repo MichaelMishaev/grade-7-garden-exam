@@ -128,3 +128,6 @@ The production candidate keeps separate launch controls for Starlight Relay, ten
 
 ## Beyond the campus
 The playable world grew from 54 × 54 to 216 × 216. New Starlight Relay editions send students to three different regions, while old drafts keep their original station coordinates. The atlas records six waystones. Two bridges cross the tidal watercourse, and nine optional jump gates grant a burst of speed. Three patrolling wind spirits slow grounded players without changing academic scoring. Browser checks covered guided travel to all six landmarks, outer-world reload, discovered-only fast travel, touch jumping through all nine gates, wind contact and the original campus guided trip.
+
+## Festival City
+The default entry opens a coastal roleplay city. Three jobs each support two shifts through eight landmarks, with walking, drivable vans, manual controls, guided routes, and three role-specific activities. Questions come from the selected PrepX quiz after each delivery. The older campus is linked from the city welcome page and continues to use its own draft. QA exercised the actual homepage entry, three complete jobs, mobile quiz controls, resume and intercepted saves. The campus mirror controls were checked in Chromium and WebKit at 320px and 390px.

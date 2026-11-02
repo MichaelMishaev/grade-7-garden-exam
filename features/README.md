@@ -12,3 +12,5 @@ Partial catalog of maze features. Every feature must include a written specifica
 | PWA-INSTALL | [Install PrepX](../docs/features/pwa-install.md) | approved | Implemented; regression QA in progress | Implementation |
 
 | AB-RELAY | [Starlight Relay](afterbell-starlight.md) | Local implementation | Playtesting | Game |
+
+| AB-CITY | [Festival City](afterbell-festival-city.md) | Local implementation | Playtesting | Game |

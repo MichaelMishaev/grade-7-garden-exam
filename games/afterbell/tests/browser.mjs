@@ -42,7 +42,7 @@ function captureErrors(page){
 }
 try {
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();captureErrors(page);
-  await page.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await ready(page);
+  await page.goto(base+'/campus.html?test=1',{waitUntil:'domcontentloaded'});await ready(page);
   await shot(page,'welcome-desktop');
   await page.locator('#start').click();check('name is required',(await state(page)).mode==='menu');
   await page.locator('#player-name').fill('בדיקת משחק');await page.locator('#start').click();await page.locator('#begin-adventure').click();
@@ -107,7 +107,7 @@ try {
   await page.locator('#replay').click();check('replay returns to start',(await state(page)).mode==='menu');await context.close();
   // Close the desktop context before testing mobile to avoid simultaneous WebGL contexts.
   const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),m=await mobile.newPage();captureErrors(m);
-  await m.route('**/api/afterbell/quizzes/**',r=>r.abort());await m.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await ready(m);
+  await m.route('**/api/afterbell/quizzes/**',r=>r.abort());await m.goto(base+'/campus.html?test=1',{waitUntil:'domcontentloaded'});await ready(m);
   check('offline uses the unchanged database snapshot',(await state(m)).source==='snapshot');await shot(m,'welcome-mobile');
   check('390px welcome has no horizontal overflow',await m.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await m.locator('#player-name').fill('בדיקת מגע');await m.locator('#start').tap();await m.locator('#begin-adventure').tap();

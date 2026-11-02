@@ -36,7 +36,7 @@ try {
     if (ok) acceptedRequests++; else rejectedRequests++;
     return route.fulfill({ status: ok ? 200 : 400, contentType: 'application/json', body: JSON.stringify(ok ? { saved: true, id: accepted.id, score: 100 } : { error: 'invalid_attempt' }) });
   });
-  await page.goto(`${base}/?test=1&quiz=physics-units`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/campus.html?test=1&quiz=physics-units`, { waitUntil: 'domcontentloaded' });
   await ready(page);
   check('URL preselects the requested original practice set', (await state(page)).quiz === 'physics-units' && (await state(page)).total === 11);
   check('all seven original practice sets are selectable', await page.locator('#quiz option').count() === 7);
@@ -114,7 +114,7 @@ try {
     HTMLCanvasElement.prototype.getContext = function(type, ...args) { return /webgl/.test(type) ? null : original.call(this, type, ...args); };
   });
   await unavailable.route('**/api/afterbell/quizzes/**', route => route.abort());
-  await unavailable.goto(base, { waitUntil: 'domcontentloaded' });
+  await unavailable.goto(base+'/campus.html', { waitUntil: 'domcontentloaded' });
   await unavailable.waitForFunction(() => document.querySelector('#source-status').textContent.includes('לא מקוון'));
   check('WebGL failure keeps Start disabled and offers normal practice', await unavailable.locator('#start').isDisabled() && await unavailable.locator('#loading a').getAttribute('href') === 'https://hitech.agnon.online/');
   await noGpu.close();
@@ -122,7 +122,7 @@ try {
   const production = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const built = await production.newPage();
   built.on('pageerror', error => pageErrors.push(error.message));
-  await built.goto('http://127.0.0.1:4319/?test=1', { waitUntil: 'domcontentloaded' });
+  await built.goto('http://127.0.0.1:4319/campus.html?test=1', { waitUntil: 'domcontentloaded' });
   await ready(built);
   check('built standalone game serves usable content', (await state(built)).total === 6);
   check('production bundle does not expose development positioning hooks', await built.evaluate(() => typeof window.__afterbell === 'undefined'));

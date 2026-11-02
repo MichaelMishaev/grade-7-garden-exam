@@ -70,7 +70,7 @@ try{
   await p.route('**/api/afterbell/attempts',r=>{mockedSaves++;return r.fulfill({status:200,contentType:'application/json',body:'{"saved":true}'});});
   await p.route('**/api/submit-exam',r=>{throw new Error('Email must never be called');});
   for(const scenario of SCENARIOS){
-   if(scenario===SCENARIOS[0]){await p.goto(base+'/?test=1',{waitUntil:'domcontentloaded'});await ready(p);}
+   if(scenario===SCENARIOS[0]){await p.goto(base+'/campus.html?test=1',{waitUntil:'domcontentloaded'});await ready(p);}
    else{if((await state(p)).mode==='complete')await press(p,'#replay');else{await p.keyboard.press('Escape');await press(p,'#menu');}await advance(p,0);}
    await p.locator('#quiz').selectOption(scenario.quizzes[0]);await ready(p);await p.locator('#player-name').fill('בדיקת תרחישים');await p.locator('#scenario').selectOption(scenario.id);await press(p,'#scenario-start');await press(p,'#begin-adventure');await advance(p,0);
    for(let i=0;i<3;i++){

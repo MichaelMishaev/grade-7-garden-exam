@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import snapshot from '../src/content-snapshot.json' with {type:'json'};
 import {SCENARIOS} from '../src/scenarios.js';
-const url=process.env.PREPX_QA_URL||'http://127.0.0.1:4328/games/afterbell/play/index.html';
+const url=process.env.PREPX_QA_URL||'http://127.0.0.1:4328/games/afterbell/play/campus.html';
 const out=new URL('../../../output/playwright/scenarios-r2-built/',import.meta.url).pathname;await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true}),checks=[],errors=[];let posts=0;
 const check=(name,ok)=>{assert.ok(ok,name);checks.push(name);};

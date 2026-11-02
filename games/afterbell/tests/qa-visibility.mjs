@@ -12,7 +12,7 @@ try {
     page.on('pageerror',e=>errors.push(e.message));
     page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('net::ERR_FAILED'))errors.push(m.text());});
     await page.route('**/api/**',r=>r.abort());
-    await page.goto(`${base}/?test=1`);
+    await page.goto(`${base}/campus.html?test=1`);
     await page.waitForFunction(()=>typeof __afterbell!=='undefined'&&!document.querySelector('#start').disabled);
     await page.locator('#player-name').fill('Visibility QA');
     await page.locator('#start').click();

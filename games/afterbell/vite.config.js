@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: 'src',
   base: './',
-  build: { outDir: '../play', emptyOutDir: true },
+  build: { rollupOptions:{input:['src/index.html','src/campus.html']}, outDir: '../play', emptyOutDir: true },
   server: {
     strictPort: true,
     proxy: {

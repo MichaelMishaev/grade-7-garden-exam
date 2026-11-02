@@ -151,7 +151,7 @@ function watch(page) {
   page.on('console', m => { if (m.type() === 'error' && !m.text().includes('Failed to load resource')) errors.push({ kind: 'console', message: m.text() }); });
 }
 async function start(page, viewport) {
-  await page.goto(base + '/?test=1&quiz=facts', { waitUntil: 'domcontentloaded' });
+  await page.goto(base + '/campus.html?test=1&quiz=facts', { waitUntil: 'domcontentloaded' });
   await ready(page); await advance(page);
   check(`${viewport} uses Hebrew RTL`, await page.evaluate(() => document.documentElement.lang === 'he' && document.documentElement.dir === 'rtl'));
   check(`${viewport} source fallback is explicit`, (await state(page)).source === 'snapshot' && (await page.locator('#source-status').textContent()).includes('לא מקוון'));
@@ -188,7 +188,7 @@ try {
       const context=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
       const page=await context.newPage();watch(page);
       await page.route('**/api/afterbell/quizzes/**',route=>route.abort());
-      await page.goto(base+'/?test=1&quiz=facts',{waitUntil:'domcontentloaded'});await ready(page);await advance(page);
+      await page.goto(base+'/campus.html?test=1&quiz=facts',{waitUntil:'domcontentloaded'});await ready(page);await advance(page);
       await shot(page,`welcome-final-${size}`);
       await page.locator('#player-name').fill('בדיקת מגע');await page.locator('#start').tap();await page.locator('#begin-adventure').tap();await advance(page);
       check(`${size} final gameplay has no horizontal overflow`,await noOverflow(page));

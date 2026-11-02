@@ -21,7 +21,7 @@ async function start(page, touch) {
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(q) });
   });
   await page.route('**/api/afterbell/attempts', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ saved: true, id: route.request().postDataJSON().id, score: 100 }) }));
-  await page.goto(`${base}/?test=1&quiz=facts`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/campus.html?test=1&quiz=facts`, { waitUntil: 'domcontentloaded' });
   await ready(page);
   await page.locator('#player-name').fill('בדיקת משחק');
   await press(page, '#start', touch);

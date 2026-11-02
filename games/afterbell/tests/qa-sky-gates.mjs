@@ -4,7 +4,7 @@ import {skyGates} from '../src/territory.js';
 const b=await chromium.launch({args:['--enable-webgl']});
 try{
   const p=await b.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-  await p.goto((process.env.AFTERBELL_URL||'http://127.0.0.1:5202')+'/?test=1');
+  await p.goto((process.env.AFTERBELL_URL||'http://127.0.0.1:5202')+'/campus.html?test=1');
   await p.fill('#player-name','QA');await p.tap('#relay-start');await p.tap('#begin-adventure');
   await p.evaluate(()=>advanceTime(0));
   for(const [i,[x,z]] of skyGates.entries()){

@@ -8,7 +8,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/api/afterbell/attempts',r=>{posts.push('attempt');return r.abort();});
  await page.route('**/api/submit-exam',r=>{posts.push('exam');return r.abort();});
- const response=await page.goto(base+'/games/afterbell/play/index.html?v=guided-2',{waitUntil:'load'});
+ const response=await page.goto(base+'/games/afterbell/play/campus.html?v=guided-2',{waitUntil:'load'});
  assert.equal(response.headers()['cache-control'],'no-cache');
  await page.waitForFunction(()=>typeof render_game_to_text==='function'&&!document.querySelector('#start').disabled);
  assert.equal(await page.evaluate(()=>typeof window.__afterbell),'undefined');

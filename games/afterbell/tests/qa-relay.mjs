@@ -34,6 +34,7 @@ await mkdir(output,{recursive:true});
 try{
   const entry=new URL(base);
   if(!entry.pathname.endsWith('.html')&&!entry.pathname.endsWith('/'))entry.pathname+='/';
+  if(entry.pathname.endsWith('/'))entry.pathname+='campus.html';
   entry.searchParams.set('test','1');
   await page.goto(entry.href);
   await page.locator('#player-name').fill('בדיקת מסילה');
