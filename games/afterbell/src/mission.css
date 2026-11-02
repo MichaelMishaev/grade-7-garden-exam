@@ -18,3 +18,8 @@
   .relay-finale polyline{stroke-dasharray:250;animation:relay-draw 1.4s ease-out both}
   @keyframes relay-draw{from{stroke-dashoffset:250}to{stroke-dashoffset:0}}
 }
+#atlas{width:100%;min-height:40px}
+.atlas-chart{display:block;width:min(100%,310px);margin:12px auto;border:1px solid #78867c;border-radius:8px}
+.atlas-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid #77807355}
+.atlas-row div{flex:1}.atlas-row small{display:block;color:#c4ccc3;margin-top:4px}
+.atlas-row .secondary{padding:7px}

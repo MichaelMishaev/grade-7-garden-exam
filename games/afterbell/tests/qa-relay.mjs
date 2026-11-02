@@ -26,7 +26,7 @@ async function guide(){
   assert.ok(!nav.blocked,'guide has route');
   if(!nav.arrived){
     await click('follow-path');
-    await page.evaluate(()=>advanceTime(18000));
+    await page.evaluate(()=>advanceTime(55000));
     await page.waitForTimeout(120);
   }
 }
@@ -41,7 +41,7 @@ try{
   await click('relay-start');await click('begin-adventure');
   // All editions use the real scene's collision map and the same planner as the HUD.
   const destinations=editions.flatMap((_,edition)=>[0,1,2].flatMap(i=>{
-    const s=station({edition},i);return s.task==='sparks'?[s,...sparksAt(s)]:[s];
+    const s=station({edition,territory:1},i);return s.task==='sparks'?[s,...sparksAt(s)]:[s];
   }));
   if(await page.evaluate(()=>typeof window.__afterbell!=='undefined')){
     const blocked=await page.evaluate(list=>list.filter(s=>!__afterbell.world.guideTo(s.x,s.z)).map(s=>[s.x,s.z]),destinations);

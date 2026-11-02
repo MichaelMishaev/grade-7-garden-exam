@@ -1,3 +1,4 @@
+import {WORLD_EDGE} from './territory.js';
 // Match the follower's 0.1-unit waypoint tolerance when rechecking arrival.
 export const arrivedAtGoal = (start,goal) => Math.hypot(start.x-goal.x,start.z-goal.z)<=1.8;
 // The same collision predicate is used for planning, segment validation and walking.
@@ -6,9 +7,10 @@ export function clearSegment(a,b,blocked,spacing=.14) {
   for(let i=0;i<=steps;i++){const t=i/steps;if(blocked(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t))return false;}
   return true;
 }
-export function findRoute(start,goal,blocked,{step=.6,radius=1.7,bound=27}={}) {
+export function findRoute(start,goal,blocked,{step=.6,radius=1.7,bound=WORLD_EDGE}={}) {
   if(![start.x,start.z,goal.x,goal.z].every(Number.isFinite)||blocked(start.x,start.z))return null;
   if(Math.hypot(start.x-goal.x,start.z-goal.z)<=radius)return [];
+  if(!blocked(goal.x,goal.z)&&clearSegment(start,goal,blocked))return [{x:goal.x,z:goal.z}];
   const width=Math.floor(bound*2/step)+1,total=width*width,point=id=>({x:id%width*step-bound,z:Math.floor(id/width)*step-bound});
   const open=[],cost=new Float64Array(total).fill(Infinity),previous=new Int32Array(total).fill(-1),closed=new Uint8Array(total),walkable=new Int8Array(total);
   function allowed(id){if(id<0||id>=total)return false;if(!walkable[id]){const p=point(id);walkable[id]=blocked(p.x,p.z)?-1:1;}return walkable[id]>0;}

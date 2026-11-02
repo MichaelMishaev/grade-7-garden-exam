@@ -11,3 +11,11 @@ Students can already pick their subject, but every campus run asks them to repea
 | AB5 | Gold rings, drifting sparks and a constellation at the gate respond to progress. Reduced motion keeps static geometry and the same playable cues. Hebrew RTL, mobile joystick, keyboard and guided walking remain available. | Browser and visual review |
 
 Only the layout and challenge progress are new draft data. The existing attempt ID, quiz content, grading and privacy rules apply. Students can leave a question, return to its marker and continue. Human playtesting will determine whether they enjoy subsequent runs.
+
+## Beyond the campus
+
+The campus becomes a hub inside a 216 × 216 world. New relay runs send players to six named locations in the tide marsh, amber quarry and observatory highlands. Roads connect the hub and outer destinations. Crossing the marsh requires finding a bridge. The atlas shows the whole region, and visiting a waystone unlocks return travel within that relay attempt.
+
+- W1 · A new relay sends three challenges to different regions. The player can reach every site using ground movement and guided travel, then complete the selected quiz and return to the campus gate.
+- W2 · Discoveries and player position survive reload beyond the former boundary. Pre-expansion drafts keep their original station layout.
+- W3 · Water blocks movement except on bridge decks. Mouse, joystick and pathfinding use the same world limits. The atlas can guide the player to an undiscovered landmark, and return travel is available only to known locations.

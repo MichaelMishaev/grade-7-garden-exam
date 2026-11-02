@@ -1,3 +1,4 @@
+import {WORLD_EDGE,knownStones,skyGates} from './territory.js';
 import { charged, validRelay } from './relay.js';
 import { restoreScenario } from './scenarios.js';
 import { attemptId } from './browser-crypto.js';
@@ -37,7 +38,7 @@ export function validQuiz(q) {
 export function makeRound(quiz, rng = Math.random) {
   if (!validQuiz(quiz)) throw new Error('Invalid quiz');
   const questions = shuffle(quiz.questions, rng).map(q => ({ ...q, options: shuffle(q.choices.map((text, original) => ({ text, original })), rng) }));
-  return { quizId: quiz.id, questions, assignments: NPCS.map((_, i) => questions.filter((__, j) => j % 3 === i).map(q => q.id)), environment: normalizeEnvironment(), answers: {}, understood: [], seals: [], items: [], collected: [], elapsed: 0, player: { x: 0, z: 9 }, startedAt: Date.now(), attemptId: attemptId() };
+  return { quizId: quiz.id, questions, assignments: NPCS.map((_, i) => questions.filter((__, j) => j % 3 === i).map(q => q.id)), environment: normalizeEnvironment(), stones: [], skyGates: [], answers: {}, understood: [], seals: [], items: [], collected: [], elapsed: 0, player: { x: 0, z: 9 }, startedAt: Date.now(), attemptId: attemptId() };
 }
 export function answer(round, id, original) {
   if (Object.hasOwn(round.answers, id)) return null;
@@ -62,7 +63,7 @@ export function restoreRound(raw, quiz) {
   try {
     const r = JSON.parse(raw);
     if (!r || r.quizId !== quiz.id || typeof r.attemptId !== 'string' || !Number.isFinite(r.startedAt) || !Number.isFinite(r.elapsed) || r.elapsed < 0 || !Array.isArray(r.questions) || r.questions.length !== quiz.questions.length) return null;
-    if (!r.player || !Number.isFinite(r.player.x) || !Number.isFinite(r.player.z) || Math.abs(r.player.x) > 27 || Math.abs(r.player.z) > 27) return null;
+    if (!r.player || !Number.isFinite(r.player.x) || !Number.isFinite(r.player.z) || Math.abs(r.player.x) > WORLD_EDGE || Math.abs(r.player.z) > WORLD_EDGE) return null;
     if(r.participantName!==undefined&&(typeof r.participantName!=='string'||!r.participantName.trim()||r.participantName.length>60))return null;
     const ids = new Set();
     for (const q of r.questions) {
@@ -87,6 +88,8 @@ export function restoreRound(raw, quiz) {
       if (!r.scenario) return null;
       r.seals = r.seals.filter(id => r.scenario.completed.includes(NPCS.findIndex(n => n.id === id)));
     }
+    r.stones = knownStones(r.stones);
+    r.skyGates = skyGates.map((_,i)=>i).filter(i=>Array.isArray(r.skyGates)&&r.skyGates.includes(i));
     r.environment = normalizeEnvironment(r.environment);
     return r;
   } catch { return null; }

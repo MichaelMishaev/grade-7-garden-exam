@@ -125,3 +125,6 @@ Original prompt: Build a fast, well-designed, funny 3D exam-practice game as a s
 
 ## Worker integration · November 2
 The production candidate keeps separate launch controls for Starlight Relay, ten field cases, and the original blackout. Existing quiz groups, scoring, stored attempts and prior hashed assets are preserved. The combined build passed 49 scenario browser checks and the full relay journey with its result submission intercepted.
+
+## Beyond the campus
+The playable world grew from 54 × 54 to 216 × 216. New Starlight Relay editions send students to three different regions, while old drafts keep their original station coordinates. The atlas records six waystones. Two bridges cross the tidal watercourse, and nine optional jump gates grant a burst of speed. Three patrolling wind spirits slow grounded players without changing academic scoring. Browser checks covered guided travel to all six landmarks, outer-world reload, discovered-only fast travel, touch jumping through all nine gates, wind contact and the original campus guided trip.

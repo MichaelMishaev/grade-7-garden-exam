@@ -1,3 +1,5 @@
+import {WORLD_EDGE,inRiver} from './territory.js';
+import {buildFrontier,createSkyGates} from './frontier.js';
 import { createRelayLights } from './relay-world.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -5,7 +7,7 @@ import { NPCS, EXIT } from './core.js';
 import { createCampusEnvironment, normalizeEnvironment } from './environment.js';
 import { findRoute, clearSegment, arrivedAtGoal } from './navigation.js';
 
-export function createWorld(container, { reduced = false, onMove, onInteract, onCollect, onEnvironmentChange }) {
+export function createWorld(container, { reduced = false, onMove, onInteract, onCollect, onEnvironmentChange, onGust }) {
   let seed = 7919;
   const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
   const scene = new THREE.Scene();
@@ -69,12 +71,14 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   function ellipsoid(x,y,z,rx,ry,rz,color,parent=scene) {const m=ball(x,y,z,1,color,parent);m.scale.set(rx,ry,rz);return m;}
   function segment(a,b,r,color,parent=scene) {const from=new THREE.Vector3(...a),to=new THREE.Vector3(...b),delta=to.clone().sub(from);const m=mesh(new THREE.CylinderGeometry(r*.7,r,delta.length(),7),color,...from.clone().add(to).multiplyScalar(.5).toArray(),parent);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m;}
   const obstacles = [];
+  let obstacleCells=null;
+  const cellKey=(x,z)=>Math.floor(x/8)+32*Math.floor(z/8);
   const circleObstacle = (x,z,r) => obstacles.push({ x,z,r });
-  function blocked(x,z) {return Math.abs(x)>27||Math.abs(z)>27||obstacles.some(o=>!o.disabled&&(o.hx!==undefined?Math.abs(x-o.x)<o.hx+.28&&Math.abs(z-o.z)<o.hz+.28:o.r?Math.hypot(x-o.x,z-o.z)<o.r+.35:((x-o.x)/(o.rx+.3))**2+((z-o.z)/(o.rz+.3))**2<1));}
+  function blocked(x,z,pad=0) {return Math.abs(x)>WORLD_EDGE||Math.abs(z)>WORLD_EDGE||inRiver(x,z)||(obstacleCells?(obstacleCells.get(cellKey(x,z))||[]):obstacles).some(o=>!o.disabled&&(o.hx!==undefined?Math.abs(x-o.x)<o.hx+.28+pad&&Math.abs(z-o.z)<o.hz+.28+pad:o.r?Math.hypot(x-o.x,z-o.z)<o.r+.35+pad:((x-o.x)/(o.rx+.3+pad))**2+((z-o.z)/(o.rz+.3+pad))**2<1));}
   function groundDisc(x,z,rx,rz,c,y=.03) {const m=mesh(new THREE.CylinderGeometry(1,1,.045,48),c,x,y,z);m.scale.set(rx,1,rz);return m;}
   // Continuous terrain and a real perimeter replace the floating toy island.
-  const terrain=box(0,-.2,0,180,.3,180,grassMat);terrain.castShadow=false;
-  for(let i=0;i<9;i++){const a=i/9*Math.PI*2, hill=ellipsoid(Math.cos(a)*72,3,Math.sin(a)*72,24,9+rand()*9,20,'#273c3d');hill.castShadow=false;}
+  const terrain=box(0,-.2,0,260,.3,260,grassMat);terrain.castShadow=false;
+  for(let i=0;i<9;i++){const a=i/9*Math.PI*2, hill=ellipsoid(Math.cos(a)*154,3,Math.sin(a)*154,24,9+rand()*9,20,'#273c3d');hill.castShadow=false;}
   function path(points,width=2.3) {
     for(let i=0;i<points.length-1;i++) {const a=points[i],b=points[i+1],d=Math.hypot(b[0]-a[0],b[1]-a[1]);const p=box((a[0]+b[0])/2,.015,(a[1]+b[1])/2,width,.055,d,asphaltMat);p.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1]);groundDisc(a[0],a[1],width/2,width/2,asphaltMat,.046);}
   }
@@ -128,7 +132,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   const aerial=mesh(new THREE.SphereGeometry(.65,16,10,0,Math.PI*2,0,Math.PI/2),'#819398',.85,7.8,.9,tower);aerial.rotation.x=-Math.PI/2;circleObstacle(16,16,1.7);
   // Perimeter fencing makes the bounded space legible as a school campus.
   function fence(a,b){const d=Math.hypot(b[0]-a[0],b[1]-a[1]),steps=Math.ceil(d/2.5);for(let i=0;i<=steps;i++){const t=i/steps;box(a[0]+(b[0]-a[0])*t,1.05,a[1]+(b[1]-a[1])*t,.07,2.1,.07,'#48585e');}for(const y of [.5,1.4,2.05])segment([a[0],y,a[1]],[b[0],y,b[1]],.018,'#738184');}
-  fence([-27,-27],[-3,-27]);fence([3,-27],[27,-27]);fence([-27,-27],[-27,27]);fence([27,-27],[27,27]);fence([-27,27],[27,27]);
+  fence([-27,-27],[-3,-27]);fence([3,-27],[27,-27]);fence([-27,-27],[-27,-4]);fence([-27,4],[-27,27]);fence([27,-27],[27,8]);fence([27,16],[27,27]);fence([-27,27],[-4,27]);fence([4,27],[27,27]);
   box(-2.5,2.4,-25,.38,4.8,.5,concreteMat);box(2.5,2.4,-25,.38,4.8,.5,concreteMat);box(0,4.8,-25,5.4,.3,.6,'#5b686c');
   const gate=new THREE.Group();scene.add(gate);
   const leaves=[-1,1].map(side=>{const g=new THREE.Group();g.position.set(side*2.2,0,-25);gate.add(g);for(let i=0;i<7;i++)box(-side*i*.32,1.9,0,.045,3.8,.08,'#66757a',g);for(const y of [.7,2.7,3.8])box(-side*1, y,0,2.15,.06,.08,'#66757a',g);return g;});
@@ -167,6 +171,14 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   sign(-2,5.75,-16.75,10,'בית הספר שי עגנון','כיתה ז׳ איינשטיין · כיתת הייטק');
   sign(-17,3.55,-9.65,4.4,'01 · ספריית איינשטיין');sign(18,3.55,-8.65,4.4,'02 · מעבדת ההייטק');sign(16,3.2,17.1,3.2,'03 · תחנת הקשר');sign(0,5.55,-24.8,4.8,'יציאה');
   box(-4,1.1,5,.07,2.2,.07,'#64716d');sign(-4,2.1,5.1,3.5,'קמפוס שי עגנון','ז׳ איינשטיין · כיתת הייטק');
+  const millRotor=buildFrontier({scene,box,cyl,cone,segment,ellipsoid,path,groundDisc,sign,circleObstacle});
+  obstacleCells=new Map();
+  for(const o of obstacles){
+    const dx=(o.hx??o.r??o.rx)+.4,dz=(o.hz??o.r??o.rz)+.4;
+    for(let ix=Math.floor((o.x-dx)/8);ix<=Math.floor((o.x+dx)/8);ix++)for(let iz=Math.floor((o.z-dz)/8);iz<=Math.floor((o.z+dz)/8);iz++){
+      const key=ix+32*iz;if(!obstacleCells.has(key))obstacleCells.set(key,[]);obstacleCells.get(key).push(o);
+    }
+  }
   // Warm, low-contrast skyline; the moon is distant rather than an oversized decorative mascot.
   ball(-38,30,-57,1.7,'#bbcbd3',scene,3,true);
   const starPoints=[];for(let i=0;i<85;i++){const a=rand()*Math.PI*2,r=65+rand()*35;starPoints.push(Math.cos(a)*r,25+rand()*40,Math.sin(a)*r);}
@@ -206,7 +218,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
     material.customProgramCacheKey=()=> 'player-sight-corridor-v1';
   }
   // Batch immutable scenery by material to keep the richer geometry inexpensive to render.
-  scene.updateMatrixWorld(true);const movingScenery=new Set([gate,...seals,...equipment.values(),...stations.map(s=>s.g),...campus.dynamic]),batches=new Map(),originals=[];
+  scene.updateMatrixWorld(true);const movingScenery=new Set([millRotor,gate,...seals,...equipment.values(),...stations.map(s=>s.g),...campus.dynamic]),batches=new Map(),originals=[];
   scene.traverse(node=>{if(!node.isMesh)return;let parent=node;while(parent){if(movingScenery.has(parent))return;parent=parent.parent;}if(node.material.transparent)return;const batch=batches.get(node.material)||[];batch.push(node.geometry.clone().applyMatrix4(node.matrixWorld));batches.set(node.material,batch);originals.push(node);});
   for(const [material,geometries] of batches){const geometry=mergeGeometries(geometries);if(!geometry)continue;const combined=new THREE.Mesh(geometry,material);combined.castShadow=!material.isMeshBasicMaterial&&!(material.emissiveIntensity>1);combined.receiveShadow=true;scene.add(combined);for(const g of geometries)g.dispose();}
   for(const node of originals){node.removeFromParent();node.geometry.dispose();}
@@ -246,7 +258,7 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   for(let i=0;i<3;i++){const g=critter('duck','#8f947b');g.scale.setScalar(1.05);scene.add(g);animals.push({g,type:'duck',angle:i*2,speed:.3,turn:0});}
   const fireflies=Array.from({length:12},(_,i)=>{const positions=[[-4,12],[-8,4],[-14,-3],[-9,-12],[4,-10],[10,-2],[18,2],[19,11],[9,21],[-7,20],[-23,-1],[5,-23]];const [x,z]=positions[i];return {x,z,mesh:ball(x,1.1,z,.055,'#c9c693',scene,1,true)};});
   const destination=mesh(new THREE.RingGeometry(.26,.30,24),'#c1c9b4',0,.12,0,scene,true);destination.rotation.x=-Math.PI/2;destination.visible=false;
-  const relayLights=createRelayLights(scene,reduced);
+  const relayLights=createRelayLights(scene,reduced),skyLights=createSkyGates(scene,reduced);
   const keys=new Set();let joystick={x:0,z:0},target=null,active=false,paused=false,velocityY=0,jumpY=0,worldTime=0,manual=false,environment=normalizeEnvironment(),observing=false,seatedPose=false;
   const guide={goal:null,endpoint:null,route:[],following:false,arrived:false,blocked:false,anchor:null,lastPlan:-10};
   let walkRoute=[],walkKind=null,lastTrail=-1;
@@ -291,13 +303,13 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
     trail.count=count;trail.instanceMatrix.needsUpdate=true;lastTrail=worldTime;
   }
   function planGuide(){
-    if(!guide.goal)return;const start={x:player.position.x,z:player.position.z};const path=arrivedAtGoal(start,guide.goal)?[]:findRoute(start,guide.goal,blocked);
+    if(!guide.goal)return;const start={x:player.position.x,z:player.position.z};const path=arrivedAtGoal(start,guide.goal)?[]:findRoute(start,guide.goal,(x,z)=>blocked(x,z,.18))||findRoute(start,guide.goal,blocked);
     guide.route=path||[];guide.endpoint=path===null?null:(path.at(-1)||start);guide.blocked=path===null;guide.arrived=path!==null&&path.length===0;guide.anchor=start;guide.lastPlan=worldTime;
     if(guide.following){walkRoute=[...guide.route];walkKind=guide.blocked||guide.arrived?null:'guide';if(!walkKind)guide.following=false;}
     drawGuide();
   }
   function guideTo(x,z){
-    if(!Number.isFinite(x)||!Number.isFinite(z)||Math.abs(x)>27||Math.abs(z)>27)return false;
+    if(!Number.isFinite(x)||!Number.isFinite(z)||Math.abs(x)>WORLD_EDGE||Math.abs(z)>WORLD_EDGE)return false;
     guide.goal={x,z};guide.following=false;walkRoute=[];walkKind=null;target=null;planGuide();return !guide.blocked;
   }
   function stopGuide(){guide.following=false;walkRoute=[];walkKind=null;target=null;destination.visible=false;}
@@ -323,22 +335,24 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   window.addEventListener('keyup',e=>keys.delete(e.code));
   const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);let pointerStart=null;
   renderer.domElement.addEventListener('pointerdown',e=>{pointerStart={x:e.clientX,y:e.clientY};});
-  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused||!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>10)return;ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);const hit=new THREE.Vector3();if(ray.ray.intersectPlane(plane,hit)&&Math.abs(hit.x)<27&&Math.abs(hit.z)<27){walkToPoint({x:hit.x,z:hit.z});}});
+  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused||!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>10)return;ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);const hit=new THREE.Vector3();if(ray.ray.intersectPlane(plane,hit)&&Math.abs(hit.x)<=WORLD_EDGE&&Math.abs(hit.z)<=WORLD_EDGE){walkToPoint({x:hit.x,z:hit.z});}});
   // Lower camera reads as being inside a place, while retaining the same input basis.
+  let windTime=0,gustTime=0,gustCooldown=0;
   const followOffset=new THREE.Vector3(11.5,12.5,15.55);
   function update(dt,draw=true){
-    if(!paused){worldTime+=dt;relayLights.tick(worldTime);}
-    if(active&&!paused){dashCooldown=Math.max(0,dashCooldown-dt);dashLeft=Math.max(0,dashLeft-dt);let dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joystick.x;let dz=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+joystick.z;let mx=dx*.806+dz*.592,mz=-dx*.592+dz*.806;
+    if(!paused){worldTime+=dt;relayLights.tick(worldTime);skyLights.tick(worldTime);if(!reduced)millRotor.rotation.z=worldTime*.55;}
+    if(active&&!paused){windTime=Math.max(0,windTime-dt);gustTime=Math.max(0,gustTime-dt);gustCooldown=Math.max(0,gustCooldown-dt);
+      if(!gustCooldown&&jumpY<.48&&skyLights.touches(player.position.x,player.position.z)){windTime=0;gustTime=1;gustCooldown=3;onGust?.();}dashCooldown=Math.max(0,dashCooldown-dt);dashLeft=Math.max(0,dashLeft-dt);let dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+joystick.x;let dz=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+joystick.z;let mx=dx*.806+dz*.592,mz=-dx*.592+dz*.806;
       if(dx||dz){standUp();observing=false;stopGuide();}
       else if(walkKind){
-        while(walkRoute.length&&Math.hypot(walkRoute[0].x-player.position.x,walkRoute[0].z-player.position.z)<.10){walkRoute.shift();if(walkKind==='guide')guide.route.shift();}
+        while(walkRoute.length&&Math.hypot(walkRoute[0].x-player.position.x,walkRoute[0].z-player.position.z)<.001){walkRoute.shift();if(walkKind==='guide')guide.route.shift();}
         if(!walkRoute.length){if(walkKind==='guide'){guide.arrived=true;guide.following=false;}walkKind=null;target=null;destination.visible=false;mx=mz=0;drawGuide();}
         else{target=walkRoute[0];mx=target.x-player.position.x;mz=target.z-player.position.z;}
       }
       if(dashLeft>0){mx=Math.sin(player.rotation.y);mz=Math.cos(player.rotation.y);target=null;}
-      if(target){standUp();observing=false;}const len=Math.hypot(mx,mz),moving=len>.05&&!environment.seated&&!observing;
-      if(moving){const speed=carrying?2.7:crouching?1.8:dashLeft>0?11:(keys.has('ShiftLeft')||keys.has('ShiftRight')?7.2:4.5),step=target?Math.min(len,dt*speed):dt*speed,nx=player.position.x+mx/len*step,nz=player.position.z+mz/len*step;
-        if(target){if(clearSegment(player.position,{x:nx,z:nz},blocked)){player.position.x=nx;player.position.z=nz;}else{const wasGuide=walkKind==='guide';stopGuide();if(wasGuide){guide.blocked=true;guide.lastPlan=worldTime;}}}
+      if(target){standUp();observing=false;}const len=Math.hypot(mx,mz),moving=len>(target ? .0001 : .05)&&!environment.seated&&!observing;
+      if(moving){const speed=carrying?2.7:crouching?1.8:gustTime>0?2.2:dashLeft>0?11:windTime>0?12:(keys.has('ShiftLeft')||keys.has('ShiftRight')?7.2:Math.max(Math.abs(player.position.x),Math.abs(player.position.z))>27?7:4.5),step=target?Math.min(len,dt*speed):dt*speed,nx=player.position.x+mx/len*step,nz=player.position.z+mz/len*step;
+        if(target){if(clearSegment(player.position,{x:nx,z:nz},blocked)){player.position.x=nx;player.position.z=nz;}else{const wasGuide=walkKind==='guide';stopGuide();if(wasGuide){guide.following=true;planGuide();}}}
         else{if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;}
         player.rotation.y=Math.atan2(mx,mz);
       }
@@ -352,8 +366,8 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
     }
     if(!paused){campus.update(dt,reduced);animals.forEach((a,i)=>{if(a.type==='duck'){a.g.position.set(-17+Math.cos(worldTime*.13+i*2)*3,.08,13+Math.sin(worldTime*.13+i*2)*2);a.g.rotation.y=-(worldTime*.13+i*2);return;}const follow=environment.following===i;const destinationPoint=follow?player.position:environment.waterFilled&&i===1?{x:-8.5,z:8}:null;let speed=a.speed;if(destinationPoint){const dx=destinationPoint.x-a.g.position.x,dz=destinationPoint.z-a.g.position.z;a.angle=Math.atan2(dx,dz);speed=Math.hypot(dx,dz)>(follow?1.7:.6)?(follow?3.2:1):0;}else{a.turn-=dt;if(a.turn<=0){a.angle+=(rand()-.5)*2.4;a.turn=2+rand()*4;}}const x=a.g.position.x+Math.sin(a.angle)*dt*speed,z=a.g.position.z+Math.cos(a.angle)*dt*speed;if(blocked(x,z)){a.angle+=Math.PI*.7;}else{a.g.position.x=x;a.g.position.z=z;}a.g.rotation.y=a.angle;if(!reduced&&a.g.userData.legs)a.g.userData.legs.forEach((leg,j)=>leg.rotation.x=Math.sin(worldTime*7+j%2*Math.PI)*.35);if(!reduced)a.g.position.y=a.type==='rabbit'?Math.abs(Math.sin(worldTime*4+i))*.07:Math.abs(Math.sin(worldTime*5+i))*.015;});if(!reduced)fireflies.forEach((f,i)=>{f.mesh.position.y=1.1+Math.sin(worldTime*1.3+i)*.12;});}
     if(active&&observing){cameraTarget.set(-17,.6,13);camera.position.set(-9,3.7,18.5);camera.lookAt(cameraTarget);}
-    else if(active){const next=new THREE.Vector3(player.position.x,1,player.position.z);cameraTarget.lerp(next,reduced?1:1-Math.exp(-dt*5));const offset=followOffset.clone().multiplyScalar(innerWidth<600?1.2:1);camera.position.copy(cameraTarget).add(offset);camera.lookAt(cameraTarget);}
-    else{const mobile=innerWidth<600;cameraTarget.set(mobile?0:7,1,mobile?-7:-2);camera.position.set(mobile?35:38,mobile?25:27,mobile?39:38);camera.lookAt(cameraTarget);}
+    else if(active){const next=new THREE.Vector3(player.position.x,1,player.position.z);cameraTarget.lerp(next,reduced?1:1-Math.exp(-dt*5));const frontierZoom=Math.min(1,Math.max(0,(Math.max(Math.abs(player.position.x),Math.abs(player.position.z))-25)/12));const offset=followOffset.clone().multiplyScalar((innerWidth<600?1.2:1)+frontierZoom*.45);camera.position.copy(cameraTarget).add(offset);camera.lookAt(cameraTarget);}
+    else{const mobile=innerWidth<600;cameraTarget.set(mobile?41:30,2,mobile?3:-1);camera.position.set(mobile?79:92,mobile?22:29,mobile?43:54);camera.lookAt(cameraTarget);}
     sightEnabled.value=active&&!observing?1:0;
     sightPlayer.value.copy(player.position).y+=1;
     if(draw)renderer.render(scene,camera);
@@ -362,10 +376,10 @@ export function createWorld(container, { reduced = false, onMove, onInteract, on
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setPaused(true);container.dispatchEvent(new CustomEvent('worldlost'));});
   update(0);
-  return {hideRelay(){relayLights.sync({});},setActive,setPaused,setCompanion,getCompanion,jump,dash,setCrouching,movement,setCarrying(value){carrying=!!value;if(carrying){crouching=false;dashLeft=0;}},setScenario,guideTo,followGuide,stopGuide,guidance,setJoystick(x,z){joystick={x,z};if(x||z)stopGuide();},setPlayer(x,z){if(environment.seated)standUp();observing=false;stopGuide();jumpY=velocityY=0;player.position.set(x,0,z);cameraTarget.set(x,1,z);if(guide.goal)planGuide();},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
+  return {windState:()=>({boost:windTime,gust:gustTime}),catchWind(){windTime=5;},hideRelay(){relayLights.sync({});},setActive,setPaused,setCompanion,getCompanion,jump,dash,setCrouching,movement,setCarrying(value){carrying=!!value;if(carrying){crouching=false;dashLeft=0;}},setScenario,guideTo,followGuide,stopGuide,guidance,setJoystick(x,z){joystick={x,z};if(x||z)stopGuide();},setPlayer(x,z){if(environment.seated)standUp();observing=false;stopGuide();windTime=gustTime=gustCooldown=0;jumpY=velocityY=0;player.position.set(x,0,z);cameraTarget.set(x,1,z);if(guide.goal)planGuide();},getPlayer:()=>({x:player.position.x,z:player.position.z,y:jumpY}),animals:()=>animals.map((a,id)=>({id,type:a.type,x:+a.g.position.x.toFixed(1),z:+a.g.position.z.toFixed(1),following:environment.following===id,observed:environment.animalNotes.includes(id)})),
     setEnvironment:applyEnvironment,observe(value){observing=value;stopGuide();keys.clear();joystick={x:0,z:0};},isObserving:()=>observing,environmentAnimation:()=>campus.animation,performance:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio()}),
     project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight,visible:p.z<1&&Math.abs(p.x)<1&&Math.abs(p.y)<1};},
-    setProgress(round){relayLights.sync(round);fireflies.forEach((f,i)=>f.mesh.visible=!round.collected.includes(i));npcMeshes.forEach((n,i)=>n.marker.visible=!round.relay&&!round.scenario&&!round.seals.includes(NPCS[i].id));for(const [id,g]of equipment)g.visible=!round.relay&&!round.scenario&&!(round.items||[]).includes(id);stations.forEach((s,i)=>{const done=round.seals.includes(NPCS[i].id);s.screen.material=mat(done?'#91aa8b':'#a4784e',true);s.light.intensity=done?12:0;});seals.forEach((s,i)=>s.material=mat(round.seals.length>i?'#a7c1a0':'#9f684f',true));leaves.forEach((g,i)=>g.rotation.y=round.seals.length===3?(i===0?-1.35:1.35):0);exitLight.intensity=round.seals.length===3?10:0;},
+    setProgress(round){relayLights.sync(round);skyLights.sync(round);fireflies.forEach((f,i)=>f.mesh.visible=!round.collected.includes(i));npcMeshes.forEach((n,i)=>n.marker.visible=!round.relay&&!round.scenario&&!round.seals.includes(NPCS[i].id));for(const [id,g]of equipment)g.visible=!round.relay&&!round.scenario&&!(round.items||[]).includes(id);stations.forEach((s,i)=>{const done=round.seals.includes(NPCS[i].id);s.screen.material=mat(done?'#91aa8b':'#a4784e',true);s.light.intensity=done?12:0;});seals.forEach((s,i)=>s.material=mat(round.seals.length>i?'#a7c1a0':'#9f684f',true));leaves.forEach((g,i)=>g.rotation.y=round.seals.length===3?(i===0?-1.35:1.35):0);exitLight.intensity=round.seals.length===3?10:0;},
     advanceTime(ms){manual=true;for(let t=0;t<Math.min(ms,60000);t+=1000/60)update(1/60,false);renderer.render(scene,camera);},resumeRealtime(){manual=false;last=performance.now();},blocked,dispose(){renderer.dispose();}
   };
 }
