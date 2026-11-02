@@ -9,6 +9,25 @@ export function israelDate(now = new Date()) {
 if (typeof document !== 'undefined') {
   const upcoming = document.getElementById('calendar-upcoming-rows');
   const past = document.getElementById('calendar-past-rows');
+  const content = document.getElementById('calendar-content');
+  const calendar = document.getElementById('exam-calendar');
+  const dialog = document.getElementById('calendar-dialog');
+  const expandButtons = document.querySelectorAll('[data-calendar-expand]');
+  const previewAnchor = document.createComment('calendar preview');
+  content.before(previewAnchor);
+  for (const button of expandButtons) {
+    button.addEventListener('click', () => {
+      document.getElementById('calendar-dialog-body').append(content);
+      dialog.showModal();
+      document.body.classList.add('calendar-is-open');
+    });
+  }
+  dialog.addEventListener('close', () => {
+    previewAnchor.after(content);
+    document.body.classList.remove('calendar-is-open');
+    // A long expanded table must not leave the compact calendar scrolled out of view.
+    calendar.scrollIntoView({ block: 'nearest' });
+  });
   const rows = [...upcoming.rows].sort((a, b) =>
     a.querySelector('time').dateTime.localeCompare(b.querySelector('time').dateTime));
   let displayedDate;

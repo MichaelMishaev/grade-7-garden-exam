@@ -20,8 +20,6 @@
   <meta name="twitter:image" content="https://hitech.agnon.online/assets/branding/share-preview.png">
   <title>בוחרים מבחן | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=8">
-  <link rel="stylesheet" href="exam-calendar.css?v=1">
-  <script type="module" src="exam-calendar.js?v=1"></script>
   <link rel="stylesheet" href="branding.css?v=2">
   <link rel="stylesheet" href="afterbell-entry.css?v=1">
   <link rel="stylesheet" href="maze-entry.css?v=1">
@@ -31,102 +29,119 @@
   <meta name="apple-mobile-web-app-title" content="PrepX">
   <link rel="stylesheet" href="pwa.css?v=1">
   <script src="pwa.js?v=1" defer></script>
+  <link rel="stylesheet" href="exam-calendar.css?v=2">
+  <script type="module" src="exam-calendar.js?v=2"></script>
 </head>
 <body class="home-page">
   <div class="page">
     <header class="site-header">
+      <div class="home-brand-group">
       <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+      <span class="grade">כיתה ז׳2</span>
+      </div>
+      <div class="home-header-actions">
       <a class="calendar-link" href="#exam-calendar" aria-label="לוח מבחנים" title="לוח מבחנים">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2M8 18h2"/></svg>
       </a>
       <button class="install-app" id="install-app" type="button" aria-label="התקנת PrepX" title="התקנת PrepX" hidden>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
       </button>
-      <span class="grade">כיתה ז׳ · הכנה למבחנים</span>
+      </div>
     </header>
 
     <main>
-      <section class="intro" aria-labelledby="welcome-title">
-        <h1 id="welcome-title">איזה מבחן מתרגלים היום?</h1>
-        <p>בחרו מקצוע, ואז בחרו גרסה של המבחן.</p>
-      </section>
-
-      <section class="exam-list" aria-label="בחירת מקצוע">
-        <a class="exam-card" href="subject.html?subject=hebrew">
-          <img class="subject-art" src="assets/books.png" alt="" width="112" height="112">
-          <span class="exam-copy"><strong>עברית</strong><small>מבחן בתאריך 29.10</small><small>2 גרסאות זמינות</small></span>
-          <span class="exam-arrow" aria-hidden="true">←</span>
-        </a>
-        <a class="exam-card" href="subject.html?subject=physics">
-          <img class="subject-art" src="assets/atom.png" alt="" width="112" height="112">
-          <span class="exam-copy"><strong>פיזיקה</strong><small>מבחן בתאריך 2.11</small><small>תרגול מדידות · 4 נושאים</small></span>
-          <span class="exam-arrow" aria-hidden="true">←</span>
-        </a>
-      </section>
-
-      <a class="afterbell-entry" href="games/afterbell/play/index.html" aria-labelledby="afterbell-title">
-        <span class="afterbell-emblem" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="25"/><circle cx="32" cy="32" r="18"/><path d="m39 25-4 10-10 4 4-10 10-4Z"/><path d="M32 3v7M32 54v7M3 32h7M54 32h7"/></svg></span>
-        <span class="afterbell-copy"><span class="afterbell-kicker">משחק תלת־ממד · עולם פתוח</span><strong id="afterbell-title">אחרי הצלצול</strong><span class="afterbell-description">הקמפוס נתקע בחושך. חוקרים, פותרים תעלומות ומתרגלים בדרך החוצה.</span><span class="afterbell-action">נכנסים למשחק <span aria-hidden="true">←</span></span></span>
-      </a>
-
-      <a class="maze-entry" href="games/maze/play/index.html" aria-labelledby="maze-title">
-        <span class="maze-emblem" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M7 31V8h50v48H35M7 40v16h19M18 8v14h15V8M45 8v25H30v12h15v11M7 31h15v14H7M18 22v9M57 44H45"/><path class="maze-path" d="M12 16v10h16v12h11v12"/><circle cx="39" cy="50" r="3"/></svg></span>
-        <span class="maze-copy"><span class="maze-kicker">משחק חדש · הרפתקה במבוך</span><strong id="maze-title">מבוך הצללים</strong><span class="maze-description">שלושה חותמים, יצורים בחשכה ומלכודות ידע. גם כשנתפסים, תמיד יש דרך להיחלץ.</span><span class="maze-action">נכנסים למבוך <span aria-hidden="true">←</span></span></span>
-      </a>
-
       <section class="exam-calendar" id="exam-calendar" aria-labelledby="calendar-title" tabindex="-1">
         <div class="section-heading calendar-heading">
           <div>
-            <h2 id="calendar-title">לוח מבחנים</h2>
+            <h1 id="calendar-title">המבחנים הקרובים</h1>
             <p>כיתה ז׳2 · מחצית א׳ · תשפ״ז</p>
           </div>
-          <a class="calendar-home" href="index.html"><span aria-hidden="true">→</span> חזרה לבית</a>
+          <button class="calendar-expand" type="button" data-calendar-expand aria-haspopup="dialog" aria-controls="calendar-dialog"><span aria-hidden="true">⛶</span> הרחבה</button>
         </div>
-        <div class="calendar-upcoming-heading">
-          <h3>המבחנים הקרובים</h3>
-          <p>היום והלאה, לפי סדר התאריכים</p>
-        </div>
+        <div id="calendar-content">
         <p id="calendar-empty" hidden>אין מבחנים נוספים בלוח כרגע.</p>
         <div class="calendar-table-wrap" id="calendar-upcoming">
           <table class="calendar-table">
             <caption class="visually-hidden">לוח מבחנים לכיתה ז׳2 — מחצית א׳, 2026–2027</caption>
-            <thead><tr><th scope="col">תאריך</th><th scope="col">יום</th><th scope="col">מקצוע</th></tr></thead>
+            <thead><tr><th scope="col">מקצוע</th><th scope="col">יום</th><th scope="col">תאריך</th></tr></thead>
             <tbody id="calendar-upcoming-rows">
-              <tr><td><time datetime="2026-10-21" dir="ltr">21.10.26</time></td><td>רביעי</td><th scope="row">מדעים</th></tr>
-              <tr><td><time datetime="2026-10-26" dir="ltr">26.10.26</time></td><td>שני</td><th scope="row">מדעי המחשב</th></tr>
-              <tr><td><time datetime="2026-10-29" dir="ltr">29.10.26</time></td><td>חמישי</td><th scope="row">עברית</th></tr>
-              <tr><td><time datetime="2026-11-02" dir="ltr">2.11.26</time></td><td>שני</td><th scope="row">פיזיקה</th></tr>
-              <tr><td><time datetime="2026-11-09" dir="ltr">9.11.26</time></td><td>שני</td><th scope="row">אנגלית</th></tr>
-              <tr><td><time datetime="2026-11-17" dir="ltr">17.11.26</time></td><td>שלישי</td><th scope="row">מתמטיקה עמ״ט</th></tr>
-              <tr><td><time datetime="2026-11-19" dir="ltr">19.11.26</time></td><td>חמישי</td><th scope="row">תנ״ך</th></tr>
-              <tr><td><time datetime="2026-11-24" dir="ltr">24.11.26</time></td><td>שלישי</td><th scope="row">מתמטיקה</th></tr>
-              <tr><td><time datetime="2026-12-02" dir="ltr">2.12.26</time></td><td>רביעי</td><th scope="row">תרבות ישראל</th></tr>
-              <tr><td><time datetime="2026-12-17" dir="ltr">17.12.26</time></td><td>חמישי</td><th scope="row">עברית</th></tr>
-              <tr><td><time datetime="2026-12-21" dir="ltr">21.12.26</time></td><td>שני</td><th scope="row">מדעי המחשב</th></tr>
-              <tr><td><time datetime="2026-12-28" dir="ltr">28.12.26</time></td><td>שני</td><th scope="row">פיזיקה</th></tr>
-              <tr><td><time datetime="2026-12-30" dir="ltr">30.12.26</time></td><td>רביעי</td><th scope="row">מדעים</th></tr>
-              <tr><td><time datetime="2027-01-04" dir="ltr">4.1.27</time></td><td>שני</td><th scope="row">אנגלית</th></tr>
-              <tr><td><time datetime="2027-01-07" dir="ltr">7.1.27</time></td><td>חמישי</td><th scope="row">מתמטיקה</th></tr>
+              <tr><th scope="row">מדעים</th><td>רביעי</td><td><time datetime="2026-10-21" dir="ltr">21.10.26</time></td></tr>
+              <tr><th scope="row">מדעי המחשב</th><td>שני</td><td><time datetime="2026-10-26" dir="ltr">26.10.26</time></td></tr>
+              <tr><th scope="row">עברית</th><td>חמישי</td><td><time datetime="2026-10-29" dir="ltr">29.10.26</time></td></tr>
+              <tr><th scope="row">פיזיקה</th><td>שני</td><td><time datetime="2026-11-02" dir="ltr">2.11.26</time></td></tr>
+              <tr><th scope="row">אנגלית</th><td>שני</td><td><time datetime="2026-11-09" dir="ltr">9.11.26</time></td></tr>
+              <tr><th scope="row">מתמטיקה עמ״ט</th><td>שלישי</td><td><time datetime="2026-11-17" dir="ltr">17.11.26</time></td></tr>
+              <tr><th scope="row">תנ״ך</th><td>חמישי</td><td><time datetime="2026-11-19" dir="ltr">19.11.26</time></td></tr>
+              <tr><th scope="row">מתמטיקה</th><td>שלישי</td><td><time datetime="2026-11-24" dir="ltr">24.11.26</time></td></tr>
+              <tr><th scope="row">תרבות ישראל</th><td>רביעי</td><td><time datetime="2026-12-02" dir="ltr">2.12.26</time></td></tr>
+              <tr><th scope="row">עברית</th><td>חמישי</td><td><time datetime="2026-12-17" dir="ltr">17.12.26</time></td></tr>
+              <tr><th scope="row">מדעי המחשב</th><td>שני</td><td><time datetime="2026-12-21" dir="ltr">21.12.26</time></td></tr>
+              <tr><th scope="row">פיזיקה</th><td>שני</td><td><time datetime="2026-12-28" dir="ltr">28.12.26</time></td></tr>
+              <tr><th scope="row">מדעים</th><td>רביעי</td><td><time datetime="2026-12-30" dir="ltr">30.12.26</time></td></tr>
+              <tr><th scope="row">אנגלית</th><td>שני</td><td><time datetime="2027-01-04" dir="ltr">4.1.27</time></td></tr>
+              <tr><th scope="row">מתמטיקה</th><td>חמישי</td><td><time datetime="2027-01-07" dir="ltr">7.1.27</time></td></tr>
             </tbody>
           </table>
         </div>
         <details class="calendar-past" id="calendar-past" hidden>
           <summary>
-            <span><strong>מבחנים קודמים <span id="calendar-past-count" class="calendar-count"></span></strong><small>הצגה לפי בחירה</small></span>
+            <span><strong>מבחנים קודמים <span id="calendar-past-count" class="calendar-count"></span></strong></span>
             <span class="calendar-chevron" aria-hidden="true">⌄</span>
           </summary>
           <div class="calendar-table-wrap">
             <table class="calendar-table">
               <caption class="visually-hidden">מבחנים קודמים לכיתה ז׳2</caption>
-              <thead><tr><th scope="col">תאריך</th><th scope="col">יום</th><th scope="col">מקצוע</th></tr></thead>
+              <thead><tr><th scope="col">מקצוע</th><th scope="col">יום</th><th scope="col">תאריך</th></tr></thead>
               <tbody id="calendar-past-rows"></tbody>
             </table>
           </div>
         </details>
+        </div>
+        <button class="calendar-show-all" type="button" data-calendar-expand aria-haspopup="dialog" aria-controls="calendar-dialog"><span aria-hidden="true">⛶</span> לכל המבחנים</button>
       </section>
+      <section class="intro" aria-labelledby="welcome-title">
+        <h2 id="welcome-title">מה מתרגלים היום?</h2>
+      </section>
+
+      <section class="exam-list" aria-label="בחירת מקצוע">
+        <a class="exam-card" href="subject.html?subject=hebrew">
+          <img class="subject-art" src="assets/books.png" alt="" width="112" height="112">
+          <span class="exam-copy"><strong>עברית</strong><small>2 גרסאות זמינות</small></span>
+          <span class="exam-arrow" aria-hidden="true">←</span>
+        </a>
+        <a class="exam-card" href="subject.html?subject=physics">
+          <img class="subject-art" src="assets/atom.png" alt="" width="112" height="112">
+          <span class="exam-copy"><strong>פיזיקה</strong><small>תרגול מדידות · 4 נושאים</small></span>
+          <span class="exam-arrow" aria-hidden="true">←</span>
+        </a>
+      </section>
+
+      <section class="home-games" aria-labelledby="games-title">
+        <h2 id="games-title">לומדים במשחק</h2>
+        <div class="home-game-list">
+      <a class="afterbell-entry" href="games/afterbell/play/index.html" aria-labelledby="afterbell-title">
+        <span class="afterbell-emblem" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="25"/><circle cx="32" cy="32" r="18"/><path d="m39 25-4 10-10 4 4-10 10-4Z"/><path d="M32 3v7M32 54v7M3 32h7M54 32h7"/></svg></span>
+        <span class="afterbell-copy"><strong id="afterbell-title">אחרי הצלצול</strong></span>
+      </a>
+
+      <a class="maze-entry" href="games/maze/play/index.html" aria-labelledby="maze-title">
+        <span class="maze-emblem" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M7 31V8h50v48H35M7 40v16h19M18 8v14h15V8M45 8v25H30v12h15v11M7 31h15v14H7M18 22v9M57 44H45"/><path class="maze-path" d="M12 16v10h16v12h11v12"/><circle cx="39" cy="50" r="3"/></svg></span>
+        <span class="maze-copy"><strong id="maze-title">מבוך הצללים</strong></span>
+      </a>
+        </div>
+      </section>
+
+
     </main>
     <footer>בהצלחה בלמידה!</footer>
   </div>
+  <dialog id="calendar-dialog" class="calendar-dialog" aria-labelledby="calendar-dialog-title">
+    <div class="calendar-dialog-heading">
+      <h2 id="calendar-dialog-title">לוח מבחנים</h2>
+      <form method="dialog"><button class="calendar-close" aria-label="סגירת לוח המבחנים" autofocus>סגירה <span aria-hidden="true">×</span></button></form>
+    </div>
+    <div id="calendar-dialog-body"></div>
+  </dialog>
   <dialog id="install-help" class="install-help" aria-labelledby="install-title" aria-describedby="install-instructions">
     <img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724">
     <h2 id="install-title">PrepX במסך הבית שלכם</h2>

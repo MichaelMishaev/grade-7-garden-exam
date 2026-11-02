@@ -75,11 +75,12 @@ test('subject page lists the physics exam with its date', async () => {
   assert.match(html, /id: 'physics-v1-assessment'[^\n]*date: '2\.11', count: '27 שאלות'/);
 });
 
-test('the exam is called physics (פיזיקה), with the 2.11 date, on the subject page, home card and exam page', async () => {
+test('physics keeps its name in practice links and exam page, and its 2.11 date in the home calendar', async () => {
   const { readFileSync } = await import('node:fs');
   const read = file => readFileSync(new URL(file, import.meta.url), 'utf8');
   assert.match(read('subject.html'), /physics: \{\s*title: 'פיזיקה'/);
-  assert.match(read('index.html'), /<strong>פיזיקה<\/strong><small>מבחן בתאריך 2\.11<\/small>/);
+  assert.match(read('index.html'), /<strong>פיזיקה<\/strong><small>תרגול מדידות · 4 נושאים<\/small>/);
+  assert.match(read('index.html'), /<th scope="row">פיזיקה<\/th><td>שני<\/td><td><time datetime="2026-11-02"/);
   const page = read('physics-exam.html');
   assert.match(page, /משימת הערכה במדידות · פיזיקה \| PrepX/);
   assert.doesNotMatch(page, /מדעים/);

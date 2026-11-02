@@ -20,7 +20,7 @@ test('PWA header, prompt recovery, installed state and offline retry preserve st
         const button = document.querySelector('#install-app').getBoundingClientRect();
         const logo = document.querySelector('.prepx-brand').getBoundingClientRect();
         const calendar = document.querySelector('.calendar-link').getBoundingClientRect();
-        return document.documentElement.scrollWidth <= innerWidth && button.width >= 44 && button.height >= 44 && button.left >= logo.right && calendar.right <= logo.left;
+        return document.documentElement.scrollWidth <= innerWidth && button.width >= 44 && button.height >= 44 && calendar.width >= 44 && calendar.height >= 44 && button.left >= 0 && button.right <= calendar.left && calendar.right <= logo.left;
       }), true, `header fits at ${width}px`);
     }
     await page.setViewportSize({ width: 390, height: 844 });
