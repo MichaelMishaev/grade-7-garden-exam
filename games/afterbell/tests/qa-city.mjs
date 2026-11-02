@@ -17,6 +17,13 @@ try{
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await p.click('[data-role="'+role+'"]');await p.fill('#player-name','QA');await p.click('#start');
   assert.equal((await state(p)).role,role);assert.ok(await p.locator('#action').isVisible());
+  let coins=0;
+  await p.click('#shop');assert.ok(await p.locator('[data-item="cap"]').isDisabled());
+  await p.click('#leave-shop');
+  const initialLife=(await state(p)).life;
+  await p.evaluate(()=>advanceTime(5000));
+  const life=(await state(p)).life;
+  for(const actor of ['car','walker','plane'])assert.notDeepEqual(life[actor],initialLife[actor]);
   const prepare=async()=>{
    if(role==='courier'){const place=await p.locator('#sheet-body p').first().innerText();const buttons=p.locator('[data-tool]');for(const btn of await buttons.all()){if(place.includes(await btn.innerText())){await btn.click();break;}}}
    else if(role==='tech'){await p.click('[data-tool="0"]');await p.click('[data-tool="1"]');}
@@ -38,14 +45,43 @@ try{
    assert.ok(await p.locator('[data-opt]').first().isVisible());
    if(i===0)await p.screenshot({path:'output/city-question-'+width+'.png'});
    while((await state(p)).mode==='question'){
-    await p.locator('[data-opt]').first().click();assert.ok(await p.locator('[data-opt]').first().isDisabled());assert.ok(await p.locator('.explain').isVisible());
+    const awaitTitle=await p.locator('#sheet-title').innerText();
+    const raw=selected.questions.find(q=>q.prompt===awaitTitle);
+    const correct=(await state(p)).answered>0;
+    const choice=correct?raw.correct:(raw.correct+1)%raw.choices.length;
+    await p.click('[data-opt="'+choice+'"]');assert.ok(await p.locator('[data-opt]').first().isDisabled());assert.ok(await p.locator('.explain').isVisible());
+    coins+=correct?5:0;
+    if(i===0 && (await state(p)).answered===2){await p.reload();await p.click('#resume');}
+    await p.waitForFunction(n=>JSON.parse(render_game_to_text()).wallet.coins===n,coins);
     await p.click('#next-q');
+   }
+   coins+=15;
+   await p.waitForFunction(n=>JSON.parse(render_game_to_text()).wallet.coins===n,coins);
+   if(i===1){
+    await p.click('#shop');await p.click('[data-item="drone"]');coins-=35;
+    await p.waitForFunction(()=>JSON.parse(render_game_to_text()).wallet.equipped.includes('drone'));
+    await p.screenshot({path:'output/city-store-'+width+'.png'});
+    await p.click('#leave-shop');await p.reload();await p.click('#resume');
+    const near=async()=>{const s=await state(p);assert.ok(Math.hypot(s.life.assistant[0]-s.player.x,s.life.assistant[1]-s.player.z)<6);};
+    await near();await p.click('#vehicle');await p.keyboard.down('ArrowRight');await p.evaluate(()=>advanceTime(600));await p.keyboard.up('ArrowRight');await near();await p.click('#vehicle');
+   }
+   if(i===2){
+    await p.click('#shop');
+    for(const [id,price] of [['cap',10],['jacket',20]]){
+     const item=p.locator('[data-item="'+id+'"]');
+     await item.click();coins-=price;await item.filter({hasText:'להסיר'}).waitFor();
+     await item.click();await item.filter({hasText:'לצייד'}).waitFor();
+     await item.click();await item.filter({hasText:'להסיר'}).waitFor();
+    }
+    assert.equal((await state(p)).wallet.coins,coins);await p.click('#leave-shop');await p.click('#vehicle');
+    await p.evaluate(()=>advanceTime(500));await p.screenshot({path:'output/city-outfit-'+width+'.png'});
+    await p.click('#vehicle');
    }
    if(i===1)await p.screenshot({path:'output/city-driving-'+width+'.png'});
   }
   await arrive();await p.waitForFunction(()=>document.querySelector('#saved')?.textContent.includes('✓'));assert.equal(saves,1);
   assert.equal((await state(p)).answered,selected.questions.length);assert.deepEqual(errors,[]);await p.click('#again');await p.click('#start');const next=await state(p);
-  assert.equal(next.role,role);assert.equal(next.stage,0);assert.ok(next.target.title.includes({courier:'כרזות',tech:'שלט',press:'מצלמת שטח'}[role]));
+  await p.waitForFunction(n=>JSON.parse(render_game_to_text()).wallet.coins===n,coins);assert.equal(next.wallet.equipped.length,3);assert.equal(next.role,role);assert.equal(next.stage,0);assert.ok(next.target.title.includes({courier:'כרזות',tech:'שלט',press:'מצלמת שטח'}[role]));
   await p.close();console.log('PASS '+role+' '+width+' full festival, free driving, reload, 3 deliveries, '+selected.questions.length+' locked questions, visible dialogs, one intercepted save and alternate replay');
  }
 }finally{await b.close();}

@@ -12,3 +12,13 @@ Reference: https://www.brookhavenrp.com/guides/history
 | C3 | A delivery opens visible selected-subject questions. First answers lock, explanations and source references remain readable, and misses allow the story to advance. |
 | C4 | Reload restores the role, vehicle, cargo, position, answers and current phase. Finishing saves through the existing game history contract, with retry on failure. |
 | C5 | Completing all three jobs opens the waterfront celebration. The original campus and its saves remain reachable. |
+
+## Festival outfitter and city life
+Students earn 5 coins per correct first answer and 15 when a delivery's questions are finished, independent of the academic score. The outfitter in the city HUD shows prices and balance. Gear belongs to the player's local nickname on this browser.
+
+| ID | Observable check |
+|---|---|
+| C6 | Wrong answers earn zero. Reloading feedback or a completed shift never pays twice. The next shift keeps the balance. |
+| C7 | Buying equips an affordable item once. Owned items can be removed and equipped freely. Insufficient funds disable purchase. |
+| C8 | A cap and jacket change the walking hero. The optional guide drone follows walking and driving players and points toward the current destination. |
+| C9 | Cars traverse both street axes, residents walk and stop on sidewalks, and planes fly over the city while the hero is stationary. Opening a modal pauses the simulation. |

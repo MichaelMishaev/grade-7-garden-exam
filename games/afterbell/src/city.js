@@ -1,5 +1,6 @@
 import {prepareCargo} from './city-job.js';
 import './city.css';
+import {items,emptyWallet,pay,toggleItem} from './city-wallet.js';
 import snapshot from './content-snapshot.json';
 import {validQuiz,makeRound,answer,progress,academicScore,starsFor,restoreRound} from './core.js';
 import {quizFingerprint} from './fingerprint.js';
@@ -54,6 +55,38 @@ function refresh(){
  if($('status').textContent!==status)$('status').textContent=status;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
+let wallet=emptyWallet();
+const fallbackWallets=new Map();
+function walletKey(){return 'prepx-city-wallet-v1:'+round.participantName;}
+function syncWallet(change){
+ const key=walletKey();
+ const update=()=>{
+  if(!round||walletKey()!==key)return;
+  try{wallet=JSON.parse(localStorage.getItem(key))||fallbackWallets.get(key)||emptyWallet();}
+  catch{wallet=fallbackWallets.get(key)||emptyWallet();}
+  pay(wallet,round,city.stage);
+  change?.(wallet);
+  fallbackWallets.set(key,wallet);
+  try{localStorage.setItem(key,JSON.stringify(wallet));}catch{toast('המטבעות זמינים רק עד לסגירת הדף.');}
+  $('coins').textContent=wallet.coins;
+  world.outfit(roles[city.role].color,wallet.equipped);
+ };
+ return navigator.locks?navigator.locks.request(key,update):Promise.resolve(update());
+}
+function shop(){
+ clearTimeout(timer);$('notice').textContent='';
+ const listing=items.map(item=>{
+  const owned=wallet.owned.includes(item.id), equipped=wallet.equipped.includes(item.id);
+  const label=equipped?'להסיר':owned?'לצייד':'לקנות · '+item.price+' 🪙';
+  return `<div class="stock"><div><strong>${item.name}</strong><small>${item.detail}</small></div><button data-item="${item.id}" ${!owned&&wallet.coins<item.price?'disabled':''}>${label}</button></div>`;
+ }).join('');
+ sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות והשלמת מסירה ב־15.</p>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
+ $('leave-shop').onclick=()=>{closeSheet();$('shop').focus();};
+ document.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
+  b.disabled=true;await syncWallet(w=>toggleItem(w,b.dataset.item));if(mode==='shop'){shop();document.querySelector('[data-item="'+b.dataset.item+'"]').focus();}
+ });
+}
+$('shop').onclick=async()=>{await syncWallet();if(mode==='explore')shop();};
 function start(resume){
  const old=resume&&restore();if(resume&&!old)return;
  if(old){({city,round}=old);role=city.role;drawRoles();feedback=city.feedback||null;}else{
@@ -63,7 +96,7 @@ function start(resume){
   const lastKey='prepx-city-shift-'+role,edition=read(localStorage,lastKey)==='0'?1:0;put(localStorage,lastKey,String(edition));
   city={role,edition,stage:0,phase:'pickup',x:places.home.x,z:places.home.z+2,driving:false};
  }
- $('welcome').hidden=true;$('hud').hidden=false;mode='explore';world.start(city.x,city.z);world.paint(roles[city.role].color);updateTarget();refresh();save();
+ $('welcome').hidden=true;$('hud').hidden=false;mode='explore';world.start(city.x,city.z);syncWallet();updateTarget();refresh();save();
  if(city.phase==='quiz')question();if(city.phase==='complete')finish();
 }
 $('entry').onsubmit=e=>{e.preventDefault();start(false);};$('player-name').oninput=()=>$('player-name').setCustomValidity('');$('resume').onclick=()=>start(true);
@@ -78,12 +111,12 @@ function reference(q){
 }
 function question(){
  const index=city.stage,p=progress(round,index);
- if(!p.next&&!feedback){city.stage++;city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! סעו לבמת המזח.':'המסירה הושלמה. המשימה הבאה על המפה.');return;}
+ if(!p.next&&!feedback){city.stage++;syncWallet();city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! קיבלתם 15 מטבעות.':'המסירה הושלמה · קיבלתם 15 מטבעות.');return;}
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
  sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title">${esc(q.prompt)}</h2><small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
  ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}">${esc(o.text)}</button>`).join('')}
- ${a?`<div class="explain" role="status"><b>${a.correct?'נכון!':'הפעם התשובה שונה.'}</b><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
- document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){feedback=city.feedback=q.id;save();question();}});
+ ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
+ document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){feedback=city.feedback=q.id;save();syncWallet();question();}});
  if($('next-q'))$('next-q').onclick=()=>{feedback=city.feedback=null;save();question();};
 }
 function interact(){
@@ -115,10 +148,10 @@ let pointer=null;
 function stick(e){const r=$('joystick').getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/30,z=(e.clientY-r.top-r.height/2)/30,d=Math.max(1,Math.hypot(x,z));world.setStick(x/d,z/d);$('joystick').firstElementChild.style.transform=`translate(${x/d*24}px,${z/d*24}px)`;}
 $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.currentTarget.setPointerCapture(pointer);stick(e);};$('joystick').onpointermove=e=>{if(pointer===e.pointerId)stick(e);};
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
-window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
+window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
 try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}});}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
 setInterval(refresh,100);drawRoles();loadQuiz();
-window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; city edges ±240 with waterfront at z=188',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,rendering:{pixelRatio:world?.pixelRatio}});
+window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; city edges ±240 with waterfront at z=188',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio}});
 window.advanceTime=ms=>{world?.advance(ms);refresh();};

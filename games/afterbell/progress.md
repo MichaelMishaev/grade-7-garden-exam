@@ -131,3 +131,8 @@ The playable world grew from 54 × 54 to 216 × 216. New Starlight Relay edition
 
 ## Festival City
 The default entry opens a coastal roleplay city. Three jobs each support two shifts through eight landmarks, with walking, drivable vans, manual controls, guided routes, and three role-specific activities. Questions come from the selected PrepX quiz after each delivery. The older campus is linked from the city welcome page and continues to use its own draft. QA exercised the actual homepage entry, three complete jobs, mobile quiz controls, resume and intercepted saves. The campus mirror controls were checked in Chromium and WebKit at 320px and 390px.
+
+## Festival outfitter
+Correct answers, completed deliveries, hero gear, a following assistant and autonomous city life. Acceptance criteria C6–C9 are in the Festival City feature record.
+
+Local QA passed all 79 game tests with isolated PostgreSQL. Chromium and WebKit exercised courier (390px), technician (320px), and reporter (1280px) shifts, including locked feedback, coins, gear purchases, companion proximity, moving street actors, reload and replay. Each shift submitted once to an intercepted endpoint.
