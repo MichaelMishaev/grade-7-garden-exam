@@ -19,7 +19,7 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
     assert.equal(await page.locator('#playground').isVisible(), false);
     assert.equal(await page.locator('.lesson-nav a[aria-current]').textContent(), '3 Write code');
     assert.match(await page.locator('#code-editor').inputValue(), /^score = 75/);
-    assert.equal(await page.locator('#code-gutter').textContent(), '1\n2\n3\n4\n5\n6');
+    assert.deepEqual(await page.locator('#code-gutter span').allTextContents(), ['1', '2', '3', '4', '5', '6']);
     assert.equal(await page.locator('#mission-next').isDisabled(), true);
 
     // Mission 1: run as-is, then change the score.
@@ -35,9 +35,15 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
     await page.locator('#mission-next').click();
 
     // Mission 2: broken program shows a red line-numbered message; Show me fixes it.
-    assert.match(await page.locator('#mission-label').textContent(), /MISSION 2 of 4/);
+    assert.match(await page.locator('#mission-label').textContent(), /MISSION 2 of 5/);
+    assert.equal(await page.locator('[data-mission-dot]').count(), 5);
     await page.locator('#run').click();
     assert.match(await page.locator('.terminal-error').textContent(), /^✕ Line 2: .*colon/);
+    assert.equal(await page.locator('#code-gutter .gutter-error').textContent(), '2');
+    await page.locator('#code-editor').press('End');
+    assert.equal(await page.locator('#code-gutter .gutter-error').count(), 1, 'marker stays until the code changes');
+    await page.locator('#code-editor').type(' ');
+    assert.equal(await page.locator('#code-gutter .gutter-error').count(), 0, 'editing clears the marker');
     await page.locator('#mission-hint').click();
     assert.equal(await page.locator('#mission-hint-text').isVisible(), true);
     await page.locator('#mission-solution').click();

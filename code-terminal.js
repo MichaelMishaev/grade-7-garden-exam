@@ -43,7 +43,13 @@ export function initTerminal({ getLanguage, onFinish }) {
 
   function renderGutter() {
     const count = Math.max(1, editor.value.split('\n').length);
-    gutter.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n');
+    const errorLine = lastRun && !lastRun.result.ok ? lastRun.result.error.line : 0;
+    gutter.replaceChildren(...Array.from({ length: count }, (_, i) => {
+      const number = document.createElement('span');
+      number.textContent = String(i + 1);
+      if (i + 1 === errorLine) number.className = 'gutter-error';
+      return number;
+    }));
     gutter.scrollTop = editor.scrollTop;
   }
 
@@ -178,7 +184,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     editor.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  editor.addEventListener('input', renderGutter);
+  editor.addEventListener('input', () => { if (lastRun && !lastRun.result.ok) lastRun = null; renderGutter(); });
   editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; });
   editor.addEventListener('keydown', (event) => {
     if (event.key === 'Tab' && !event.shiftKey) {
@@ -234,6 +240,9 @@ export function initTerminal({ getLanguage, onFinish }) {
     render();
   });
 
+  const dots = document.querySelector('.mission-dots');
+  dots.replaceChildren(...missions.map(() => { const dot = document.createElement('span'); dot.setAttribute('data-mission-dot', ''); return dot; }));
+  byId('terminal-complete-heading').textContent = `if_else.py — ${missions.length} / ${missions.length}`;
   editor.value = missions[0].starter;
   render();
   return { render };

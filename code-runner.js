@@ -328,5 +328,14 @@ elif temperature >= 20:
 else:
     print("Cold")`,
     check: (output, source) => output.length === 1 && output[0] === 'Hot' && /^elif\b/m.test(source) && /^else\b/m.test(source)
+  },
+  {
+    id: 'free',
+    title: { en: 'Your turn: invent a program', he: 'תורכם: המציאו תוכנית' },
+    task: { en: 'Make up your own if / else. Any variable, any rule, any messages. It counts when it runs and prints at least one line.', he: 'המציאו if / else משלכם. כל משתנה, כל כלל, כל הודעה. זה נחשב כשהתוכנית רצה ומדפיסה לפחות שורה אחת.' },
+    starter: `# your idea here. For example:\n# pet = "cat"\n# if pet == "cat":\n#     print("Meow")\n# else:\n#     print("Woof")\n`,
+    hint: { en: 'Pick something you like: a pet, a game score, the weather. Set it with =, then if ... : and else: with a print in each.', he: 'בחרו משהו שאתם אוהבים: חיית מחמד, ניקוד במשחק, מזג אוויר. קבעו אותו עם =, ואז if ... : ו־else: עם print בכל אחד.' },
+    solution: `pet = "cat"\nif pet == "cat":\n    print("Meow")\nelse:\n    print("Woof")`,
+    check: (output, source) => output.length > 0 && /^if\b/m.test(source) && /^else\b/m.test(source)
   }
 ];

@@ -622,3 +622,7 @@ code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
   .mac-title { margin-inline-end: 44px; }
 }
 .terminal-steps li:has(> [dir="rtl"]) { flex-direction: row-reverse; text-align: right; }
+/* Gutter error marker and phone-only toolbar cleanup for the write-code stage. */
+.mac-window .editor-gutter span { display: block; }
+.mac-window .editor-gutter .gutter-error { color: #fff; background: #d93636; border-radius: 6px 0 0 6px; }
+@media (hover: none) and (pointer: coarse) { .editor-tip { visibility: hidden; } }
