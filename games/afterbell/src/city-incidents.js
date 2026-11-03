@@ -16,32 +16,49 @@ const sites={
  quay:site('דרך רציף המטענים','נמל המזרח',309,114,309,114,EAST,312,105),
  depot:site('דרך בית המלאכה','רובע המלאכה',170,85,170,85,NORTH,162,81)
 };
+// mode: sidewalk = road stays open, drivers slow by the crowd; closure = the lane is coned
+// off once the crew arrives; platoon = a marshal releases short queues. softStart lets
+// traffic crawl past during the first report before the closure takes effect.
 const cases={
- fight:{title:'קטטה ברחוב',responder:'police',durations:[10,13,45,13],details:[
+ fight:{title:'קטטה ברחוב',responder:'police',mode:'sidewalk',durations:[10,13,45,13],details:[
   'ויכוח בין שני הולכי רגל הידרדר לדחיפות. עוברי אורח התרחקו מהמדרכה.',
   'ניידת הוזעקה. עד ראייה ממתין על המדרכה ממול.',
   'השוטרים הפרידו בין המעורבים ומשוחחים עם כל אחד בנפרד.',
   'המעורבים עוזבים בנפרד. המדרכה נפתחת שוב למעבר.'
  ]},
- fire:{title:'שריפה בארון חשמל',responder:'fire',durations:[12,17,85,14],details:[
+ fire:{title:'שריפה בארון חשמל',responder:'fire',mode:'closure',softStart:true,durations:[12,17,85,14],details:[
   'עשן עולה מארון חשמל סמוך למדרכה. התושבים פינו את הסביבה.',
   'כבאית בדרך. צוות החשמל מנתק את הזרם לארון.',
   'הזרם נותק. הכבאים מכבים את האש ומרחיקים את הקהל.',
   'האש כובתה. הכבאים בודקים נקודות חמות ומפנים את הציוד.'
  ]},
- crash:{title:'תאונת דרכים',responder:'tow',durations:[12,17,76,14],details:[
+ crash:{title:'תאונת דרכים',responder:'tow',mode:'closure',durations:[12,17,76,14],details:[
   'רכב פגע מאחור ברכב משלוחים שעצר. שני הנהגים יצאו למדרכה.',
   'הנהגים מסרו ששניהם עומדים מחוץ לרכב. גרר בדרכו לנתיב החסום.',
   'הגרר מעמיס את הרכב שניזוק. התנועה ממתינה לפני התאונה.',
   'הרכב הפגוע פונה. הנתיב נבדק לפני חזרת התנועה.'
  ]},
- jam:{title:'עומס תנועה בעבודות בדרך',responder:'traffic',durations:[11,14,76,14],details:[
+ jam:{title:'עומס תנועה בעבודות בדרך',responder:'traffic',mode:'platoon',durations:[11,14,76,14],details:[
   'צוות תשתיות צמצם את הכביש לנתיב אחד. תור נוצר מאחורי הקונוסים.',
   'מכוון תנועה בדרך למקום כדי להסדיר את המעבר.',
   'מכוון התנועה מעביר כלי רכב בתורות דרך אזור העבודות.',
   'הצוות אוסף את הקונוסים. כלי הרכב חוזרים בהדרגה לקצב הרגיל.'
+ ]},
+ spill:{title:'מטען שנפל על הכביש',responder:'traffic',mode:'closure',softStart:true,durations:[11,15,60,14],details:[
+  'ארגזים נפלו מטנדר שבלם בפתאומיות. הנהג עצר בצד ומסמן לרכבים להאט.',
+  'מכוון תנועה בדרך. הנהג מזיז את הארגזים הקרובים אל המדרכה.',
+  'הנתיב נסגר בקונוסים. המכוון והנהג אוספים את הארגזים אחד־אחד.',
+  'הכביש נקי. הקונוסים נאספים והטנדר ממשיך בדרכו.'
+ ]},
+ rescue:{title:'חתול תקוע על עץ',responder:'fire',mode:'sidewalk',durations:[12,16,50,13],details:[
+  'חתול טיפס לצמרת עץ ליד המדרכה ולא מצליח לרדת. ילדה מהשכונה קוראת לעזרה.',
+  'כבאית בדרך עם סולם. השכנים שומרים מרחק מהעץ.',
+  'הכבאי מטפס בסולם ומושיט יד לחתול. הקהל מתבקש לשמור על שקט.',
+  'החתול ירד בשלום לידיים של הילדה. הסולם נאסף.'
  ]}
 };
+// Every second shift round two of the sites host a different kind of call.
+const variants={market:'spill',station:'rescue'};
 const phases=['reported','responding','working','clearing'];
 const cycle=394;
 const calls=[
@@ -54,16 +71,17 @@ const calls=[
 export function cityIncidentsAt(seconds){
  if(!Number.isFinite(seconds)||seconds<0)return [];
  const elapsed=seconds+4,round=Math.floor(elapsed/cycle),now=elapsed%cycle,active=[];
- for(const [start,type,location] of calls){
+ for(let [start,type,location] of calls){
    const previous=now<start,occurrence=previous?round-1:round;
    if(occurrence<0)continue;
    const age=previous?now+cycle-start:now-start;
+   const variant=occurrence%2===1&&variants[location];if(variant)type=variant;
    const info=cases[type],duration=info.durations.reduce((sum,value)=>sum+value,0);
    if(age>=duration)continue;
    let stage=0,local=age;
    while(local>=info.durations[stage])local-=info.durations[stage++];
    active.push({...sites[location],id:occurrence+'-'+location,type,age,duration,phase:phases[stage],
-    phaseProgress:local/info.durations[stage],stageAge:local,workDuration:info.durations[2],title:info.title,detail:info.details[stage],responder:info.responder});
+    phaseProgress:local/info.durations[stage],stageAge:local,workDuration:info.durations[2],title:info.title,detail:info.details[stage],responder:info.responder,mode:info.mode,softStart:Boolean(info.softStart)});
  }
  return active;
 }
@@ -76,8 +94,8 @@ function lanePosition(e,x,z){
 }
 export function incidentLaneBlocked(events,x,z){
  return events.some(e=>{
-   if(e.type==='fight'||e.type==='jam'||e.phase==='clearing')return false;
-   if(e.type==='fire'&&e.phase==='reported')return false;
+   if(e.mode!=='closure'||e.phase==='clearing')return false;
+   if(e.softStart&&e.phase==='reported')return false;
    const {along,across}=lanePosition(e,x,z);
    // Include the guided van's footprint, while leaving the opposite lane open.
    return across<3.55&&along>-9&&along<10;
@@ -90,11 +108,11 @@ export function incidentTrafficAt(events,x,z,heading){
    const {along,across}=lanePosition(event,x,z);
    if(across>2.45||along<-32||along>10)continue;
    // A fight remains on the sidewalk. Drivers slow near the crowd but can pass.
-   if(event.type==='fight'){factor=Math.min(factor,.72);continue;}
-   if(event.type==='fire'&&event.phase==='reported'){factor=Math.min(factor,.7);continue;}
+   if(event.mode==='sidewalk'){factor=Math.min(factor,.72);continue;}
+   if(event.softStart&&event.phase==='reported'){factor=Math.min(factor,.7);continue;}
    if(event.phase==='clearing'){factor=Math.min(factor,.5+.5*event.phaseProgress);continue;}
    if(along>=7)continue;
-   if(event.type==='jam'){
+   if(event.mode==='platoon'){
      // A marshal releases short platoons. Already inside the taper, keep
      // crawling through instead of stopping midway when the signal changes.
      const flowing=event.phase==='working'&&event.stageAge%10<5;

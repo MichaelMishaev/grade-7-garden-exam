@@ -27,6 +27,15 @@ export function pay(wallet, round, stage) {
   }
 }
 
+// Reaching an incident's observation point once per shift pays a witness report.
+export function witness(wallet, round, eventId) {
+  const key = round.attemptId + ':witness:' + eventId;
+  if (wallet.earnings[key]) return false;
+  wallet.earnings[key] = 10;
+  wallet.coins += 10;
+  return true;
+}
+
 export function toggleItem(wallet, id) {
   const item = items.find(item=>item.id===id);
   if (!item) return;

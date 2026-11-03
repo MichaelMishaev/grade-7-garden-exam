@@ -1,6 +1,6 @@
 import {prepareCargo} from './city-job.js';
 import './city.css';
-import {items,emptyWallet,pay,toggleItem} from './city-wallet.js';
+import {items,emptyWallet,pay,toggleItem,witness} from './city-wallet.js';
 import snapshot from './content-snapshot.json';
 import {validQuiz,makeRound,answer,progress,academicScore,starsFor,restoreRound} from './core.js';
 import {quizFingerprint} from './fingerprint.js';
@@ -60,13 +60,17 @@ function refresh(){
  if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);}
  const selected=events.find(e=>e.id===followedEvent);
  announceEvents(events,selected);
+ if(selected&&!claimedWitness.has(selected.id)&&Math.hypot(city.x-selected.observer.x,city.z-selected.observer.z)<9){
+  claimedWitness.add(selected.id);
+  syncWallet(w=>{if(witness(w,round,selected.id))toast('📝 דיווח עדים נרשם · '+selected.title+' · +10 מטבעות');});
+ }
  if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
  const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
  const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
  $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
-const knownEvents=new Set();let followedPhase='';
+const knownEvents=new Set(),claimedWitness=new Set();let followedPhase='';
 // Say out loud when something new happens in the city, so the dispatch badge is not the only cue.
 function announceEvents(events,selected){
  for(const e of events){
@@ -103,7 +107,7 @@ function shop(vehicle=city.driving){
   const label=equipped?'להסיר':owned?'לצייד':'לקנות · '+item.price+' 🪙';
   return `<div class="stock"><div><strong>${item.name}</strong><small>${item.detail}</small></div><button data-item="${item.id}" ${!owned&&wallet.coins<item.price?'disabled':''}>${label}</button></div>`;
  }).join('');
- sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות והשלמת מסירה ב־15.</p><div class="stock-tabs" role="group" aria-label="סוג הציוד"><button id="hero-stock" aria-pressed="${!vehicle}">ציוד לדמות</button><button id="van-stock" aria-pressed="${vehicle}">המוסך</button></div>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
+ sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות, השלמת מסירה ב־15 ודיווח עדים ממוקד העיר ב־10.</p><div class="stock-tabs" role="group" aria-label="סוג הציוד"><button id="hero-stock" aria-pressed="${!vehicle}">ציוד לדמות</button><button id="van-stock" aria-pressed="${vehicle}">המוסך</button></div>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
  for(const [id,showVan] of [['hero-stock',false],['van-stock',true]]){
   $(id).onclick=()=>{shop(showVan);$(id).focus();};
  }
@@ -172,7 +176,7 @@ function dispatch(){
  const events=world.events();
  const reports=events.map((event,i)=>{
   const distance=Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z));
-  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
  }).join('');
  sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
  $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};

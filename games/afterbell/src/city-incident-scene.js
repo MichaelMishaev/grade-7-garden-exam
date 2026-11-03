@@ -185,6 +185,34 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
      person(e.lane,3.8,-6.3-12*move,Math.PI,'#c78c32',open>.5 ? .32:1.12+wave,true);
    }
  }
+ function spill(e){
+   const working=e.phase==='working',done=e.phase==='clearing';
+   // The pickup that lost its load waits a few metres ahead of the boxes.
+   vehicle(e.lane,0,4.6+(done?ease(e.phaseProgress)*26:0),0,'#2c4f87','van');
+   const total=7,left=working?Math.round(total*(1-ease(e.phaseProgress))):done?0:total;
+   at(e.lane,0,0);
+   for(let i=0;i<left;i++)box(i%2?'#d9b074':'#c89a5c',-1.2+(i*1.7)%3.1,.46,-1.4-i*1.05,.92,.9,.92,0,i*.6);
+   if(e.phase!=='reported'){at(e.lane,0,0);cone(-1.5,-7);cone(-2,-11);}
+   person(e.lane,4.5,2.4,-Math.PI/2,'#8d6a4e',working?.6:0);
+   responder(e,'traffic','#f1c24d',8.4);
+   if(working)person(e.lane,.6,-1.4-(total-left)*1.05,0,'#c78c32',.9,true);
+ }
+ function rescue(e,t){
+   const working=e.phase==='working',down=e.phase==='clearing';
+   at(e,0,0);
+   box('#7a5537',0,3,0,.7,6,.7);rock('#5f9a5a',0,6.7,0,2.3,1.9,2.3);rock('#6fae63',.9,6.1,.6,1.5,1.3,1.5);
+   const reach=working?ease(e.phaseProgress):0;
+   const catY=down?.5:5.5-reach*.3,catX=down?1.6:1.1;
+   box('#e9a241',catX,catY,.9,.55,.45,.95);box('#e9a241',catX+.1,catY+.35,1.35,.42,.4,.42);
+   const wobble=reduced||down?0:.12*Math.sin(t*5);
+   person(e,-2.4,2.2,.3,'#d26a8c',.9+wobble,false,.08);
+   responder(e,'fire','#c34a3c',-8);
+   if(working||down){
+     const lift=down?1-ease(e.phaseProgress):1;
+     box('#9aa3a8',-1.2,2.9*lift+.3,1.6,.9,.12,5.8*lift+.1,-1.05*lift);
+     if(working)person(e,-1.5,1.2+reach*1.3,0,'#c34a3c',1.2,true,-.4);
+   }
+ }
  let lastTime=-Infinity,lastState='';
  return {update(events,time,traffic=[]){
    const state=events.map(e=>e.id+e.phase).join('|');
@@ -195,6 +223,8 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
      else if(e.type==='fight')fight(e,time);
      else if(e.type==='crash')crash(e);
      else if(e.type==='jam')jam(e,time,traffic);
+     else if(e.type==='spill')spill(e);
+     else if(e.type==='rescue')rescue(e,time);
    }
    for(const mesh of [boxes,stones]){
      mesh.visible=mesh.count>0;mesh.instanceMatrix.needsUpdate=true;

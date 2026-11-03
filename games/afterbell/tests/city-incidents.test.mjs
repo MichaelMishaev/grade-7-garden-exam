@@ -39,7 +39,21 @@ test('activity covers older and newly expanded neighborhoods without crowding th
      assert.ok(Math.hypot(e.observer.x-e.x,e.observer.z-e.z)>=8);
    }
  }
- assert.equal(positions.size,8);assert.equal(types.size,4);assert.equal(peak,3);
+ assert.equal(positions.size,8);assert.equal(types.size,6);assert.equal(peak,3);
+});
+test('odd rounds swap two sites for a cargo spill and a tree rescue with the same timing',()=>{
+ const first=occurrence(90,'crash'),spill=occurrence(394+90,'spill'),rescue=occurrence(394+185,'rescue');
+ assert.ok(spill&&rescue);assert.equal(spill.place,first.place);assert.equal(spill.age,first.age);
+ assert.equal(occurrence(394+90,'crash'),undefined);assert.equal(occurrence(394+185,'fight'),undefined);
+ assert.ok(occurrence(2*394+90,'crash'));
+ // A spill lets traffic crawl past while it is only reported, then closes the lane.
+ assert.ok(speed(spill,-6)>0);assert.equal(incidentLaneBlocked([spill],...offset(spill,0)),false);
+ const closed=occurrence(394+90+30,'spill');assert.equal(closed.phase,'working');
+ assert.equal(speed(closed,-6),0);assert.equal(incidentLaneBlocked([closed],...offset(closed,0)),true);
+ assert.equal(speed(closed,-6,0,closed.heading+Math.PI),1);
+ // A rescue stays on the sidewalk like a fight.
+ const climbing=occurrence(394+185+30,'rescue');assert.equal(climbing.phase,'working');
+ assert.ok(speed(climbing,-6)>0);assert.equal(incidentLaneBlocked([climbing],...offset(climbing,0)),false);
 });
 test('time jumps, repeated reads and a two-shift boundary preserve the same calls',()=>{
  const t=390.75,expected=cityIncidentsAt(t);
