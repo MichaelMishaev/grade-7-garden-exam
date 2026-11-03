@@ -23,11 +23,13 @@ test('explanations: picture, bilingual discovery, visual playground and immediat
     await page.locator('.home-explanations a').click();
     await page.getByRole('button', { name: 'עברית', exact: true }).click();
     assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
-    assert.equal(await page.locator('.lesson-preview').getAttribute('dir'), 'ltr');
+    assert.deepEqual(await page.locator('.lesson-preview').evaluateAll(nodes => nodes.map(node => node.dir)), ['ltr', 'ltr']);
     assert.equal(await page.getByRole('heading', { name: 'הסברים', exact: true }).count(), 1);
     await page.reload();
     assert.equal(await page.locator('html').getAttribute('lang'), 'he');
-    await page.locator('.discovery-start').click();
+    assert.equal(await page.locator('.discovery-card').count(), 2);
+    assert.equal(await page.locator('[data-lesson="else-if.html"]').getAttribute('href'), 'else-if.html?lang=he#playground');
+    await page.locator('.discovery-start[data-lesson="if-else.html"]').click();
     await page.locator('#playground').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#playground-title').getAttribute('lang'), 'he');
     assert.equal(await page.locator('.decision-board').isVisible(), true);

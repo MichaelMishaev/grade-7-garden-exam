@@ -39,3 +39,28 @@ Added a real-browser PWA regression (`pwa.browser.test.mjs`) covering 320–1440
 Verification: game unit/database tests 146/146, e2e 9/9 with the repository's invented rubric fixture (`--import ./test-fixtures/use-fake-rubrics.mjs`), Afterbell homepage/built game browser checks 40/40, maze/arcade built startup and mobile overflow checks, subject navigation and Back, and zero Chrome installability errors in a fresh browser. Local database migrate/seed/verify matches current source. Initial missing game dependency and missing e2e fake-rubric prerequisite were resolved locally without product changes. No real provider messages were sent. Physical OS install, physical Safari and screen-reader testing remain NOT TESTED.
 
 Final application regression: 320 tests, 318 passed, 0 failed, 2 skipped (local private-rubric content/scan tests; private file absent). Includes real-browser exam submission failure/retry, locking/advance, draft restoration across reload and legacy drafts, plus practice flows. Together with game/database suites: 473 automated passes, 0 failures, 2 skips. Additional Afterbell browser checks: 40 passes.
+
+## App sharing — 2026-11-03
+User requested a PWA app-URL share icon, a fresh agent and push. Entry is a44px native
+share-icon button in the home header, visible in browser and installed standalone mode.
+It shares only https://hitech.agnon.online/, never the current query, hash, answers or
+attempt state. Native sharing opens on explicit click; cancellation is silent. Native
+failure/absence falls back to clipboard with Hebrew feedback. Clipboard denial exposes
+a selectable readonly URL, copy retry and a close button; Escape returns focus. No
+changes to installation, offline cache, APIs, student data or database.
+
+| ID | Acceptance | Verification |
+| --- | --- | --- |
+| SHARE-1 | Canonical app URL only through native share; no query/hash leakage | Mocked native-share browser check |
+| SHARE-2 | AbortError silent; native absent/failure copies or offers manual selection/retry | Browser clipboard/native mocks |
+| SHARE-3 | Icon available installed and browser; keyboard and44px target; header fits320–1280 | Standalone emulation and layout checks |
+| SHARE-4 | Existing installation, calendar and offline checks remain green | PWA/calendar regression tests |
+
+Fresh agent implemented index.html, pwa.js/css and app-share.browser.test.mjs. Parent
+reviewed and reran focused tests; all passed. Screenshots app-share-mobile-header.png
+and app-share-manual-dialog.png inspected by implementing agent. Physical OS share
+sheet and actual messages were not exercised; native sharing is mocked in QA.
+
+Combined else-if/app-share release checks2026-11-03: full current suite333total,
+325passed,8environment-dependent skips,zero failures. Existing PWA/calendar and new
+native/copy/manual/standalone app-sharing checks passed. Userauthorizedproductionpush.

@@ -530,3 +530,15 @@ code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 @media (max-width: 650px) {
   .home-page .explanation-feature-art { flex-basis: 118px; }
 }
+.discovery-card + .discovery-card { margin-top: 28px; }
+.python-spelling { display: inline-block; font-size: 12px; color: #486073; background: #edf3f7; border-radius: 8px; padding: 6px 10px; margin-bottom: 14px; }
+.elif-preview { background: #edf7ff; }
+.preview-check { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; border: 2px solid #d0dce5; border-radius: 14px; background: white; }
+.preview-check code { font-size: 18px; font-weight: bold; }
+.preview-check > span { font-size: 12px; font-weight: bold; color: #526474; }
+.preview-check-match { border-color: #80b2cf; }
+.preview-check-match > span { color: #14608e; }
+.elif-preview-paths { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; align-items: start; }
+.elif-preview-paths > span { padding: 12px 6px; border: 2px dashed #d0dce5; border-radius: 12px; color: #687f8e; font-size: 15px; }
+.elif-preview-paths .elif-preview-chosen { background: white; border: 2px solid #80b2cf; color: #184d70; }
+.elif-preview-chosen strong { display: block; font-size: 11px; margin-top: 8px; }
