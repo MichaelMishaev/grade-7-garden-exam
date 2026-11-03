@@ -30,3 +30,45 @@ skips; full-stack e2e skipped 10 tests without its database flag. Additive migra
 seed and verification passed on a newly created, isolated local database. Tests
 that reset schemas were not enabled; no existing database was reset or changed.
 Native sharing was mocked; physical-device share sheets were not exercised.
+
+## In-test sharing extension
+
+The same control appears below the header inside all four exam pages and the
+practice page, outside the changing question/result screens, so it remains
+available throughout an attempt. It shares a fresh test URL: preserve only the
+`quiz` selector for practice, discard other query parameters and fragments.
+Title is read when sharing, after asynchronous quiz content has loaded.
+
+| ID | Observable acceptance criterion | Verification |
+| --- | --- | --- |
+| SH-6 | All 11 test URLs show a share button inside the test; the button stays visible during questions and results. | Focused mobile browser test |
+| SH-7 | In-test sharing contains only the exam path or practice path plus quiz id, and no draft, name, source or fragment. | Mock share on every test URL |
+| SH-8 | Copy/manual fallbacks work inside tests and do not change stored attempts or submit answers. | Focused browser test |
+
+Extension verification: SH-6–SH-8 pass in the expanded sharing browser suite
+(4 tests total). Full automated run: 311 passed, 8 database-dependent skips;
+full-stack e2e: 10 database-dependent skips. Reviewed exam and practice screenshots
+at 390×844; isolated local migration/seed/verify passed with zero content changes.
+
+## Top icon and preview image
+
+Replace the visible share text with a purple line icon in a 44px circular touch
+target, retaining a Hebrew accessible label and keyboard focus. On test pages it
+sits beside the logo in the top toolbar, outside all attempt stages. Existing
+subject-page share controls use the same icon. All five test HTML pages include
+Open Graph image metadata in the initial HTML so preview crawlers can fetch the
+existing public 1200×630 PrepX PNG without JavaScript. Practice links keep their
+quiz selector and use a shared practice preview. No image attachment is sent and
+no student state enters the preview. WhatsApp preview display remains controlled
+by its client, cache and user settings.
+
+SH-9: all 11 test URLs show an icon-only, labelled 44px control beside the logo
+within the first 180px at 390×844 (browser check).
+SH-10: each test response includes Open Graph title, description, public PNG URL,
+image dimensions and alt text before JavaScript runs; image is publicly readable
+(HTTP check). Physical WhatsApp preview acceptance remains a device check.
+
+Verification: SH-9 and SH-10 pass in the 5-test sharing browser suite.
+Full suite: 312 passed, 8 database-dependent skips; full-stack e2e: 10
+database-dependent skips. Exam/practice mobile screenshots reviewed at 390×844;
+isolated database matches source. Physical WhatsApp preview remains untested.
