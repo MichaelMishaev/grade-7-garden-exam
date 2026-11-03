@@ -339,3 +339,92 @@ else:
     check: (output, source) => output.length > 0 && /^if\b/m.test(source) && /^else\b/m.test(source)
   }
 ];
+
+// "Try a change" suggestions: each inspects the learner's code and returns an edited
+// version plus a short note, or null when the change does not fit the current code.
+const conditionLine = /^(\s*)(if|elif)\s+(.+?)\s*:\s*$/m;
+export const suggestions = [
+  {
+    id: 'number',
+    label: { en: '🔢 Change the number', he: '🔢 שנו את המספר' },
+    apply(source) {
+      const match = /^([A-Za-z_]\w*)\s*=\s*(\d+)\s*$/m.exec(source);
+      if (!match) return null;
+      const value = Number(match[2]);
+      const next = value >= 60 ? 40 : 75;
+      return {
+        source: source.replace(match[0], `${match[1]} = ${next}`),
+        note: { en: `${match[1]} is now ${next}. Press Run: does the other path run this time?`, he: `${match[1]} הוא עכשיו ${next}. לחצו על הפעלה: האם הפעם רץ המסלול השני?` }
+      };
+    }
+  },
+  {
+    id: 'comparison',
+    label: { en: '↔ Flip the comparison', he: '↔ הפכו את ההשוואה' },
+    apply(source) {
+      const match = conditionLine.exec(source);
+      if (!match) return null;
+      const swaps = [['>=', '>'], ['>', '>='], ['<=', '<'], ['<', '<='], ['==', '!='], ['!=', '==']];
+      const pair = swaps.find(([from]) => match[3].includes(from));
+      if (!pair) return null;
+      const condition = match[3].replace(pair[0], pair[1]);
+      return {
+        source: source.replace(match[0], `${match[1]}${match[2]} ${condition}:`),
+        note: { en: `The rule is now ${condition}. Run it with the number exactly on the edge to feel the difference.`, he: `התנאי הוא עכשיו ${condition}. הריצו עם מספר בדיוק על הגבול כדי להרגיש את ההבדל.` }
+      };
+    }
+  },
+  {
+    id: 'elif',
+    label: { en: '➕ Add an elif path', he: '➕ הוסיפו מסלול elif' },
+    apply(source) {
+      const match = conditionLine.exec(source);
+      const elseLine = /^else\s*:\s*$/m.exec(source);
+      if (!match || !elseLine || /^elif\b/m.test(source)) return null;
+      const name = /^[A-Za-z_]\w*/.exec(match[3])?.[0];
+      if (!name) return null;
+      const block = `elif ${name} >= 40:\n    print("Almost!")\n`;
+      return {
+        source: source.slice(0, elseLine.index) + block + source.slice(elseLine.index),
+        note: { en: 'A middle path was added. Try a number between 40 and 59: only elif should run.', he: 'נוסף מסלול אמצעי. נסו מספר בין 40 ל־59: רק elif אמור לרוץ.' }
+      };
+    }
+  },
+  {
+    id: 'message',
+    label: { en: '💬 Change what it prints', he: '💬 שנו מה מודפס' },
+    apply(source) {
+      const match = /print\((["'])(.*?)\1\)/.exec(source);
+      if (!match) return null;
+      const next = match[2] === 'Well done!' ? 'Nice!' : 'Well done!';
+      return {
+        source: source.replace(match[0], `print("${next}")`),
+        note: { en: `The first message is now “${next}”. The computer prints exactly what is inside the quotes.`, he: `ההודעה הראשונה היא עכשיו “${next}”. המחשב מדפיס בדיוק מה שבתוך המירכאות.` }
+      };
+    }
+  },
+  {
+    id: 'after',
+    label: { en: '⬇ Add a line after both paths', he: '⬇ הוסיפו שורה אחרי שני המסלולים' },
+    apply(source) {
+      if (!conditionLine.test(source)) return null;
+      const trimmed = source.replace(/\s+$/, '');
+      return {
+        source: `${trimmed}\nprint("Done")\n`,
+        note: { en: 'A line with no spaces in front is outside the branches, so it runs every time.', he: 'שורה בלי רווחים בהתחלה נמצאת מחוץ לענפים, ולכן היא רצה תמיד.' }
+      };
+    }
+  },
+  {
+    id: 'skeleton',
+    label: { en: '🧱 Insert a new if / else', he: '🧱 הכניסו if / else חדש' },
+    apply(source) {
+      const trimmed = source.replace(/\s+$/, '');
+      const block = `number = 10\nif number > 5:\n    print("big")\nelse:\n    print("small")\n`;
+      return {
+        source: trimmed ? `${trimmed}\n\n${block}` : block,
+        note: { en: 'A complete if / else was added at the end. Change number, the rule or the messages, then Run.', he: 'נוסף if / else שלם בסוף. שנו את number, את התנאי או את ההודעות, ואז הפעלה.' }
+      };
+    }
+  }
+];

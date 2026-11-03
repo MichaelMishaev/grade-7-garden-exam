@@ -1,11 +1,11 @@
 // The "Write code" stage: an Apple-style editor + terminal where learners type real
 // Python if / else programs, run them with the safe interpreter and follow missions.
-import { runProgram, describeError, missions, indentLine } from './code-runner.js';
+import { runProgram, describeError, missions, indentLine, suggestions } from './code-runner.js';
 
 const copy = {
   en: {
     mission: 'MISSION', of: 'of', hint: '💡 Hint', hide_hint: '💡 Hide hint', show: '👀 Show me', reset: '↺ Reset code',
-    run: '▶ Run', indent: '⇥ Indent', back: '← Back', next: 'Next mission →', finish: 'Finish ✓',
+    run: '▶ Run', indent: '⇥ Indent', ideas: '💡 Try a change:', back: '← Back', next: 'Next mission →', finish: 'Finish ✓',
     todo: 'Not done yet', done: '✓ Mission done!', waiting: 'Nothing yet. Press ▶ Run and the computer will answer here.',
     running: '▶ Running your code…', editor_badge: 'YOUR CODE · tap to edit', output_badge: 'THE COMPUTER ANSWERS',
     success: '✓ Mission done! The computer printed exactly what we wanted.', nothing: '(the program printed nothing)',
@@ -14,7 +14,7 @@ const copy = {
   },
   he: {
     mission: 'משימה', of: 'מתוך', hint: '💡 רמז', hide_hint: '💡 הסתרת הרמז', show: '👀 הראו לי', reset: '↺ איפוס הקוד',
-    run: '▶ הפעלה', indent: '⇥ הזחה', back: '→ חזרה', next: 'למשימה הבאה ←', finish: 'סיום ✓',
+    run: '▶ הפעלה', indent: '⇥ הזחה', ideas: '💡 נסו שינוי:', back: '→ חזרה', next: 'למשימה הבאה ←', finish: 'סיום ✓',
     todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
     running: '▶ מריץ את הקוד שלכם…', editor_badge: 'הקוד שלכם · לחצו כדי לערוך', output_badge: 'המחשב עונה',
     success: '✓ המשימה הושלמה! המחשב הדפיס בדיוק מה שרצינו.', nothing: '(התוכנית לא הדפיסה כלום)',
@@ -37,6 +37,7 @@ export function initTerminal({ getLanguage, onFinish }) {
   let index = 0;
   let hintOpen = false;
   let lastRun = null; // { result, passed } for the current mission
+  let ideaNote = null; // { en, he } after a suggestion was applied
 
   const language = () => (getLanguage() === 'he' ? 'he' : 'en');
   const text = (key) => copy[language()][key];
@@ -103,6 +104,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     byId('mission-card').hidden = finished;
     byId('terminal-complete').hidden = !finished;
     byId('editor-shell').hidden = finished;
+    byId('idea-row').hidden = finished;
     byId('terminal-shell').hidden = finished;
     byId('mission-nav').hidden = finished;
     for (const node of document.querySelectorAll('#terminal [data-terminal-copy]')) {
@@ -147,8 +149,26 @@ export function initTerminal({ getLanguage, onFinish }) {
       dot.classList.toggle('done', completed.has(i));
       dot.classList.toggle('current', i === index);
     });
+    renderIdeas();
     renderGutter();
     renderScreen();
+  }
+
+  function renderIdeas() {
+    const lang = language();
+    const hebrew = lang === 'he';
+    for (const button of ideaButtons) {
+      const suggestion = suggestions.find((candidate) => candidate.id === button.dataset.idea);
+      button.textContent = suggestion.label[lang];
+      button.disabled = suggestion.apply(editor.value) === null;
+      button.lang = lang;
+      button.dir = hebrew ? 'rtl' : 'ltr';
+    }
+    const note = byId('idea-note');
+    note.hidden = !ideaNote;
+    note.textContent = ideaNote ? ideaNote[lang] : '';
+    note.lang = lang;
+    note.dir = hebrew ? 'rtl' : 'ltr';
   }
 
   function loadMission(newIndex, focus = false) {
@@ -156,6 +176,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     index = newIndex;
     hintOpen = false;
     lastRun = null;
+    ideaNote = null;
     if (index < missions.length) editor.value = drafts[index];
     render();
     if (focus && index < missions.length) editor.focus({ preventScroll: true });
@@ -184,7 +205,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     editor.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  editor.addEventListener('input', () => { if (lastRun && !lastRun.result.ok) lastRun = null; renderGutter(); });
+  editor.addEventListener('input', () => { if (lastRun && !lastRun.result.ok) lastRun = null; ideaNote = null; renderGutter(); renderIdeas(); });
   editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; });
   editor.addEventListener('keydown', (event) => {
     if (event.key === 'Tab' && !event.shiftKey) {
@@ -211,17 +232,36 @@ export function initTerminal({ getLanguage, onFinish }) {
     renderGutter();
     editor.focus({ preventScroll: true });
   });
-  byId('run').addEventListener('click', run);
+  byId('run').addEventListener('click', () => { ideaNote = null; run(); });
+  const ideaRow = byId('idea-buttons');
+  const ideaButtons = suggestions.map((suggestion) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.idea = suggestion.id;
+    button.addEventListener('click', () => {
+      const change = suggestion.apply(editor.value);
+      if (!change) return;
+      editor.value = change.source;
+      ideaNote = change.note;
+      lastRun = null;
+      render();
+      editor.focus({ preventScroll: true });
+    });
+    ideaRow.append(button);
+    return button;
+  });
   hintButton.addEventListener('click', () => { hintOpen = !hintOpen; render(); });
   byId('mission-solution').addEventListener('click', () => {
     editor.value = missions[index].solution;
     lastRun = null;
+    ideaNote = null;
     render();
     editor.focus({ preventScroll: true });
   });
   byId('mission-reset').addEventListener('click', () => {
     editor.value = missions[index].starter;
     lastRun = null;
+    ideaNote = null;
     render();
     editor.focus({ preventScroll: true });
   });
@@ -237,6 +277,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     index = 0;
     hintOpen = false;
     lastRun = null;
+    ideaNote = null;
     render();
   });
 

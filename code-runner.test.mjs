@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runProgram, describeError, missions, indentLine } from './code-runner.js';
+import { runProgram, describeError, missions, indentLine, suggestions } from './code-runner.js';
 
 const starter = `score = 75
 if score >= 60:
@@ -91,4 +91,34 @@ test('missions have solutions that pass their own checks and starters that do no
 
 test('indentLine inserts four spaces at the caret', () => {
   assert.deepEqual(indentLine('ab', 1), { value: 'a    b', caret: 5 });
+});
+
+test('try-a-change suggestions edit the lesson program into runnable code and decline when they do not fit', () => {
+  const program = 'score = 75\nif score >= 60:\n    print("You passed!")\nelse:\n    print("Keep practicing!")\nprint("Next lesson")';
+  const expected = {
+    number: ['Keep practicing!', 'Next lesson'],
+    comparison: ['You passed!', 'Next lesson'],
+    elif: ['You passed!', 'Next lesson'],
+    message: ['Well done!', 'Next lesson'],
+    after: ['You passed!', 'Next lesson', 'Done'],
+    skeleton: ['You passed!', 'Next lesson', 'big']
+  };
+  for (const suggestion of suggestions) {
+    const change = suggestion.apply(program);
+    assert.ok(change && change.note.en && change.note.he, suggestion.id);
+    assert.ok(suggestion.label.en && suggestion.label.he);
+    const result = runProgram(change.source);
+    assert.equal(result.ok, true, suggestion.id);
+    assert.deepEqual(result.output, expected[suggestion.id], suggestion.id);
+  }
+  assert.deepEqual(runProgram(suggestions.find((s) => s.id === 'elif').apply(program).source.replace('75', '50')).output, ['Almost!', 'Next lesson']);
+  assert.deepEqual(runProgram(suggestions.find((s) => s.id === 'comparison').apply(program).source.replace('75', '60')).output, ['Keep practicing!', 'Next lesson']);
+  const byId = Object.fromEntries(suggestions.map((s) => [s.id, s]));
+  assert.equal(byId.number.apply('print("hi")'), null);
+  assert.equal(byId.comparison.apply('x = 1\nprint(x)'), null);
+  assert.equal(byId.elif.apply('x = 1\nif x > 0:\n    print(x)'), null, 'needs an else');
+  assert.equal(byId.elif.apply(byId.elif.apply(program).source), null, 'only one elif is suggested');
+  assert.equal(byId.message.apply('x = 1'), null);
+  assert.equal(byId.after.apply('x = 1'), null);
+  assert.deepEqual(runProgram(byId.skeleton.apply('').source).output, ['big']);
 });

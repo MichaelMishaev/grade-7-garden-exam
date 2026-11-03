@@ -22,6 +22,18 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
     assert.deepEqual(await page.locator('#code-gutter span').allTextContents(), ['1', '2', '3', '4', '5', '6']);
     assert.equal(await page.locator('#mission-next').isDisabled(), true);
 
+    // Suggestions edit the code for the learner and explain what to look for.
+    assert.equal(await page.locator('#idea-buttons button').count(), 6);
+    assert.equal(await page.locator('#idea-buttons button:disabled').count(), 0);
+    await page.locator('[data-idea="number"]').click();
+    assert.match(await page.locator('#code-editor').inputValue(), /^score = 40/);
+    assert.match(await page.locator('#idea-note').textContent(), /score is now 40/);
+    await page.locator('[data-idea="elif"]').click();
+    assert.match(await page.locator('#code-editor').inputValue(), /elif score >= 40:\n    print\("Almost!"\)\nelse:/);
+    assert.equal(await page.locator('[data-idea="elif"]').isDisabled(), true, 'a second elif is not offered');
+    await page.locator('#mission-reset').click();
+    assert.equal(await page.locator('#idea-note').isVisible(), false);
+
     // Mission 1: run as-is, then change the score.
     await page.locator('#run').click();
     assert.match(await page.locator('#terminal-output').textContent(), /Running your code…\nYou passed!\nNext lesson\n/);
