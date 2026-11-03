@@ -57,13 +57,13 @@ const cases={
   'החתול ירד בשלום לידיים של הילדה. הסולם נאסף.'
  ]}
 };
-// Every second shift round two of the sites host a different kind of call.
-const variants={market:'spill',station:'rescue'};
 const phases=['reported','responding','working','clearing'];
-const cycle=394;
+const cycle=480;
+// Ten calls per round, at most three at a time; a site hosts two calls only when the first has cleared.
 const calls=[
  [0,'fight','gardens'],[40,'fire','eastUtility'],[90,'crash','market'],[140,'jam','port'],
- [185,'fight','station'],[235,'fire','radio'],[285,'crash','quay'],[335,'jam','depot']
+ [185,'fight','station'],[225,'spill','depot'],[270,'fire','radio'],[315,'rescue','gardens'],
+ [355,'crash','quay'],[400,'jam','market']
 ];
 
 // Driven by the shift's simulation clock. Looking up a time directly (e.g. after
@@ -71,16 +71,15 @@ const calls=[
 export function cityIncidentsAt(seconds){
  if(!Number.isFinite(seconds)||seconds<0)return [];
  const elapsed=seconds+4,round=Math.floor(elapsed/cycle),now=elapsed%cycle,active=[];
- for(let [start,type,location] of calls){
+ for(const [start,type,location] of calls){
    const previous=now<start,occurrence=previous?round-1:round;
    if(occurrence<0)continue;
    const age=previous?now+cycle-start:now-start;
-   const variant=occurrence%2===1&&variants[location];if(variant)type=variant;
    const info=cases[type],duration=info.durations.reduce((sum,value)=>sum+value,0);
    if(age>=duration)continue;
    let stage=0,local=age;
    while(local>=info.durations[stage])local-=info.durations[stage++];
-   active.push({...sites[location],id:occurrence+'-'+location,type,age,duration,phase:phases[stage],
+   active.push({...sites[location],id:occurrence+'-'+location+'-'+type,type,age,duration,phase:phases[stage],
     phaseProgress:local/info.durations[stage],stageAge:local,workDuration:info.durations[2],title:info.title,detail:info.details[stage],responder:info.responder,mode:info.mode,softStart:Boolean(info.softStart)});
  }
  return active;

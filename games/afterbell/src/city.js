@@ -15,7 +15,10 @@ const read=(store,key)=>{try{return store.getItem(key);}catch{return null;}};
 const put=(store,key,v)=>{try{store.setItem(key,v);}catch{}};
 let mode='menu',quiz=snapshot.quizzes[0],source='snapshot',role='courier',round,city,world,loadId=0,saveClock=0,timer,feedback=null;
 let followedEvent=null;
+const incidentIcon={fight:'👮',fire:'🔥',crash:'🚗',jam:'🚧',spill:'📦',rescue:'🐱'};
 const incidentPhase={reported:'דיווח ראשוני',responding:'צוות בדרך',working:'צוות במקום',clearing:'חזרה לשגרה'};
+// Short attention animations on HUD controls; the CSS drops them under reduced motion.
+function ping(el,cls='ping'){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),900);}
 function toast(msg){$('notice').textContent=msg;clearTimeout(timer);timer=setTimeout(()=>$('notice').textContent='',2600);}
 function save(){if(city&&round)put(sessionStorage,DRAFT,JSON.stringify({city,round}));}
 function restore(){
@@ -46,7 +49,7 @@ async function loadQuiz(){
 $('quiz').onchange=loadQuiz;
 function updateTarget(){const obj=objective(city),p=places[obj.place];world.target(p);world.drive(city.driving);world.cargo(city.phase==='deliver');
  $('chapter').textContent=roles[city.role].icon+' '+roles[city.role].name+' · משימה '+Math.min(city.stage+1,3)+' מתוך 3';
- $('goal').textContent=obj.title;$('vehicle').textContent=city.driving?'לצאת מהרכב':'לעלות ל־'+world.carName();$('action').textContent=obj.action;$('pin').textContent=p.name;
+ $('goal').textContent=obj.title;const vehicleLabel=(city.driving?'לצאת מהרכב':'לעלות לרכב')+'<small class="btn-sub" dir="ltr">'+esc(world.carName())+'</small>';if($('vehicle').innerHTML!==vehicleLabel)$('vehicle').innerHTML=vehicleLabel;$('action').textContent=obj.action;$('pin').textContent=p.name;
 }
 function refresh(){
  if(!city||mode!=='explore')return;
@@ -57,7 +60,7 @@ function refresh(){
  const status=d<=4.3?'הגעתם! לחצו על ״'+o.action+'״.':world.yielding()?'מאטים ונותנים זכות קדימה.':p.district+' · '+Math.round(d)+' מטר · אפשר לנהוג או ללחוץ על הובלה.';
  if($('status').textContent!==status)$('status').textContent=status;
  const events=world.events(),count=String(events.length);
- if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);}
+ if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);$('dispatch').classList.toggle('alert',events.length>0);}
  const selected=events.find(e=>e.id===followedEvent);
  announceEvents(events,selected);
  if(selected&&!claimedWitness.has(selected.id)&&Math.hypot(city.x-selected.observer.x,city.z-selected.observer.z)<9){
@@ -66,7 +69,7 @@ function refresh(){
  }
  if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
  const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
- const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
+ const report=nearby?(incidentIcon[nearby.type]||'📍')+' '+nearby.title+' · '+incidentPhase[nearby.phase]+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
  $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
@@ -75,7 +78,7 @@ const knownEvents=new Set(),claimedWitness=new Set();let followedPhase='';
 function announceEvents(events,selected){
  for(const e of events){
   if(knownEvents.has(e.id))continue;knownEvents.add(e.id);
-  if(knownEvents.size>1||mode==='explore')toast('🚨 דיווח חדש · '+e.title+' · '+e.district);
+  if(knownEvents.size>1||mode==='explore'){toast((incidentIcon[e.type]||'🚨')+' דיווח חדש · '+e.title+' · '+e.district);ping($('dispatch'));}
  }
  if(selected){
   if(followedPhase&&followedPhase!==selected.phase)toast('עדכון מהשטח · '+selected.title+': '+incidentPhase[selected.phase]);
@@ -95,7 +98,7 @@ function syncWallet(change){
   change?.(wallet);
   fallbackWallets.set(key,wallet);
   try{localStorage.setItem(key,JSON.stringify(wallet));}catch{toast('המטבעות זמינים רק עד לסגירת הדף.');}
-  $('coins').textContent=wallet.coins;
+  if($('coins').textContent!==String(wallet.coins)){$('coins').textContent=wallet.coins;if(mode==='explore')ping($('shop'),'bump');}
   world.outfit(roles[city.role].color,wallet.equipped,city.role);
  };
  return navigator.locks?navigator.locks.request(key,update):Promise.resolve(update());
@@ -176,7 +179,7 @@ function dispatch(){
  const events=world.events();
  const reports=events.map((event,i)=>{
   const distance=Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z));
-  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${incidentIcon[event.type]||'📍'} ${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
  }).join('');
  sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
  $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};

@@ -31,7 +31,7 @@ test('calls have four distinct phases and leave no restriction after clearance',
 });
 test('activity covers older and newly expanded neighborhoods without crowding the scene',()=>{
  const positions=new Set(),types=new Set();let peak=0;
- for(let t=0;t<2*394;t++){
+ for(let t=0;t<2*480;t++){
    const events=cityIncidentsAt(t);peak=Math.max(peak,events.length);
    for(const e of events){
      positions.add(e.place);types.add(e.type);
@@ -41,28 +41,29 @@ test('activity covers older and newly expanded neighborhoods without crowding th
  }
  assert.equal(positions.size,8);assert.equal(types.size,6);assert.equal(peak,3);
 });
-test('odd rounds swap two sites for a cargo spill and a tree rescue with the same timing',()=>{
- const first=occurrence(90,'crash'),spill=occurrence(394+90,'spill'),rescue=occurrence(394+185,'rescue');
- assert.ok(spill&&rescue);assert.equal(spill.place,first.place);assert.equal(spill.age,first.age);
- assert.equal(occurrence(394+90,'crash'),undefined);assert.equal(occurrence(394+185,'fight'),undefined);
- assert.ok(occurrence(2*394+90,'crash'));
+test('every round has a cargo spill and a tree rescue, and a site reused in one round keeps distinct ids',()=>{
+ const spill=occurrence(225,'spill'),rescue=occurrence(315,'rescue');
+ assert.ok(spill&&rescue);assert.equal(spill.phase,'reported');assert.equal(rescue.phase,'reported');
+ assert.ok(occurrence(480+225,'spill'));assert.ok(occurrence(480+315,'rescue'));
+ assert.notEqual(occurrence(0,'fight').id,rescue.id);assert.equal(occurrence(0,'fight').place,rescue.place);
+ assert.notEqual(occurrence(90,'crash').id,occurrence(400,'jam').id);
  // A spill lets traffic crawl past while it is only reported, then closes the lane.
  assert.ok(speed(spill,-6)>0);assert.equal(incidentLaneBlocked([spill],...offset(spill,0)),false);
- const closed=occurrence(394+90+30,'spill');assert.equal(closed.phase,'working');
+ const closed=occurrence(225+30,'spill');assert.equal(closed.phase,'working');
  assert.equal(speed(closed,-6),0);assert.equal(incidentLaneBlocked([closed],...offset(closed,0)),true);
  assert.equal(speed(closed,-6,0,closed.heading+Math.PI),1);
  // A rescue stays on the sidewalk like a fight.
- const climbing=occurrence(394+185+30,'rescue');assert.equal(climbing.phase,'working');
+ const climbing=occurrence(315+30,'rescue');assert.equal(climbing.phase,'working');
  assert.ok(speed(climbing,-6)>0);assert.equal(incidentLaneBlocked([climbing],...offset(climbing,0)),false);
 });
 test('time jumps, repeated reads and a two-shift boundary preserve the same calls',()=>{
  const t=390.75,expected=cityIncidentsAt(t);
  for(let n=0;n<395;n+=.25)cityIncidentsAt(n);
  assert.deepEqual(cityIncidentsAt(t),expected);
- const a=occurrence(0,'fight'),next=occurrence(394,'fight');
+ const a=occurrence(0,'fight'),next=occurrence(480,'fight');
  assert.notEqual(next.id,a.id);assert.equal(next.age,a.age);
  // The last older call survives the cycle boundary until the crew leaves.
- assert.equal(cityIncidentsAt(394).find(e=>e.type==='jam').id,cityIncidentsAt(389).find(e=>e.type==='jam').id);
+ assert.equal(cityIncidentsAt(480).find(e=>e.type==='jam').id,cityIncidentsAt(475).find(e=>e.type==='jam').id);
 });
 test('a crash stops its approach, leaves the other direction open and allows vehicles already inside to exit',()=>{
  const e=occurrence(90,'crash');

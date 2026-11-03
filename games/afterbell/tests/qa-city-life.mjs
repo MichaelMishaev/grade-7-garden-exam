@@ -41,7 +41,7 @@ try{
    await page.click('#map');await page.click('[data-place="'+place+'"]');await arrive(places[place]);
  }
  let current=(await state()).life.shiftTime;
- const nextJam=136+394*(Math.floor((current-136)/394)+1);
+ const nextJam=136+480*(Math.floor((current-136)/480)+1);
  while(current<nextJam){current=(await tick(Math.min(80000,(nextJam-current)*1000+25))).life.shiftTime;}
  const jam=(await state()).life.events.find(e=>e.type==='jam');assert.ok(jam);
  const waiting=[];

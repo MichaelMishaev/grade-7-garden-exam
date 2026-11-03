@@ -48,8 +48,52 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    box(uniform?'#efbc50':'#534445',0,3.72,lean,1.04,.22,.94);
    if(uniform)box('#ebe780',0,2.13,0,1.48,.19,.86);
  }
+ // Branded silhouettes mirror src/city-cars.js: no textures here, so each make is
+ // told apart by its shape and light signature (Tesla tail bar, Ford bed, SUV cabin).
+ const branded={
+   tesla(body){
+     box('#303f4c',0,1.02,0,3.05,.75,5.6);box(body,0,1.62,0,3.25,1.2,5.9);
+     box('#1b2530',0,2.6,-.4,3,1,3.3);box(body,0,3.12,-.4,2.9,.14,3.1);
+     box('#1b2530',0,2.28,1.55,2.9,.12,1.25,-.5);
+     box('#ff2f3f',0,1.95,-2.97,3.1,.16,.08);
+     box('#ffffff',0,1.78,2.97,2.9,.07,.08);
+     box('#1b2530',0,1.42,2.98,.12,.5,.06);box('#1b2530',0,1.68,2.98,.5,.1,.06);
+   },
+   cybertruck(){
+     const steel='#aeb6bb';
+     box('#303f4c',0,1,0,3.1,.7,5.9);box(steel,0,1.6,0,3.4,1.1,6);
+     box(steel,0,2.35,-1.2,3.3,.5,3.4);
+     box('#12181d',0,2.2,1.4,3,.5,1.7,-.3);
+     box(steel,0,2.58,.75,3.32,.16,3.5,-.28);
+     box('#ffffff',0,1.88,2.98,3.3,.08,.08);box('#ff2f3f',0,2.3,-2.98,3.3,.14,.08);
+   },
+   pickup(body){
+     box('#303f4c',0,1.02,0,3.05,.75,5.8);box(body,0,1.62,0,3.25,1.25,5.9);
+     box(body,0,2.75,1,3,1.4,2.4);box('#3d5565',0,2.85,2.22,2.6,.8,.08);
+     for(const side of [-1,1]){
+       box('#3d5565',side*1.52,2.85,.9,.08,.8,1.7);
+       box(body,side*1.6,2.5,-1.6,.14,.55,3);
+       box('#fff0c9',side*1.1,1.75,2.98,.6,.3,.08);box('#e5382f',side*1.35,2,-2.98,.6,.3,.08);
+     }
+     box('#2a3036',0,2.2,-1.6,3,.12,2.9);box(body,0,2.5,-2.95,3.3,.55,.14);
+     box('#d4d8d9',0,1.3,2.98,2.5,.6,.08);box('#25496f',0,1.3,3.03,.9,.3,.06);
+   },
+   suv(body){
+     box('#303f4c',0,1.02,0,3.05,.75,5.6);box(body,0,1.65,0,3.25,1.3,5.9);
+     box('#27343e',0,2.9,-.5,3.1,1.35,4.2);box(body,0,3.6,-.5,3,.14,4.1);
+     for(const side of [-1,1]){
+       box(body,side*1.56,2.9,-.5,.08,1.3,.5);
+       box('#fff0c9',side*1.1,1.75,2.98,.6,.3,.08);box('#e5382f',side*1.3,2.1,-2.98,.6,.3,.08);
+     }
+     box('#14181a',0,1.3,2.98,2,.3,.08);
+   }
+ };
  function vehicle(anchor,x,z,turn,body,kind){
    at(anchor,x,z,turn);
+   if(branded[kind]){
+     for(const side of [-1,1])for(const end of [-1,1])box('#29363d',side*1.58,.98,end*1.75,.46,1.12,1.1);
+     branded[kind](body);return;
+   }
    const truck=kind==='fire'||kind==='tow',length=truck?7.4:5.4;
    box('#303f4c',0,1.02,0,3.05,.75,length);
    box(body,0,1.62,0,3.25,1.25,length);
@@ -134,9 +178,8 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    const clear=e.phase==='clearing'?ease((e.phaseProgress-.28)/.72):0;
    // The tow truck hooks onto the disabled van before pulling it out.
    vehicle(e.lane,0,2.75+clear*23,0,'#e6b269','van');
-   vehicle(e.lane,-.16,-2.7+clear*15,.09,'#71a6ae','car');
-   box('#537c82',0,2.31,2.16,2.6,.2,.76,-.25,.05);
-   for(const side of [-1,1])box('#ebaa59',side*1.27,1.7,-2.74,.53,.33,.12);
+   vehicle(e.lane,-.16,-2.7+clear*15,.09,'#f4f5f4','tesla');
+   box('#dfe3e2',0,2.31,2.16,2.6,.2,.76,-.25,.05);
    if(e.phase!=='reported'){
      at(e.lane,0,0);cone(-1.5,-7);cone(-2,-11);
    }
@@ -159,7 +202,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    const flowing=e.phase==='working'||clearing;
    const elapsed=clearing?e.workDuration:e.stageAge;
    const cycle=Math.floor(elapsed/10),progress=elapsed%10;
-   const colours=['#b2acc9','#71a4a0','#d19a72','#9aabad'];
+   const kinds=['car','tesla','suv','cybertruck'],colours=['#b2acc9','#f4f5f4','#2f5fa8','#aeb6bb'];
    // A local city block is 56 m wide. Its circuit vans form the actual queue;
    // use staged arrivals only on streets with no ambient vehicles in the block.
    const liveQueue=traffic.some(g=>Math.hypot(g.position.x-e.lane.x,g.position.z-e.lane.z)<75);
@@ -176,7 +219,8 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
        const depart=ease((e.phaseProgress-i*.15)/.68);
        z+=depart*27;x-=2.6*Math.sin(depart*Math.PI);
      }
-     vehicle(e.lane,x,z,0,colours[(i+(flowing?cycle:0))%colours.length],'car');
+     const k=(i+(flowing?cycle:0))%kinds.length;
+     vehicle(e.lane,x,z,0,colours[k],kinds[k]);
    }
    if(e.phase!=='reported'){
      // Marshal stands beside the taper to signal the waiting lane.
@@ -188,7 +232,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
  function spill(e){
    const working=e.phase==='working',done=e.phase==='clearing';
    // The pickup that lost its load waits a few metres ahead of the boxes.
-   vehicle(e.lane,0,4.6+(done?ease(e.phaseProgress)*26:0),0,'#2c4f87','van');
+   vehicle(e.lane,0,4.6+(done?ease(e.phaseProgress)*26:0),0,'#2c4f87','pickup');
    const total=7,left=working?Math.round(total*(1-ease(e.phaseProgress))):done?0:total;
    at(e.lane,0,0);
    for(let i=0;i<left;i++)box(i%2?'#d9b074':'#c89a5c',-1.2+(i*1.7)%3.1,.46,-1.4-i*1.05,.92,.9,.92,0,i*.6);
@@ -208,9 +252,24 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    person(e,-2.4,2.2,.3,'#d26a8c',.9+wobble,false,.08);
    responder(e,'fire','#c34a3c',-8);
    if(working||down){
-     const lift=down?1-ease(e.phaseProgress):1;
-     box('#9aa3a8',-1.2,2.9*lift+.3,1.6,.9,.12,5.8*lift+.1,-1.05*lift);
-     if(working)person(e,-1.5,1.2+reach*1.3,0,'#c34a3c',1.2,true,-.4);
+     // Ladder leans from the sidewalk up into the crown; it folds back down as the crew leaves.
+     const lift=down?1-ease(e.phaseProgress):1,span=5.8*lift+.1,pitch=1.05*lift;
+     at(e,0,0);
+     for(const side of [-1,1])box('#e8ecef',-1.2+side*.42,2.9*lift+.3,1.6,.16,.16,span,pitch);
+     for(let i=0;i<5;i++){
+       const u=(i+.5)/5-.5,dz=u*span;
+       box('#e8ecef',-1.2,2.9*lift+.3+dz*Math.sin(-pitch),1.6+dz*Math.cos(pitch),.84,.14,.16,pitch);
+     }
+     if(working){
+       // Firefighter climbs the rungs toward the cat, drawn a touch larger than the crowd.
+       // person() keeps feet on the ground, so the climber is built by hand on the rungs.
+       const climb=reach*3.2,y=.3+climb;
+       at(e,-1.2,1.6-climb*.45);
+       box('#334851',-.3,y+.7,0,.5,1.3,.6,-.3);box('#334851',.3,y+.7,0,.5,1.3,.6,-.3);
+       box('#c34a3c',0,y+1.95,-.1,1.4,1.4,.9,-.3);
+       for(const side of [-1,1])box('#c34a3c',side*.85,y+2.3,.35,.38,.9,.4,-1);
+       box('#cf9875',0,y+3.05,0,1,.95,.9);box('#efbc50',0,y+3.6,0,1.15,.3,1.05);
+     }
    }
  }
  let lastTime=-Infinity,lastState='';

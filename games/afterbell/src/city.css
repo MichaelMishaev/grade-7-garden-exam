@@ -28,3 +28,16 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 
 .role-car{display:block;margin-top:2px;font-size:10px;font-weight:600;color:#53685c;letter-spacing:.02em}#roles button[aria-pressed=true] .role-car{color:#214f46}
 .streak{margin:6px 0;font-weight:800;color:#b4501f}
+
+/* HUD polish: four equal controls, car name as a sub-label, live dispatch badge, coin bump. */
+.jobcard .row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.row button{padding:7px 4px;line-height:1.2;border-radius:9px}
+.btn-sub{display:block;font-size:10px;font-weight:600;color:#53685c;letter-spacing:.02em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dispatch{display:inline-flex;align-items:center;justify-content:center;gap:5px}#calls{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e3e8d6;color:#5a4634;font-size:12px;font-weight:800}
+#dispatch.alert{border-color:#d1835f}#dispatch.alert #calls{background:var(--coral);color:#fff}
+.jobcard #scene-report{background:#fff1e4;border-radius:0 7px 7px 0;padding:5px 8px 5px 6px;margin:4px 0 10px}
+#shop{transition:transform .25s var(--ease-out,ease-out)}.bump{animation:bump .6s ease-out}.ping{animation:ping .9s ease-out}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes ping{0%{box-shadow:0 0 0 0 #ec765c99}100%{box-shadow:0 0 0 14px #ec765c00}}
+#notice{max-width:min(92vw,520px);font-weight:700;box-shadow:0 6px 24px #0f2b2744;border:1px solid #ffffff22}
+@media(max-width:650px){.jobcard .row{gap:4px}.row button{font-size:12px;padding:6px 2px}.btn-sub{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.bump,.ping{animation:none}#shop{transition:none}}
