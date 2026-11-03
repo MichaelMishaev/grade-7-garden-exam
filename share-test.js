@@ -6,7 +6,8 @@ function testShareControl(link, title) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'test-share-button';
-  button.textContent = 'שיתוף';
+  button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 16V3m-4 4 4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+  button.title = 'שיתוף';
   button.setAttribute('aria-label', `שיתוף ${getTitle()}`);
   const status = document.createElement('span');
   status.className = 'test-share-status';
@@ -64,7 +65,17 @@ function mountInTestShare() {
   const link = document.createElement('a');
   link.href = url.href;
   const title = () => document.querySelector('#quiz-title, #page-title')?.textContent || document.title;
-  main.querySelector('header').after(testShareControl(link, title));
+  const control = testShareControl(link, title);
+  control.classList.add('test-share-top');
+  const brand = main.querySelector(':scope > .prepx-brand');
+  if (brand) {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'test-toolbar';
+    brand.before(toolbar);
+    toolbar.append(brand, control);
+  } else {
+    main.querySelector('header').append(control);
+  }
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', mountInTestShare, { once: true });

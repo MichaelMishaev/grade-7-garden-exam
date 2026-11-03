@@ -93,7 +93,7 @@ test('sharing inside all 11 tests preserves quiz identity, stays outside stages 
   await page.route('**/api/practice-result', route => { posts++; return route.abort(); });
   for (const path of paths) {
     await page.goto(`${base}/${path}${path.includes('?') ? '&' : '?'}source=inline&name=private#answer`);
-    const button = page.locator('main > .test-share .test-share-button');
+    const button = page.locator('main .test-share .test-share-button');
     await button.waitFor();
     if (path.startsWith('practice')) await page.waitForFunction(() => document.getElementById('quiz-title').textContent.length > 0);
     assert.equal(await button.count(), 1);
@@ -106,6 +106,13 @@ test('sharing inside all 11 tests preserves quiz identity, stays outside stages 
     assert.equal(await page.evaluate(() => JSON.stringify([localStorage, sessionStorage])), storage);
     const box = await button.boundingBox();
     assert.ok(box.width >= 44 && box.height >= 44);
+    assert.ok(box.y < 180, 'share icon is at the top');
+    assert.equal((await button.textContent()).trim(), '');
+    assert.equal(await button.locator('svg[aria-hidden="true"]').count(), 1);
+    assert.match(await button.getAttribute('aria-label'), /שיתוף/);
+    assert.equal(await button.evaluate(el => el.closest('section')), null);
+    const logo = await page.locator('main .prepx-brand').first().boundingBox();
+    assert.ok(Math.abs((box.y + box.height / 2) - (logo.y + logo.height / 2)) < 3, 'aligned beside logo');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     if (!path.startsWith('practice')) {
       await page.locator('#student-name').fill('בדיקה');
@@ -124,7 +131,7 @@ test('in-test copy and manual fallback preserve answers and work from the questi
   await page.locator('#student-name').fill('בדיקה');
   await page.locator('#begin').click();
   await page.locator('#question-stage.active').waitFor();
-  const button = page.locator('main > .test-share .test-share-button');
+  const button = page.locator('main .test-share .test-share-button');
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => window.copied = text } });
@@ -137,4 +144,26 @@ test('in-test copy and manual fallback preserve answers and work from the questi
   assert.equal(await input.isVisible(), true);
   assert.equal(await input.inputValue(), `${base}/library-exam.html`);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+}));
+
+
+test('test link previews expose the branded picture in initial HTML without JavaScript', { skip }, () => withPage(async (_page, base) => {
+  for (const path of ['garden-exam.html', 'library-exam.html', 'physics-exam.html', 'english-exam.html', 'practice.html?quiz=facts']) {
+    const response = await fetch(`${base}/${path}`, { headers: { 'User-Agent': 'WhatsApp/2' } });
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    const head = html.slice(0, html.indexOf('</head>'));
+    for (const property of ['og:title', 'og:description', 'og:image', 'og:image:alt']) {
+      assert.match(head, new RegExp(`<meta property="${property}" content="[^"]+">`));
+    }
+    assert.match(head, /property="og:image" content="https:\/\/hitech\.agnon\.online\/assets\/branding\/share-preview\.png"/);
+    assert.match(head, /property="og:image:width" content="1200"/);
+    assert.match(head, /property="og:image:height" content="630"/);
+  }
+  const image = await fetch(`${base}/assets/branding/share-preview.png`);
+  assert.equal(image.status, 200);
+  assert.match(image.headers.get('content-type'), /image\/png/);
+  const bytes = new DataView(await image.arrayBuffer());
+  assert.equal(bytes.getUint32(16), 1200);
+  assert.equal(bytes.getUint32(20), 630);
 }));
