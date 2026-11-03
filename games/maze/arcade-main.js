@@ -1,3 +1,4 @@
+import {questionMedia} from '../english-question-media.js';
 import {loadMazeContent,normalizeMazeContent,MAZE_QUIZZES,DEFAULT_QUIZ_ID} from './content.js';
 import {questionPresentation} from './question-presentation.js';
 import {createArcadeRenderer} from './arcade-renderer.js';
@@ -82,7 +83,7 @@ async function newRun(){
 function renderQuestion(){
   const q=arcadeQuestion(state),present=questionPresentation(q);
   show(title(`גשר ${state.stage+1} מתוך 3 · שאלה ללא הגבלת זמן`,text(present.prompt||q.prompt))+
-    (present.context?`<p class="question-context">${text(present.context)}</p>`:'')+
+    questionMedia(q)+(present.context?`<p class="question-context">${text(present.context)}</p>`:'')+
     `<div class="answers">${state.choices[state.stage].map((choice,i)=>`<button class="answer" data-choice="${choice}"><span class="answer-index">${i+1}</span><bdi>${text(q.choices[choice])}</bdi></button>`).join('')}</div><details><summary>חומר המקור</summary>${source(q)}</details>`+button('question-pause','השהיה או יציאה',false));
   document.querySelectorAll('[data-choice]').forEach(el=>fresh(el,()=>apply({type:'answer',choice:Number(el.dataset.choice),generation:state.generation})));
   bind('question-pause',()=>openPanel('pause'));

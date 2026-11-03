@@ -1,3 +1,4 @@
+import {questionMedia} from '../../english-question-media.js';
 import {prepareCargo} from './city-job.js';
 import './city.css';
 import snapshot from './content-snapshot.json';
@@ -80,7 +81,7 @@ function question(){
  const index=city.stage,p=progress(round,index);
  if(!p.next&&!feedback){city.stage++;city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! סעו לבמת המזח.':'המסירה הושלמה. המשימה הבאה על המפה.');return;}
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
- sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2><small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
+ sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
  ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}"><bdi>${esc(o.text)}</bdi></button>`).join('')}
  ${a?`<div class="explain" role="status"><b>${a.correct?'נכון!':'הפעם התשובה שונה.'}</b><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){feedback=city.feedback=q.id;save();question();}});

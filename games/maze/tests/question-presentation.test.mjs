@@ -7,8 +7,8 @@ import { questionPresentation } from '../question-presentation.js';
 const questions = snapshot.quizzes.flatMap(quiz => quiz.questions);
 const question = id => structuredClone(questions.find(question => question.id === id));
 
-test('all 75 source questions are audited and display without mutating academic content', () => {
-  assert.equal(questions.length, 75);
+test('all 244 source questions are audited and display without mutating academic content', () => {
+  assert.equal(questions.length, 244);
   const before = JSON.stringify(snapshot);
   for (const raw of snapshot.quizzes) {
     const normalized = normalizeMazeContent(raw);

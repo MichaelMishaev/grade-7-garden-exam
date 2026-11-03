@@ -1,3 +1,4 @@
+import {questionMedia} from '../english-question-media.js';
 import { createState, restoreState, transition, currentQuestion, progress, MAZE_LAYOUTS, selectMazeLayout, MAZE, encountersFor, EXIT, pathTo, isWalkable, rewardBalance } from './core.js';
 import { loadMazeContent, normalizeMazeContent, MAZE_QUIZZES, DEFAULT_QUIZ_ID } from './content.js';
 import { createMazeRenderer } from './renderer.js';
@@ -166,7 +167,7 @@ function renderQuestion() {
   const presentation=questionPresentation(q);
   const hint = reviewing && state.review.hint ? `<p class="explanation">רמז: ${text(q.explanation.he)}</p>` : '';
   showDialog(heading(reviewing?`חדר ההיחלצות · שלב ${state.review.index+1} מתוך 2`:`${text(room?.title)} · שאלה ${trapAnswered+1} מתוך ${assigned.length}`,'')+
-    (presentation.context?`<p class="question-context" id="question-context">${text(presentation.context)}</p>`:'')+`<h2 id="dialog-title" dir="auto">${text(presentation.prompt)}</h2>`+
+    (presentation.context?`<p class="question-context" id="question-context">${text(presentation.context)}</p>`:'')+`<h2 id="dialog-title" dir="auto">${text(presentation.prompt)}</h2>${questionMedia(q)}`+
     (reviewing?'<p class="small-note">חזרה עם רמזים · בלי איבוד לבבות</p>':'')+hint+
     `<div class="answers">${q.options.map((option,index)=>`<button class="answer" data-choice="${option.original}"><span class="answer-index">${index+1}</span><span dir="auto">${text(option.text)}</span></button>`).join('')}</div><details class="question-source" id="question-source"><summary>מקור השאלה</summary>${sourceHtml(q)}</details>`);
   document.querySelectorAll('[data-choice]').forEach(el=>{

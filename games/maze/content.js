@@ -30,6 +30,8 @@ export function normalizeMazeContent(raw, { source = raw?.source || 'snapshot', 
       difficulty, weight: weights[difficulty], topic: question.topic || null,
       explanation: { he: question.explanation.he, en: typeof question.explanation.en === 'string' ? question.explanation.en : '' },
       ref: { id: question.ref.id, part: question.ref.part },
+      ...(typeof question.context === 'string' ? { context: question.context } : {}),
+      ...(typeof question.image === 'string' ? { image: question.image, imageAlt: question.imageAlt || '' } : {}),
       reference: { id: reference.id, title: reference.title, url: reference.url, part: question.ref.part }
     };
   });

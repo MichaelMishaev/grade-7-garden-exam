@@ -1,3 +1,4 @@
+import {questionMedia} from '../../english-question-media.js';
 import {HOME,landmarks,regionAt,skyGates} from './territory.js';
 import {atlasMap,atlasPage} from './atlas.js';
 import { editions, newRelay, station, symbols, charged, sparksAt } from './relay.js';
@@ -212,7 +213,7 @@ function reference(q){const ref=quiz.references.find(r=>r.id===q.ref.id);if(!ref
   return `<a class="reference" target="_blank" rel="noopener noreferrer" href="${esc(url.href)}">מקור: ${esc(ref.title)}${q.ref.part?' · '+esc(q.ref.part):''} ↗</a>`;
 }
 function showQuestion(i){if(round.scenario&&!round.scenario.completed.includes(i)){closeDialog();toast('משלימים קודם את משימת השטח.');return;}if(!round.relay&&!round.items.includes(EQUIPMENT[i].id)){equipmentMission(i);return;}const p=progress(round,i);if(!p.next){awardSeal(i);return;}const q=round.questions.find(q=>q.id===p.next);activeQuestion=q;activeNpc=i;
-  openDialog(round.relay?station(round.relay,i).title:`${NPCS[i].name} · ${NPCS[i].system}`, `<div class="question-meta"><span>${esc(quiz.title)}</span><span>שאלה ${Object.keys(round.answers).length+1} מתוך ${round.questions.length}</span></div><div class="progress-line"><i style="width:${Object.keys(round.answers).length/round.questions.length*100}%"></i></div><h2 id="dialog-title" dir="auto">${esc(q.prompt)}</h2>${reference(q)}${round.relay?'':`<button class="text-button npc-chat" data-npc-chat="${i}">רגע לשיחה עם ${esc(NPCS[i].name)} ↗</button>`}<div class="options" id="answer-options">${q.options.map((o,j)=>`<button class="option answer" data-choice="${o.original}"><span class="number">${j+1}</span><span dir="auto">${esc(o.text)}</span></button>`).join('')}</div><div id="answer-feedback" aria-live="polite"></div>`, 'question');
+  openDialog(round.relay?station(round.relay,i).title:`${NPCS[i].name} · ${NPCS[i].system}`, `<div class="question-meta"><span>${esc(quiz.title)}</span><span>שאלה ${Object.keys(round.answers).length+1} מתוך ${round.questions.length}</span></div><div class="progress-line"><i style="width:${Object.keys(round.answers).length/round.questions.length*100}%"></i></div><h2 id="dialog-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}${reference(q)}${round.relay?'':`<button class="text-button npc-chat" data-npc-chat="${i}">רגע לשיחה עם ${esc(NPCS[i].name)} ↗</button>`}<div class="options" id="answer-options">${q.options.map((o,j)=>`<button class="option answer" data-choice="${o.original}"><span class="number">${j+1}</span><span dir="auto">${esc(o.text)}</span></button>`).join('')}</div><div id="answer-feedback" aria-live="polite"></div>`, 'question');
   activeQuestion=q;
   document.querySelectorAll('.answer').forEach(b=>b.onclick=()=>submitAnswer(q,Number(b.dataset.choice),i));
 }

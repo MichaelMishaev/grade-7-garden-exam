@@ -9,7 +9,7 @@ const perParent = Object.groupBy(content.questions, (q) => q.exam_id ?? q.quiz_i
 const refs = new Map(content.study_references.map((r) => [r.id, r]));
 
 test('extracts every subject, exam, quiz, reference and question from the source files', () => {
-  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [3, 3, 4, 7, 9, 132]);
+  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [3, 3, 4, 7, 17, 132]);
   assert.deepEqual(Object.fromEntries(Object.entries(perParent).map(([k, v]) => [k, v.length])), {
     'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, 'english-v1-practice': 20, facts: 6, questions: 6, instructions: 6,
     'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5
@@ -59,7 +59,7 @@ test('quizzes link to the right subject and exam, and the Hebrew exams have a pa
 
 test('every exam version has its own study references, with known kinds and parts', () => {
   assert.deepEqual(content.exams.map((e) => [e.id, content.study_references.filter((r) => r.exam_id === e.id).map((r) => r.id)]), [
-    ['hebrew-v1-garden', ['garden-passage']], ['hebrew-v2-library', ['library-passage']], ['physics-v1-assessment', ['physics-pdf', 'physics-site']], ['english-v1-practice', ['english-teacher-material', 'english-reading', 'english-vocabulary-12', 'english-vocabulary-20', 'english-vocabulary-28']]
+    ['hebrew-v1-garden', ['garden-passage']], ['hebrew-v2-library', ['library-passage']], ['physics-v1-assessment', ['physics-pdf', 'physics-site']], ['english-v1-practice', ['english-teacher-material', 'english-reading', 'english-vocabulary-12', 'english-vocabulary-20', 'english-vocabulary-28', 'english-parts-sort', 'english-parts-quiz', 'english-negative-1', 'english-negative-2', 'english-affirmative-1', 'english-affirmative-2', 'english-questions-1', 'english-questions-2']]
   ]);
   for (const r of content.study_references) {
     assert.ok(['pdf', 'site', 'passage'].includes(r.kind) && r.title && r.url, r.id);

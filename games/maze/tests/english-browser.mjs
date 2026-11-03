@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
+import { englishTeacherQuizzes } from '../../english-teacher-content.mjs';
 import { englishGameQuiz } from '../../english-content.mjs';
 
 const base = process.env.ENGLISH_GAMES_URL || 'http://127.0.0.1:4358';
@@ -26,7 +27,7 @@ try {
       await page.goto(`${base}/games/${path}?quiz=${quiz.id}`);
       await page.locator(`${select} option[value="${quiz.id}"]`).waitFor({state:'attached'});
       assert.equal(await page.locator(select).inputValue(),quiz.id);
-      assert.equal(await page.locator(`${select} optgroup[label="אנגלית"] option`).count(),1);
+      assert.equal(await page.locator(`${select} optgroup[label="אנגלית"] option`).count(),englishTeacherQuizzes().length+1);
       if (await page.locator('#player-name').count()) await page.fill('#player-name','QA');
       await page.locator(`${start}:enabled`).waitFor();
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
