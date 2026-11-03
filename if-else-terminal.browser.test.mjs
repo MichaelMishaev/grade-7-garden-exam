@@ -24,7 +24,9 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
 
     // Mission 1: run as-is, then change the score.
     await page.locator('#run').click();
-    assert.match(await page.locator('#terminal-output').textContent(), /\$ python3 if_else\.py\nYou passed!\nNext lesson\n/);
+    assert.match(await page.locator('#terminal-output').textContent(), /Running your code…\nYou passed!\nNext lesson\n/);
+    assert.equal(await page.locator('.terminal-help').evaluate(el => el.open), true);
+    assert.equal(await page.locator('.mac-badge').first().textContent(), 'YOUR CODE · tap to edit');
     assert.equal(await page.locator('.terminal-note').count(), 1);
     await page.locator('#code-editor').fill('score = 40\nif score >= 60:\n    print("You passed!")\nelse:\n    print("Keep practicing!")\nprint("Next lesson")');
     await page.locator('#run').click();

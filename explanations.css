@@ -607,3 +607,18 @@ code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .discovery-code-lights i:nth-child(2) { background: #febc2e; }
 .discovery-code-lights i:nth-child(3) { background: #28c840; }
 @media (hover: hover) and (pointer: fine) { .discovery-code:hover { background: #2b2d33; } }
+/* Kid clarity for the write-code stage: numbered how-to, window badges. */
+.terminal-steps { display: grid; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.terminal-steps li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; }
+.terminal-steps li > span:first-child { flex: 0 0 24px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #58cc02; color: #163800; font-size: 12px; font-weight: 800; margin-top: 1px; }
+.terminal-help[open] { margin-bottom: 20px; }
+.terminal-help p { margin: 8px 0 0; font-size: 14px; line-height: 1.6; }
+.mac-titlebar { position: relative; }
+.mac-badge { position: absolute; inset-inline-end: 12px; top: 50%; transform: translateY(-50%); padding: 3px 8px; border-radius: 999px; background: #58cc02; color: #163800; font: 800 10px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.mac-title { margin-inline-end: 0; }
+@media (max-width: 650px) {
+  .mac-titlebar { flex-wrap: wrap; row-gap: 6px; }
+  .mac-badge { position: static; transform: none; order: 3; flex-basis: 100%; text-align: center; }
+  .mac-title { margin-inline-end: 44px; }
+}
+.terminal-steps li:has(> [dir="rtl"]) { flex-direction: row-reverse; text-align: right; }

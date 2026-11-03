@@ -236,3 +236,11 @@ Added a fourth lesson stage, `#terminal` ("Write code"), between Playground and 
   module before asserting the Hebrew `lang` attribute (the extra module imports made the old
   race visible). Cache versions bumped: `explanations.css?v=15`, `if-else.js?v=14`. The hub lists
   "⌨ Code editor" for lesson 1.
+
+### Kid clarity pass — 2026-11-03
+Michael: "terminal not clear to kids". Replaced the `$ python3 if_else.py` prompt with
+"▶ Running your code…", added green badges on both windows ("YOUR CODE · tap to edit",
+"THE COMPUTER ANSWERS"), a numbered three-step how-to above the mission card, the
+"What are these two dark windows?" help open by default with plainer wording, and a
+"your code works, but the mission is not done yet" note that points back to the green card.
+The hub card got a black terminal-style button straight into `if-else.html#terminal`.

@@ -8,8 +8,8 @@
   <title>if / else, explained | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=8">
   <link rel="stylesheet" href="branding.css?v=2">
-  <link rel="stylesheet" href="explanations.css?v=16">
-  <script src="if-else.js?v=14" type="module"></script>
+  <link rel="stylesheet" href="explanations.css?v=17">
+  <script src="if-else.js?v=15" type="module"></script>
 </head>
 <body class="explanation-page focused-lesson kid-lesson">
   <a class="skip-link" href="#lesson">Skip to lesson</a>
@@ -65,8 +65,9 @@
 
       <section id="terminal" class="lesson-section" aria-labelledby="terminal-title">
         <h2 id="terminal-title" data-copy="terminal_title">Now you write the code.</h2>
-        <p data-copy="terminal_body">Type real Python in the editor. Press Run. The computer answers in the Terminal.</p>
-        <details class="short-help terminal-help"><summary data-copy="terminal_what">What are these two windows?</summary><p data-copy="terminal_what_body">The top window is a code editor: a notebook where you write instructions for the computer. The black window is a Terminal: where the computer runs your program and prints its answer. Red text means the computer did not understand a line.</p></details>
+        <p data-copy="terminal_body">Here you type real Python, like a real programmer. The computer reads your lines and answers.</p>
+        <ol class="terminal-steps" aria-label="How to use this page"><li><span aria-hidden="true">1</span><span data-copy="terminal_step1">Read the mission in the green card.</span></li><li><span aria-hidden="true">2</span><span data-copy="terminal_step2">Change the code in the dark window. Tap a line to edit it.</span></li><li><span aria-hidden="true">3</span><span data-copy="terminal_step3">Press ▶ Run. The computer’s answer appears in the bottom window.</span></li></ol>
+        <details class="short-help terminal-help" open><summary data-copy="terminal_what">What are these two dark windows?</summary><p data-copy="terminal_what_body">The top one is your code: the instructions you give the computer, one line at a time. The bottom one is the computer’s answer: when you press Run, it reads your code from top to bottom and prints there. Red text means it did not understand one line, and it tells you which line.</p></details>
         <div class="mission-dots" aria-hidden="true"><span data-mission-dot></span><span data-mission-dot></span><span data-mission-dot></span><span data-mission-dot></span></div>
         <article id="mission-card" class="mission-card">
           <div class="mission-head"><span id="mission-label" class="mission-label">MISSION 1 of 4</span><span id="mission-status" class="mission-status" data-done="false">Not done yet</span></div>
@@ -76,12 +77,12 @@
           <p id="mission-hint-text" class="mission-hint" hidden></p>
         </article>
         <div id="editor-shell" class="mac-window editor-window">
-          <div class="mac-titlebar"><span class="mac-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="mac-title"><span class="mac-file-icon" aria-hidden="true">🐍</span> if_else.py</span></div>
+          <div class="mac-titlebar"><span class="mac-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="mac-title"><span class="mac-file-icon" aria-hidden="true">🐍</span> if_else.py</span><span class="mac-badge" data-terminal-copy="editor_badge">YOUR CODE · tap to edit</span></div>
           <div class="editor-body"><pre id="code-gutter" class="editor-gutter" aria-hidden="true">1</pre><textarea id="code-editor" class="editor-input" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Python code editor" aria-describedby="editor-tip"></textarea></div>
           <div class="editor-toolbar"><button type="button" id="indent">⇥ Indent</button><span id="editor-tip" class="editor-tip" data-terminal-copy-static>⌘/Ctrl + Enter</span><button type="button" id="run" class="primary-button run-button" aria-label="Run the program">▶ Run</button></div>
         </div>
         <div id="terminal-shell" class="mac-window terminal-window">
-          <div class="mac-titlebar"><span class="mac-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="mac-title">Terminal — python3</span></div>
+          <div class="mac-titlebar"><span class="mac-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="mac-title">Terminal</span><span class="mac-badge" data-terminal-copy="output_badge">THE COMPUTER ANSWERS</span></div>
           <pre id="terminal-output" class="terminal-screen" role="status" aria-live="polite" aria-atomic="true"></pre>
         </div>
         <div id="mission-nav" class="mission-nav"><button type="button" id="mission-previous" disabled>← Back</button><button type="button" class="primary-button" id="mission-next" disabled>Next mission →</button></div>

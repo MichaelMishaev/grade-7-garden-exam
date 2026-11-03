@@ -6,17 +6,19 @@ const copy = {
   en: {
     mission: 'MISSION', of: 'of', hint: '💡 Hint', hide_hint: '💡 Hide hint', show: '👀 Show me', reset: '↺ Reset code',
     run: '▶ Run', indent: '⇥ Indent', back: '← Back', next: 'Next mission →', finish: 'Finish ✓',
-    todo: 'Not done yet', done: '✓ Mission done!', waiting: 'Press ▶ Run to see what the computer says.',
+    todo: 'Not done yet', done: '✓ Mission done!', waiting: 'Nothing yet. Press ▶ Run and the computer will answer here.',
+    running: '▶ Running your code…', editor_badge: 'YOUR CODE · tap to edit', output_badge: 'THE COMPUTER ANSWERS',
     success: '✓ Mission done! The computer printed exactly what we wanted.', nothing: '(the program printed nothing)',
-    not_yet: 'Runs fine, but that is not the output the mission asks for. Read the task again and try once more.',
+    not_yet: 'Your code works! But the mission is not done yet. Look at the green card above: what should the computer print? Change the code and press Run again.',
     all_done: 'You wrote real Python with if / else. Next: the quick check.', run_label: 'Run the program', editor_label: 'Python code editor'
   },
   he: {
     mission: 'משימה', of: 'מתוך', hint: '💡 רמז', hide_hint: '💡 הסתרת הרמז', show: '👀 הראו לי', reset: '↺ איפוס הקוד',
     run: '▶ הפעלה', indent: '⇥ הזחה', back: '→ חזרה', next: 'למשימה הבאה ←', finish: 'סיום ✓',
-    todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', waiting: 'לחצו על ▶ הפעלה כדי לראות מה המחשב אומר.',
+    todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
+    running: '▶ מריץ את הקוד שלכם…', editor_badge: 'הקוד שלכם · לחצו כדי לערוך', output_badge: 'המחשב עונה',
     success: '✓ המשימה הושלמה! המחשב הדפיס בדיוק מה שרצינו.', nothing: '(התוכנית לא הדפיסה כלום)',
-    not_yet: 'התוכנית רצה, אבל זה לא הפלט שהמשימה מבקשת. קראו שוב את המשימה ונסו עוד פעם.',
+    not_yet: 'הקוד שלכם עובד! אבל המשימה עוד לא הושלמה. הסתכלו בכרטיס הירוק למעלה: מה המחשב צריך להדפיס? שנו את הקוד ולחצו שוב על הפעלה.',
     all_done: 'כתבתם Python אמיתי עם if / else. הלאה: הבדיקה המהירה.', run_label: 'הפעלת התוכנית', editor_label: 'עורך קוד Python'
   }
 };
@@ -49,8 +51,10 @@ export function initTerminal({ getLanguage, onFinish }) {
     screen.replaceChildren();
     const prompt = document.createElement('span');
     prompt.className = 'terminal-prompt';
-    prompt.textContent = '$ python3 if_else.py';
-    screen.append(prompt, '\n');
+    prompt.lang = language();
+    prompt.dir = language() === 'he' ? 'rtl' : 'ltr';
+    prompt.textContent = lastRun ? text('running') : '';
+    if (lastRun) screen.append(prompt, '\n');
     if (!lastRun) {
       const idle = document.createElement('span');
       idle.className = 'terminal-muted';
