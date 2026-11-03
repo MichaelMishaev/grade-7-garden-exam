@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>גרסאות המבחן | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=8">
-  <link rel="stylesheet" href="subject.css?v=6">
+  <link rel="stylesheet" href="subject.css?v=7">
   <link rel="stylesheet" href="exam-date-chip.css?v=1">
   <script type="module" src="exam-date-chip.js?v=1"></script>
   <link rel="stylesheet" href="branding.css?v=2">
@@ -64,6 +64,7 @@
   </div>
   <script src="quiz-core.js?v=3"></script>
   <script src="content-api.js?v=3"></script>
+  <script src="share-test.js?v=1"></script>
   <script>
     const subjects = {
       hebrew: {
@@ -296,7 +297,7 @@
         examLink.className = 'variant-start';
         examLink.href = variant.href;
         examLink.textContent = 'מתחילים את המבחן המלא ←';
-        content.append(examLink);
+        content.append(examLink, testShareControl(examLink, `${subject.title} · ${variant.title}`));
         if (variant.references?.length) content.append(referenceBlock(variant.references, index));
         if (variant.practiceQuizzes?.length) {
           const practice = document.getElementById('practice-section').cloneNode(true);
@@ -323,6 +324,12 @@
       if (firstPractice) shortcut.href = '#' + firstPractice.id;
       else shortcut.remove();
     }
+    document.querySelectorAll('a.quiz-row[href^="practice.html?quiz="]').forEach(link => {
+      const item = document.createElement('div');
+      item.className = 'shared-quiz';
+      link.before(item);
+      item.append(link, testShareControl(link, link.querySelector('strong').textContent));
+    });
     showBestScores();
     }
     // Each exam version's own study material ("חומר לימוד"); its questions point at parts of it.

@@ -30,8 +30,8 @@
 .subject-page .quiz-copy strong { margin: 0 0 3px; font-size: 17px; color: #263541; }
 .subject-page .quiz-copy small { font-size: 12px; color: #69798a; }
 .subject-page .quiz-icon { grid-column: 4; grid-row: 1; width: 48px; height: 48px; border-radius: 13px; background: #f0dcff; color: #9b58d8; box-shadow: 0 2px 0 #dec1f2; font-size: 24px; }
-.subject-page .quiz-row:nth-child(2) .quiz-icon { background: #d8f1ff; color: #2c9ddf; box-shadow: 0 2px 0 #bcdff1; }
-.subject-page .quiz-row:nth-child(3) .quiz-icon { background: #e9f9df; color: #53aa27; box-shadow: 0 2px 0 #c9ebbb; }
+.subject-page .shared-quiz:nth-child(2) .quiz-icon { background: #d8f1ff; color: #2c9ddf; box-shadow: 0 2px 0 #bcdff1; }
+.subject-page .shared-quiz:nth-child(3) .quiz-icon { background: #e9f9df; color: #53aa27; box-shadow: 0 2px 0 #c9ebbb; }
 .subject-page .quiz-row:active { transform: translateY(3px); box-shadow: 0 1px 0 #e1e6ea; }
 .subject-page .empty-state { margin: 0; padding: 26px; border: 2px dashed #dce8ef; border-radius: 20px; background: #f9fcfe; color: #627385; text-align: center; line-height: 1.65; }
 .subject-page footer { margin-top: 44px; }
@@ -112,3 +112,13 @@
 .subject-page .reference-copy small { display: block; margin-top: 2px; color: #69798a; font-size: 12px; line-height: 1.4; }
 .subject-page .reference-link:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) { .subject-page .reference-link:hover { border-color: #9fd0ec; background: #fff; } }
+
+/* Secondary share actions stay outside the test navigation links. */
+.subject-page .test-share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.subject-page .test-share-button { min-height: 44px; min-width: 72px; padding: 8px 16px; border: 1px solid #b7cbd9; border-radius: 12px; background: #fff; color: #36576c; font: inherit; font-weight: 700; cursor: pointer; }
+.subject-page .test-share-button:focus-visible, .subject-page .test-share-manual input:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
+.subject-page .test-share-button:disabled { opacity: .65; cursor: wait; }
+.subject-page .test-share-status { color: #36576c; font-size: 13px; }
+.subject-page .test-share-manual { width: 100%; color: #36576c; font-size: 13px; }
+.subject-page .test-share-manual input { display: block; box-sizing: border-box; width: 100%; min-height: 44px; margin-top: 6px; padding: 8px; border: 1px solid #b7cbd9; border-radius: 8px; font: inherit; }
+.subject-page .shared-quiz { min-width: 0; }
