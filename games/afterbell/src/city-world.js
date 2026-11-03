@@ -225,6 +225,7 @@ export function cityWorld(host,onMove,onImpact){
  const incidentScene=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
  let shiftTime=0,events=[],incidentKey='',observing=null;
  let viewX=.58,viewZ=.815,viewHeight=108,focusX=0,focusZ=0;
+ let visHeading=0,turnLean=0,momentum=0,moving=false;
  const keys=new Set();let stick={x:0,z:0},px=places.home.x,pz=places.home.z+2,heading=0,time=0,destination=places.home,path=[],active=false,paused=false,driving=false,loaded=false,manual=false,jump=0,vy=0;
  const forward=new T.Vector3(-.58,0,-.815),right=new T.Vector3(.815,0,-.58);
  const dust=new T.Group();
@@ -329,6 +330,9 @@ export function cityWorld(host,onMove,onImpact){
      if(len>.0001){
        const angle=Math.atan2(dx,dz),guided=path.length>0;
        let speed=driving?31:10;
+       // Ease into motion instead of starting at full speed (guided trips included).
+       momentum=reduced?1:Math.min(1,momentum+dt/.4);moving=true;
+       speed*=.3+.7*momentum;
        if(driving&&guided){
          const ahead=safeSpeed(px,pz,angle,speed,traffic);
          const pace=events.length?incidentTrafficAt(events,px,pz,angle):1;
@@ -364,10 +368,17 @@ export function cityWorld(host,onMove,onImpact){
        else{if(!blocked(nx,pz))px=nx;if(!blocked(px,nz))pz=nz;}
        if(!hit)heading=angle;
      }
+     if(!(len>.0001)){momentum=0;moving=false;}
      vy-=20*dt;jump=Math.max(0,jump+vy*dt);if(!jump)vy=0;onMove(px,pz,dt);
    }
-   avatar.position.set(px,jump,pz);avatar.rotation.y=heading;avatar.visible=active&&!driving;
-   car.position.set(driving?px:px+3.6,0,driving?pz:pz+2);car.rotation.y=heading;car.visible=active&&driving;
+   if(dt>0){
+     let diff=Math.atan2(Math.sin(heading-visHeading),Math.cos(heading-visHeading));
+     const turn=reduced?1:1-Math.exp(-dt*12);visHeading+=diff*turn;
+     turnLean+=((reduced?0:Math.max(-.14,Math.min(.14,diff*.22)))-turnLean)*Math.min(1,dt*10);
+   }else{visHeading=heading;turnLean=0;}
+   const bob=!reduced&&moving&&!driving&&!jump?Math.abs(Math.sin(time*14))*.32:0;
+   avatar.position.set(px,jump+bob,pz);avatar.rotation.y=visHeading;avatar.visible=active&&!driving;
+   car.position.set(driving?px:px+3.6,0,driving?pz:pz+2);car.rotation.y=visHeading;car.visible=active&&driving;
    const rebound=!reduced&&impactAge<.55?Math.sin(impactAge*26)*Math.exp(-impactAge*7)*impactPower:0;
    dust.visible=car.visible&&!reduced&&impactAge<.38;
    if(dust.visible)dust.children.forEach((p,i)=>{
@@ -375,7 +386,7 @@ export function cityWorld(host,onMove,onImpact){
      p.position.set(Math.sin(i*2.4)*spread,impactAge*(1+i%2),Math.cos(i*2.4)*spread);
      p.scale.setScalar((.19+.25*impactPower)*(1-impactAge/.38));
    });
-   car.rotation.x=rebound*.18;car.rotation.z=-rebound*impactSide*.13;car.position.y=Math.abs(rebound)*.3;
+   car.rotation.x=rebound*.18;car.rotation.z=-rebound*impactSide*.13-(driving?turnLean:0);car.position.y=Math.abs(rebound)*.3;
    parcel.visible=active&&loaded;parcel.position.set(px+(driving?0:Math.sin(heading)),driving?3.9:2.1+jump,pz+(driving?0:Math.cos(heading)));
    marker.visible=ring.visible=active&&!!destination;
    if(destination){marker.position.set(destination.x,6+(reduced?0:Math.sin(time*3)*.5),destination.z);marker.rotation.y=time*.65;ring.position.set(destination.x,.5,destination.z);}

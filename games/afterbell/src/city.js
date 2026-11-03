@@ -59,11 +59,24 @@ function refresh(){
  const events=world.events(),count=String(events.length);
  if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);}
  const selected=events.find(e=>e.id===followedEvent);
+ announceEvents(events,selected);
  if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
  const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
- const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]:'';
+ const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
  $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
+}
+const knownEvents=new Set();let followedPhase='';
+// Say out loud when something new happens in the city, so the dispatch badge is not the only cue.
+function announceEvents(events,selected){
+ for(const e of events){
+  if(knownEvents.has(e.id))continue;knownEvents.add(e.id);
+  if(knownEvents.size>1||mode==='explore')toast('🚨 דיווח חדש · '+e.title+' · '+e.district);
+ }
+ if(selected){
+  if(followedPhase&&followedPhase!==selected.phase)toast('עדכון מהשטח · '+selected.title+': '+incidentPhase[selected.phase]);
+  followedPhase=selected.phase;
+ }else followedPhase='';
 }
 let wallet=emptyWallet();
 const fallbackWallets=new Map();
