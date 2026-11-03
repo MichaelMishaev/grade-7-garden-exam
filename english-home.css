@@ -1,7 +1,11 @@
-/* Keep three subject rows and the existing games visible on the compact home page. */
-.home-page .exam-card, .home-page .exam-card:first-child { min-height: 52px; padding: 6px 12px; }
+/* Keep four subject rows and the existing games visible on the compact home page. */
+.home-page .exam-card, .home-page .exam-card:first-child { min-height: 46px; padding: 4px 12px; }
+.home-page .exam-copy strong { margin-bottom: 2px; }
+.home-page .exam-copy small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .home-page .subject-art { flex-basis: 32px; width: 32px; height: 32px; }
 .home-page .site-header { padding-bottom: 6px; }
+.home-page .exam-calendar { margin-bottom: 12px; }
+.home-page .calendar-show-all { margin-top: 6px; }
 .home-page .intro { margin-bottom: 8px; }
-.home-page .home-games { margin-top: 8px; }
+.home-page .home-games { margin-top: 6px; }
 .home-page footer { margin-top: 4px; }
