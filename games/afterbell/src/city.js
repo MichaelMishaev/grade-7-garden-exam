@@ -86,10 +86,10 @@ const knownEvents=new Set(),claimedWitness=new Set();let followedPhase='';
 function announceEvents(events,selected){
  for(const e of events){
   if(knownEvents.has(e.id))continue;knownEvents.add(e.id);
-  if(knownEvents.size>1||mode==='explore'){toast((incidentIcon[e.type]||'🚨')+' דיווח חדש · '+e.title+' · '+e.district);ping($('dispatch'));}
+  if(mode==='explore'&&knownEvents.size>1){toast((incidentIcon[e.type]||'🚨')+' דיווח חדש · '+e.title+' · '+e.district);ping($('dispatch'));}
  }
  if(selected){
-  if(followedPhase&&followedPhase!==selected.phase)toast('עדכון מהשטח · '+selected.title+': '+incidentPhase[selected.phase]);
+  if(followedPhase&&followedPhase!==selected.phase&&mode==='explore')toast('עדכון מהשטח · '+selected.title+': '+incidentPhase[selected.phase]);
   followedPhase=selected.phase;
  }else followedPhase='';
 }
@@ -155,9 +155,9 @@ function question(){
  const index=city.stage,p=progress(round,index);
  if(!p.next&&!feedback){city.stage++;syncWallet();city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! קיבלתם 15 מטבעות.':'המסירה הושלמה · קיבלתם 15 מטבעות.');return;}
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
- sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
+ sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small class="q-meta"><span>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</span><span class="q-coins">🪙 ${wallet.coins}</span></small>
  ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}"><bdi>${esc(o.text)}</bdi></button>`).join('')}
- ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 ${streak} נכונות ברצף${streak%3===0?' · +5 בונוס':streak%3===2?' · עוד אחת לבונוס':''}</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
+ ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 ${streak} נכונות ברצף${streak%3===0?' · +5 בונוס':streak%3===2?' · עוד אחת לבונוס':''}</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'המסירה הושלמה · +15 🪙 · להמשיך'} ←</button>`:reference(q)}`,'question');
  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){streak=round.answers[q.id]?.correct?streak+1:0;feedback=city.feedback=q.id;save();syncWallet();question();}});
  if($('next-q'))$('next-q').onclick=()=>{feedback=city.feedback=null;save();question();};
 }

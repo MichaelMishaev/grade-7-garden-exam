@@ -52,3 +52,10 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 @media(pointer:fine){#sheet-body{counter-reset:opt}#sheet-body [data-opt]{position:relative;padding-inline-start:38px}#sheet-body [data-opt]::before{counter-increment:opt;content:counter(opt);position:absolute;inset-inline-start:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;background:#deeddb;color:#214f46}#sheet-body [data-opt].right::before{background:#3f8d6c;color:#fff}#sheet-body [data-opt].wrong::before{background:#c6523f;color:#fff}}
 @media(max-width:650px){.shift-stats{gap:4px}.shift-stats b{font-size:16px}.shift-stats small{font-size:10px}}
 @media(prefers-reduced-motion:reduce){#shift-bar i::after{transition:none}}
+
+/* Loop 1: answering stays focused; rewards are visible where they happen. */
+.q-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}.q-coins{font-weight:800;color:#975135;background:#ffedb6;padding:2px 8px;border-radius:7px}
+#sheet-body [data-opt]{min-height:48px;transition:transform .12s var(--ease-out,ease-out),background .12s}#sheet-body [data-opt]:not(:disabled):active{transform:scale(.985)}
+#sheet-body [data-opt].right{background:#d7eadc;border-color:#3f8d6c}#sheet-body [data-opt].wrong{background:#f6dcd7;border-color:#c6523f}
+.explain{animation:rise .3s var(--ease-out,ease-out)}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.explain{animation:none}#sheet-body [data-opt]{transition:none}}
