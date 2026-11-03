@@ -41,3 +41,14 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 #notice{max-width:min(92vw,520px);font-weight:700;box-shadow:0 6px 24px #0f2b2744;border:1px solid #ffffff22}
 @media(max-width:650px){.jobcard .row{gap:4px}.row button{font-size:12px;padding:6px 2px}.btn-sub{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.bump,.ping{animation:none}#shop{transition:none}}
+
+/* Engagement: personal best on the poster, mission bar, shift stats, numbered options. */
+.best{margin:0 0 12px;padding:9px 12px;border-radius:9px;background:#e9f1e3;font-size:13px;color:#214f46;line-height:1.5}.best b{color:#975135}
+#shift-bar{display:flex;gap:4px;margin:6px 0 2px}#shift-bar i{flex:1;height:5px;border-radius:3px;background:#dfe5d4;overflow:hidden;position:relative}
+#shift-bar i::after{content:'';position:absolute;inset:0;width:0;background:var(--coral);border-radius:3px;transition:width .4s var(--ease-out,ease-out)}
+#shift-bar i.half::after{width:50%}#shift-bar i.done::after{width:100%;background:#3f8d6c}
+.shift-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}.shift-stats div{background:#e9f1e3;border-radius:9px;padding:9px 4px;text-align:center}.shift-stats b{display:block;font-size:19px;color:#214f46}.shift-stats small{font-size:11px;color:#53685c}
+.record{color:#b4501f}.city-report.following{background:#fff1e4;border-radius:0 9px 9px 0}
+@media(pointer:fine){#sheet-body{counter-reset:opt}#sheet-body [data-opt]{position:relative;padding-inline-start:38px}#sheet-body [data-opt]::before{counter-increment:opt;content:counter(opt);position:absolute;inset-inline-start:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;background:#deeddb;color:#214f46}#sheet-body [data-opt].right::before{background:#3f8d6c;color:#fff}#sheet-body [data-opt].wrong::before{background:#c6523f;color:#fff}}
+@media(max-width:650px){.shift-stats{gap:4px}.shift-stats b{font-size:16px}.shift-stats small{font-size:10px}}
+@media(prefers-reduced-motion:reduce){#shift-bar i::after{transition:none}}

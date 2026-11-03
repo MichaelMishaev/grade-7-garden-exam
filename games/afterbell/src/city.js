@@ -1,7 +1,7 @@
 import {questionMedia} from '../../english-question-media.js';
 import {prepareCargo} from './city-job.js';
 import './city.css';
-import {items,emptyWallet,pay,toggleItem,witness} from './city-wallet.js';
+import {items,emptyWallet,pay,toggleItem,witness,streakBonus,bestStreak} from './city-wallet.js';
 import snapshot from './content-snapshot.json';
 import {validQuiz,makeRound,answer,progress,academicScore,starsFor,restoreRound} from './core.js';
 import {quizFingerprint} from './fingerprint.js';
@@ -45,11 +45,18 @@ $('roles').onclick=e=>{const b=e.target.closest('[data-role]');if(b){role=b.data
 async function loadQuiz(){
  const id=$('quiz').value,version=++loadId;let q=snapshot.quizzes.find(q=>q.id===id),src='snapshot';$('start').disabled=true;$('resume').hidden=true;
  try{const res=await fetch('/api/afterbell/quizzes/'+encodeURIComponent(id),{signal:AbortSignal.timeout(3500)});if(res.ok){const live=await res.json();if(live.id===id&&validQuiz(live)){q=live;src='database';}}}catch{}
- if(loadId!==version)return;quiz=q;source=src;$('start').disabled=!world;$('resume').hidden=!restore();$('campus-link').href='./campus.html?quiz='+encodeURIComponent(id);
+ if(loadId!==version)return;quiz=q;source=src;$('start').disabled=!world;$('resume').hidden=!restore();$('campus-link').href='./campus.html?quiz='+encodeURIComponent(id);renderBest();
 }
 $('quiz').onchange=loadQuiz;
+function renderBest(){
+ const best=Number(read(localStorage,'prepx-best-'+quiz.id)||0),shifts=Number(read(localStorage,'prepx-city-shifts-'+quiz.id)||0);
+ $('best').hidden=false;
+ $('best').innerHTML=shifts?`<b>${'★'.repeat(starsFor(best))+'☆'.repeat(3-starsFor(best))}</b> השיא שלכם: <b>${best}/100</b> · ${shifts===1?'משמרת אחת הושלמה':shifts+' משמרות הושלמו'}${best<100?' · אפשר לשפר!':' · שיא מושלם!'}`:'🚀 המשמרת הראשונה בנושא הזה · כל תשובה נכונה שווה מטבעות לחנות';
+}
 function updateTarget(){const obj=objective(city),p=places[obj.place];world.target(p);world.drive(city.driving);world.cargo(city.phase==='deliver');
  $('chapter').textContent=roles[city.role].icon+' '+roles[city.role].name+' · משימה '+Math.min(city.stage+1,3)+' מתוך 3';
+ const step=city.stage*2+(city.phase==='deliver'||city.phase==='quiz'?1:0);
+ [...$('shift-bar').children].forEach((seg,i)=>{seg.className=step>=i*2+2?'done':step===i*2+1?'half':'';});
  $('goal').textContent=obj.title;const vehicleLabel=(city.driving?'לצאת מהרכב':'לעלות לרכב')+'<small class="btn-sub" dir="ltr">'+esc(world.carName())+'</small>';if($('vehicle').innerHTML!==vehicleLabel)$('vehicle').innerHTML=vehicleLabel;$('action').textContent=obj.action;$('pin').textContent=p.name;
 }
 function refresh(){
@@ -111,7 +118,7 @@ function shop(vehicle=city.driving){
   const label=equipped?'להסיר':owned?'לצייד':'לקנות · '+item.price+' 🪙';
   return `<div class="stock"><div><strong>${item.name}</strong><small>${item.detail}</small></div><button data-item="${item.id}" ${!owned&&wallet.coins<item.price?'disabled':''}>${label}</button></div>`;
  }).join('');
- sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות, השלמת מסירה ב־15 ודיווח עדים ממוקד העיר ב־10.</p><div class="stock-tabs" role="group" aria-label="סוג הציוד"><button id="hero-stock" aria-pressed="${!vehicle}">ציוד לדמות</button><button id="van-stock" aria-pressed="${vehicle}">המוסך</button></div>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
+ sheet(`<span class="kicker">ציוד למשמרת</span><h2 id="sheet-title">חנות הפסטיבל</h2><p>בארנק שלכם: <b>${wallet.coins} מטבעות</b></p><p>תשובה נכונה מזכה ב־5 מטבעות, כל שלוש נכונות ברצף ב־5 בונוס, השלמת מסירה ב־15 ודיווח עדים ממוקד העיר ב־10.</p><div class="stock-tabs" role="group" aria-label="סוג הציוד"><button id="hero-stock" aria-pressed="${!vehicle}">ציוד לדמות</button><button id="van-stock" aria-pressed="${vehicle}">המוסך</button></div>${listing}<button class="cta" id="leave-shop">חזרה לעיר</button>`,'shop');
  for(const [id,showVan] of [['hero-stock',false],['van-stock',true]]){
   $(id).onclick=()=>{shop(showVan);$(id).focus();};
  }
@@ -150,7 +157,7 @@ function question(){
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
  sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
  ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}"><bdi>${esc(o.text)}</bdi></button>`).join('')}
- ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 רצף של ${streak} תשובות נכונות ברצף</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
+ ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 ${streak} נכונות ברצף${streak%3===0?' · +5 בונוס':streak%3===2?' · עוד אחת לבונוס':''}</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){streak=round.answers[q.id]?.correct?streak+1:0;feedback=city.feedback=q.id;save();syncWallet();question();}});
  if($('next-q'))$('next-q').onclick=()=>{feedback=city.feedback=null;save();question();};
 }
@@ -178,9 +185,9 @@ $('map').onclick=map;
 function dispatch(){
  if(mode!=='explore')return;
  const events=world.events();
- const reports=events.map((event,i)=>{
-  const distance=Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z));
-  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${incidentIcon[event.type]||'📍'} ${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+ const reports=events.map((event,i)=>({event,i,distance:Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z))})).sort((a,b)=>a.distance-b.distance).map(({event,i,distance})=>{
+  const following=event.id===followedEvent;
+  return `<section class="city-report${following?' following':''}">${following?'<div class="kicker">● בדרך לשם</div>':''}<small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${incidentIcon[event.type]||'📍'} ${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
  }).join('');
  sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
  $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};
@@ -193,8 +200,13 @@ function dispatch(){
 $('dispatch').onclick=dispatch;
 async function finish(){
  const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();
- const bestKey='prepx-best-'+quiz.id;if(score>Number(read(localStorage,bestKey)||0))put(localStorage,bestKey,String(score));
- sheet(`<div class="kicker">✦ המשמרת הושלמה · שלוש מסירות</div><h2 id="sheet-title">פסטיבל המפרץ נפתח!</h2><div class="big-score">${score}/100</div><p>${'★'.repeat(starsFor(score))+'☆'.repeat(3-starsFor(score))} · ${esc(quiz.title)}</p><details><summary>התשובות וההסברים</summary>${round.questions.map(q=>`<p><b>${esc(q.prompt)}</b><br>התשובה שלכם: ${esc(q.choices[round.answers[q.id].choice])}<br>התשובה הנכונה: ${esc(q.choices[q.correct])}<br>${esc(q.explanation.he)}</p>`).join('')}</details><p id="saved" role="status">שומרים את התוצאה…</p><button id="watch" disabled>לצאת אל המופע ✦</button><button id="again" class="cta" disabled>למשמרת חדשה ←</button>`,'complete');
+ const bestKey='prepx-best-'+quiz.id,previous=Number(read(localStorage,bestKey)||0),record=score>previous;if(record)put(localStorage,bestKey,String(score));
+ const shiftsKey='prepx-city-shifts-'+quiz.id,countedKey='prepx-city-counted-'+attempt;
+ if(!read(localStorage,countedKey)){put(localStorage,shiftsKey,String(Number(read(localStorage,shiftsKey)||0)+1));put(localStorage,countedKey,'1');}
+ const earned=Object.entries(wallet.earnings).filter(([k])=>k===attempt||k.startsWith(attempt+':witness:')).reduce((n,[,v])=>n+v,0);
+ const witnessed=Object.keys(wallet.earnings).filter(k=>k.startsWith(attempt+':witness:')).length,correct=Object.values(round.answers).filter(a=>a.correct).length;
+ const stats=`<div class="shift-stats"><div><b>${correct}/${round.questions.length}</b><small>תשובות נכונות</small></div><div><b>🔥 ${bestStreak(round)}</b><small>הרצף הארוך</small></div><div><b>${earned} 🪙</b><small>מטבעות מהמשמרת</small></div><div><b>${witnessed}</b><small>דיווחי עדים</small></div></div>`;
+ sheet(`<div class="kicker">✦ המשמרת הושלמה · שלוש מסירות</div><h2 id="sheet-title">פסטיבל המפרץ נפתח!</h2><div class="big-score">${score}/100</div><p>${'★'.repeat(starsFor(score))+'☆'.repeat(3-starsFor(score))} · ${esc(quiz.title)}${record&&previous?' · <b class="record">🏆 שיא חדש!</b>':''}</p>${stats}<details><summary>התשובות וההסברים</summary>${round.questions.map(q=>`<p><b>${esc(q.prompt)}</b><br>התשובה שלכם: ${esc(q.choices[round.answers[q.id].choice])}<br>התשובה הנכונה: ${esc(q.choices[q.correct])}<br>${esc(q.explanation.he)}</p>`).join('')}</details><p id="saved" role="status">שומרים את התוצאה…</p><button id="watch" disabled>לצאת אל המופע ✦</button><button id="again" class="cta" disabled>למשמרת חדשה ←</button>`,'complete');
  const retry=async()=>{const btn=$('save-retry');if(btn)btn.disabled=true;
  try{const payload={id:attempt,name:round.participantName,quizId:quiz.id,contentHash:quizFingerprint(quiz),startedAt:round.startedAt,answers:Object.entries(round.answers).map(([id,a])=>({id,choice:a.choice}))};
  const res=await fetch('/api/afterbell/attempts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(6500)});if(!res.ok||!(await res.json()).saved)throw Error();
@@ -205,7 +217,7 @@ let pointer=null;
 function stick(e){const r=$('joystick').getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/30,z=(e.clientY-r.top-r.height/2)/30,d=Math.max(1,Math.hypot(x,z));world.setStick(x/d,z/d);$('joystick').firstElementChild.style.transform=`translate(${x/d*24}px,${z/d*24}px)`;}
 $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.currentTarget.setPointerCapture(pointer);stick(e);};$('joystick').onpointermove=e=>{if(pointer===e.pointerId)stick(e);};
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
-window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
+window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode==='question'){const n=Number(e.key);if(n>=1&&n<=4){const opts=document.querySelectorAll('[data-opt]');opts[n-1]?.click();}if(e.key==='Enter'&&$('next-q'))$('next-q').click();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
 try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},()=>toast('התנגשות ברכב · אפשר להמשיך לנסוע'));}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}

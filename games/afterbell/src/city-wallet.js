@@ -17,9 +17,24 @@ export function emptyWallet() {
   return {coins:0, owned:[], equipped:[], earnings:{}};
 }
 
+// Every third correct answer in a row is worth 5 bonus coins. Answers keep their
+// insertion order through the draft, so a reload reproduces the same bonus.
+export function streakBonus(round) {
+  let run = 0, bonus = 0;
+  for (const a of Object.values(round.answers)) {
+    if (a.correct) { run++; if (run % 3 === 0) bonus += 5; } else run = 0;
+  }
+  return bonus;
+}
+export function bestStreak(round) {
+  let run = 0, best = 0;
+  for (const a of Object.values(round.answers)) { run = a.correct ? run + 1 : 0; best = Math.max(best, run); }
+  return best;
+}
+
 // Reconcile the draft against the last paid total, including after a reload.
 export function pay(wallet, round, stage) {
-  const total = Object.values(round.answers).filter(a=>a.correct).length * 5 + stage * 15;
+  const total = Object.values(round.answers).filter(a=>a.correct).length * 5 + stage * 15 + streakBonus(round);
   const previous = wallet.earnings[round.attemptId] || 0;
   if (total > previous) {
     wallet.coins += total - previous;

@@ -17,7 +17,7 @@ try{
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await p.click('[data-role="'+role+'"]');await p.fill('#player-name','QA');await p.click('#start');
   assert.equal((await state(p)).role,role);assert.ok(await p.locator('#action').isVisible());
-  let coins=0;
+  let coins=0,run=0;
   await p.click('#shop');assert.ok(await p.locator('[data-item="cap"]').isDisabled());
   await p.click('#leave-shop');
   const initialLife=(await state(p)).life;
@@ -54,7 +54,7 @@ try{
     const correct=(await state(p)).answered>0;
     const choice=correct?raw.correct:(raw.correct+1)%raw.choices.length;
     await p.click('[data-opt="'+choice+'"]');assert.ok(await p.locator('[data-opt]').first().isDisabled());assert.ok(await p.locator('.explain').isVisible());
-    coins+=correct?5:0;
+    if(correct){coins+=5;run++;if(run%3===0)coins+=5;}else run=0;
     if(i===0 && (await state(p)).answered===2){await p.reload();await p.click('#resume');}
     await p.waitForFunction(n=>JSON.parse(render_game_to_text()).wallet.coins===n,coins);
     await p.click('#next-q');
