@@ -29,6 +29,8 @@ test('explanations: picture, bilingual discovery, visual playground and immediat
     assert.equal(await page.locator('html').getAttribute('lang'), 'he');
     assert.equal(await page.locator('.discovery-card').count(), 2);
     assert.equal(await page.locator('[data-lesson="else-if.html"]').getAttribute('href'), 'else-if.html?lang=he#playground');
+    assert.equal(await page.locator('.discovery-code').getAttribute('href'), 'if-else.html?lang=he#terminal');
+    assert.match(await page.locator('.discovery-code').textContent(), /קוד אמיתי/);
     await page.locator('.discovery-start[data-lesson="if-else.html"]').click();
     await page.locator('#playground').waitFor({ state: 'visible' });
     await page.locator('#playground-title[lang="he"]').waitFor(); // the lesson module graph may still be loading

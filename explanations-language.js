@@ -13,6 +13,7 @@ const hebrewCopy = {
   animation: '▶ אנימציה',
   playground: '↔ מתנסים בעצמכם',
   editor: '⌨ עורך קוד',
+  write_code: '⌨ כותבים קוד אמיתי בטרמינל',
   questions: '✓ 5 שאלות',
   start: 'בואו ננסה',
   languages: 'עברית + English',
@@ -52,6 +53,7 @@ function setLanguage(language, updateURL = false) {
   for (const { node, english } of ariaNodes) node.setAttribute('aria-label', hebrew ? hebrewAria[node.dataset.hubAria] : english);
   for (const button of languageButtons) button.setAttribute('aria-pressed', String(button.dataset.hubLanguage === language));
   document.querySelectorAll('.discovery-start').forEach(link => { link.setAttribute('href', `${link.dataset.lesson}?lang=${language}#playground`); });
+  document.querySelectorAll('.discovery-code').forEach(link => { const [page, stage] = link.dataset.lessonStage.split('#'); link.setAttribute('href', `${page}?lang=${language}#${stage}`); });
   document.querySelectorAll('.discovery-start-arrow').forEach(arrow => { arrow.textContent = hebrew ? '←' : '→'; });
   if (updateURL) {
     const url = new URL(location.href);
