@@ -12,6 +12,7 @@ const hebrewCopy = {
   lesson_intro: 'שאלה אחת.<br>שני מסלולים אפשריים.',
   animation: '▶ אנימציה',
   playground: '↔ מתנסים בעצמכם',
+  editor: '⌨ עורך קוד',
   questions: '✓ 5 שאלות',
   start: 'בואו ננסה',
   languages: 'עברית + English',

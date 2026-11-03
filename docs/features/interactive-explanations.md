@@ -207,3 +207,32 @@ pacing, state preservation, optional Python result, validation and question feed
 Aligned the second legacy footer-fit assertion with the intentionally extended home
 while preserving first-screen visibility of the existing core content. Browser logs and
 screenshots are local artifacts and excluded from the release.
+
+## Write-code stage — 2026-11-03
+Michael asked for a text code editor "in Apple style terminal" inside the if / else lesson so a
+kid can practice writing if / else statements, understand what the windows are, and try with help.
+Added a fourth lesson stage, `#terminal` ("Write code"), between Playground and Quick check.
+
+- `code-runner.js`: a safe interpreter for a Python subset (assignments, `print()` with several
+  arguments, `if` / `elif` / `else`, the six comparisons, `+ - * / %`, strings, numbers, True/False,
+  comments, 2- or 4-space indentation). No `eval`; variables live in a `Map`; 200-line / 5000-step
+  caps. Errors carry a code and a 1-based line number; `describeError` turns them into kid
+  language in English or Hebrew ("Line 2: an if, elif or else line must end with a colon").
+  `missions` holds four tasks (run and change, fix the broken program, write your own if / else,
+  three paths with elif), each with a starter, hint, solution and an output check.
+- `code-terminal.js`: the UI. macOS-style windows (traffic lights, title bar) for the editor
+  (`textarea` with a synced line-number gutter) and the Terminal (`$ python3 if_else.py` prompt,
+  output, red error line, yellow "not the expected output" note, green mission-done line).
+  Tab and the ⇥ Indent button insert four spaces (phones have no Tab key); Enter keeps the
+  current indentation and adds four spaces after a colon; ⌘/Ctrl+Enter runs. On an error the
+  offending line is selected in the editor. Hint toggles, Show me loads the solution, Reset
+  restores the starter; Next mission unlocks only after the check passes. Drafts per mission are
+  kept in memory only; refresh resets, like the rest of the lesson.
+- Bilingual through the lesson's existing `data-copy` dictionary plus the module's own copy table;
+  code, gutter and output stay LTR in Hebrew. Mobile editor font is 16px so iOS does not zoom.
+- Tests: `code-runner.test.mjs` (interpreter, errors, missions) and
+  `if-else-terminal.browser.test.mjs` (missions flow, error message, indent helpers, Hebrew, no
+  horizontal overflow at 390 and 1280). `explanations.browser.test.mjs` now waits for the lesson
+  module before asserting the Hebrew `lang` attribute (the extra module imports made the old
+  race visible). Cache versions bumped: `explanations.css?v=15`, `if-else.js?v=14`. The hub lists
+  "⌨ Code editor" for lesson 1.

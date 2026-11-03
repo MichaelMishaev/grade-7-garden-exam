@@ -1,3 +1,5 @@
+import { initTerminal } from './code-terminal.js';
+
 const comparisons = {
   '>=': { test: (a, b) => a >= b, words: 'at least' },
   '>': { test: (a, b) => a > b, words: 'greater than' },
@@ -61,8 +63,11 @@ function initLesson() {
     input_help: 'מספרים שלמים: 0–100.', preset75: '75', preset40: '40', preset60: '60',
     view_code: 'קוד Python', view_path: 'לוח הבחירה', code_heading: 'PYTHON', output_heading: 'המחשב אומר',
     step_input: 'ערך', step_check: 'בדיקה', step_branch: 'בחירה', step_continue: 'המשך',
-    learn_label: 'לומדים', playground_label: 'מתנסים', check_label: 'בודקים',
-    flow_start: 'הציון שלכם', flow_end: 'אחרי כל אחד מהמסלולים', rule_question: 'האם התנאי מתקיים?', yes_path: 'כן · TRUE', no_path: 'לא · FALSE', ready: 'לשאלה הבאה ←', question_hint: 'בחרו תשובה וגלו למה.',
+    learn_label: 'לומדים', playground_label: 'מתנסים', write_label: 'כותבים קוד', check_label: 'בודקים',
+    terminal_title: 'עכשיו אתם כותבים את הקוד.', terminal_body: 'כתבו Python אמיתי בעורך. לחצו על הפעלה. המחשב עונה בטרמינל.',
+    terminal_what: 'מה שני החלונות האלה?', terminal_what_body: 'החלון העליון הוא עורך קוד: מחברת שבה כותבים הוראות למחשב. החלון השחור הוא טרמינל: שם המחשב מריץ את התוכנית ומדפיס את התשובה. טקסט אדום אומר שהמחשב לא הבין שורה.',
+    terminal_to_questions: 'לבדיקה המהירה ←',
+    flow_start: 'הציון שלכם', flow_end: 'אחרי כל אחד מהמסלולים', rule_question: 'האם התנאי מתקיים?', yes_path: 'כן · TRUE', no_path: 'לא · FALSE', ready: 'עכשיו כותבים את הקוד ←', question_hint: 'בחרו תשובה וגלו למה.',
     basics_title: 'תנאי אחד. ענף אחד.', basics_body: 'אם התנאי מתקיים (True), מבצעים if. אחרת, מבצעים else.',
     notes_title: 'שני דברים לזכור', note_indent: 'שורות מוזחות שייכות לענף.',
     note_end: 'השורה האחרונה מתבצעת אחרי כל אחד מהענפים.', try_playground: 'נסו בעצמכם ←'
@@ -230,12 +235,13 @@ function initLesson() {
     history.replaceState(null, '', url);
     applyInstructionLanguage();
     render();
+    terminal.render();
   }));
   document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
     document.querySelector('.execution-layout').dataset.mobileView = button.dataset.view;
     document.querySelectorAll('[data-view]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
   }));
-  const stageIds = ['idea', 'playground', 'questions'];
+  const stageIds = ['idea', 'playground', 'terminal', 'questions'];
   function showStage() {
     const anchor = location.hash.slice(1);
     const active = anchor === 'python-notes' ? 'idea' : stageIds.includes(anchor) ? anchor : 'idea';
@@ -249,6 +255,7 @@ function initLesson() {
     if (active !== 'playground') pause();
     if (stageIds.includes(anchor) || anchor === 'python-notes') byId(anchor).scrollIntoView({ block: 'start' });
   }
+  const terminal = initTerminal({ getLanguage: () => instructionLanguage });
   window.addEventListener('hashchange', showStage);
   showStage();
   applyInstructionLanguage();

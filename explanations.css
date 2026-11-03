@@ -542,3 +542,59 @@ code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .elif-preview-paths > span { padding: 12px 6px; border: 2px dashed #d0dce5; border-radius: 12px; color: #687f8e; font-size: 15px; }
 .elif-preview-paths .elif-preview-chosen { background: white; border: 2px solid #80b2cf; color: #184d70; }
 .elif-preview-chosen strong { display: block; font-size: 11px; margin-top: 8px; }
+
+/* Write-code stage: missions plus Apple-style editor and terminal windows. */
+.focused-lesson .lesson-nav-four { grid-template-columns: repeat(4, 1fr); }
+.terminal-help { margin: 0 0 18px; max-width: 700px; }
+.mission-dots { display: flex; gap: 6px; margin: 0 0 10px; }
+.mission-dots span { width: 10px; height: 10px; border-radius: 50%; background: #dbe3e8; }
+.mission-dots span.current { background: #58cc02; box-shadow: 0 0 0 3px #e9fbdc; }
+.mission-dots span.done { background: #398a00; }
+.mission-card { border: 2px solid #c4e5ad; background: #f6fcf0; border-radius: 18px; padding: 16px 18px; margin-bottom: 14px; }
+.mission-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mission-label { color: #357200; font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+.mission-status { font-size: 12px; font-weight: 700; color: #526474; background: white; border: 1px solid #d8e1e7; border-radius: 999px; padding: 4px 10px; }
+.mission-status[data-done="true"] { color: #163800; background: #d8f5c1; border-color: #8ed54f; }
+.mission-card h3 { margin: 8px 0 4px; font-size: 19px; }
+.mission-card p { margin: 0; line-height: 1.55; }
+.mission-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mission-actions button { padding: 8px 12px; font-size: 13px; min-height: 40px; }
+.mission-card .mission-hint { margin-top: 12px; padding: 12px 14px; background: #fff8e1; border: 2px solid #f5d77a; border-radius: 12px; font-size: 14px; }
+.mac-window { border-radius: 14px; overflow: hidden; background: #1e1f24; color: #e8e9ed; box-shadow: 0 10px 30px rgba(16, 31, 43, .22), 0 0 0 1px rgba(0, 0, 0, .35); margin-bottom: 14px; }
+.mac-titlebar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: linear-gradient(#3a3b41, #2c2d33); border-bottom: 1px solid #141518; font: 600 12px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; color: #c2c4cb; }
+.mac-lights { display: inline-flex; gap: 7px; }
+.mac-lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .25); }
+.mac-lights i:nth-child(2) { background: #febc2e; }
+.mac-lights i:nth-child(3) { background: #28c840; }
+.mac-title { flex: 1; text-align: center; margin-inline-end: 50px; letter-spacing: .01em; direction: ltr; }
+.mac-file-icon { font-size: 12px; }
+.editor-body { display: grid; grid-template-columns: 42px 1fr; background: #1e1f24; direction: ltr; }
+.mac-window .editor-gutter { margin: 0; padding: 14px 8px 14px 0; text-align: right; color: #5c6170; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: #1a1b20; border-right: 1px solid #2b2d33; overflow: hidden; user-select: none; }
+.editor-input { display: block; width: 100%; min-width: 0; min-height: 216px; margin: 0; padding: 14px 12px; border: 0; border-radius: 0; outline: none; resize: vertical; background: transparent; color: #f2f3f5; caret-color: #ffd866; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; tab-size: 4; white-space: pre; overflow: auto; }
+.editor-input:focus-visible { box-shadow: inset 0 0 0 2px #58cc02; }
+.editor-input::selection { background: #3d5a80; }
+.editor-toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #26272d; border-top: 1px solid #141518; }
+.editor-toolbar button { min-height: 40px; }
+.explanation-page .editor-toolbar #indent { background: #35363d; color: #e8e9ed; border-color: #4a4b53; }
+.editor-tip { flex: 1; text-align: center; font-size: 11px; color: #7f8491; font-family: ui-monospace, monospace; }
+.run-button { min-width: 120px; }
+.mac-window .terminal-screen { margin: 0; padding: 14px 14px 16px; min-height: 120px; max-height: 320px; overflow: auto; font: 14px/1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #f2f3f5; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+.terminal-prompt { color: #8be28b; }
+.terminal-muted { color: #8a8f9c; }
+.terminal-error, .terminal-success, .terminal-note { display: block; margin-top: 6px; font-family: inherit; }
+.terminal-error { color: #ff6b6b; }
+.terminal-success { color: #8be28b; font-weight: 700; }
+.terminal-note { color: #ffd866; }
+.terminal-screen [dir="rtl"] { text-align: right; }
+.mission-nav { display: flex; justify-content: space-between; gap: 10px; margin: 6px 0 14px; }
+.mission-nav .primary-button { min-width: 160px; }
+@media (max-width: 650px) {
+  .focused-lesson .lesson-nav-four { gap: 6px; }
+  .focused-lesson .lesson-nav-four a { padding: 10px 4px; gap: 5px; font-size: 12px; }
+  .focused-lesson .lesson-nav-four a > span:first-child { width: 20px; height: 20px; font-size: 11px; }
+  /* 16px keeps iOS Safari from zooming into the editor on focus. */
+  .editor-input, .mac-window .editor-gutter { font-size: 16px; }
+  .editor-input { min-height: 190px; }
+  .mission-nav button { flex: 1 1 auto; min-width: 0; }
+  .mac-title { margin-inline-end: 44px; }
+}
