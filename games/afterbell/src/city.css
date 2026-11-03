@@ -59,3 +59,7 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 #sheet-body [data-opt].right{background:#d7eadc;border-color:#3f8d6c}#sheet-body [data-opt].wrong{background:#f6dcd7;border-color:#c6523f}
 .explain{animation:rise .3s var(--ease-out,ease-out)}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.explain{animation:none}#sheet-body [data-opt]{transition:none}}
+
+/* Loop 2: review mistakes after the shift. */
+#sheet .review-btn{width:100%;background:#fff1e4;border-color:#d1835f;color:#7a3f22;margin:4px 0 8px}.perfect{background:#e9f1e3;border-radius:9px;padding:9px 12px;font-weight:700;color:#214f46}
+#sheet .link-btn{background:none;border:0;min-height:36px;color:#53685c;text-decoration:underline;font-weight:600}

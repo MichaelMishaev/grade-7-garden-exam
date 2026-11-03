@@ -198,26 +198,53 @@ function dispatch(){
  });
 }
 $('dispatch').onclick=dispatch;
+let finishSaved=null;
 async function finish(){
- const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();
+ const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();finishSaved=null;
  const bestKey='prepx-best-'+quiz.id,previous=Number(read(localStorage,bestKey)||0),record=score>previous;if(record)put(localStorage,bestKey,String(score));
  const shiftsKey='prepx-city-shifts-'+quiz.id,countedKey='prepx-city-counted-'+attempt;
  if(!read(localStorage,countedKey)){put(localStorage,shiftsKey,String(Number(read(localStorage,shiftsKey)||0)+1));put(localStorage,countedKey,'1');}
- const earned=Object.entries(wallet.earnings).filter(([k])=>k===attempt||k.startsWith(attempt+':witness:')).reduce((n,[,v])=>n+v,0);
- const witnessed=Object.keys(wallet.earnings).filter(k=>k.startsWith(attempt+':witness:')).length,correct=Object.values(round.answers).filter(a=>a.correct).length;
- const stats=`<div class="shift-stats"><div><b>${correct}/${round.questions.length}</b><small>תשובות נכונות</small></div><div><b>🔥 ${bestStreak(round)}</b><small>הרצף הארוך</small></div><div><b>${earned} 🪙</b><small>מטבעות מהמשמרת</small></div><div><b>${witnessed}</b><small>דיווחי עדים</small></div></div>`;
- sheet(`<div class="kicker">✦ המשמרת הושלמה · שלוש מסירות</div><h2 id="sheet-title">פסטיבל המפרץ נפתח!</h2><div class="big-score">${score}/100</div><p>${'★'.repeat(starsFor(score))+'☆'.repeat(3-starsFor(score))} · ${esc(quiz.title)}${record&&previous?' · <b class="record">🏆 שיא חדש!</b>':''}</p>${stats}<details><summary>התשובות וההסברים</summary>${round.questions.map(q=>`<p><b>${esc(q.prompt)}</b><br>התשובה שלכם: ${esc(q.choices[round.answers[q.id].choice])}<br>התשובה הנכונה: ${esc(q.choices[q.correct])}<br>${esc(q.explanation.he)}</p>`).join('')}</details><p id="saved" role="status">שומרים את התוצאה…</p><button id="watch" disabled>לצאת אל המופע ✦</button><button id="again" class="cta" disabled>למשמרת חדשה ←</button>`,'complete');
+ const wrong=round.questions.filter(q=>!round.answers[q.id]?.correct);
+ const render=()=>{
+  const earned=Object.entries(wallet.earnings).filter(([k])=>k===attempt||k.startsWith(attempt+':witness:')).reduce((n,[,v])=>n+v,0);
+  const witnessed=Object.keys(wallet.earnings).filter(k=>k.startsWith(attempt+':witness:')).length,correct=round.questions.length-wrong.length;
+  const stats=`<div class="shift-stats"><div><b>${correct}/${round.questions.length}</b><small>תשובות נכונות</small></div><div><b>🔥 ${bestStreak(round)}</b><small>הרצף הארוך</small></div><div><b>${earned} 🪙</b><small>מטבעות מהמשמרת</small></div><div><b>${witnessed}</b><small>דיווחי עדים</small></div></div>`;
+  sheet(`<div class="kicker">✦ המשמרת הושלמה · שלוש מסירות</div><h2 id="sheet-title">פסטיבל המפרץ נפתח!</h2><div class="big-score">${score}/100</div><p>${'★'.repeat(starsFor(score))+'☆'.repeat(3-starsFor(score))} · ${esc(quiz.title)}${record&&previous?' · <b class="record">🏆 שיא חדש!</b>':''}</p>${stats}${wrong.length?`<button id="review-wrong" class="review-btn">📚 לחזור על ${wrong.length===1?'הטעות':'ה־'+wrong.length+' טעויות'} · בלי לחץ, בלי מטבעות</button>`:'<p class="perfect">💯 כל התשובות נכונות. אין מה לחזור עליו!</p>'}<details><summary>התשובות וההסברים</summary>${round.questions.map(q=>`<p><b>${esc(q.prompt)}</b><br>התשובה שלכם: ${esc(q.choices[round.answers[q.id].choice])}<br>התשובה הנכונה: ${esc(q.choices[q.correct])}<br>${esc(q.explanation.he)}</p>`).join('')}</details><p id="saved" role="status">${finishSaved?esc(finishSaved.text):'שומרים את התוצאה…'}</p><button id="watch" ${finishSaved?'':'disabled'}>לצאת אל המופע ✦</button><button id="again" class="cta" ${finishSaved?'':'disabled'}>למשמרת חדשה ←</button>`,'complete');
+  if(finishSaved?.retry)addRetry();
+  if($('review-wrong'))$('review-wrong').onclick=()=>reviewWrong(wrong,0,0,render);
+  $('watch').onclick=()=>{closeSheet();$('goal').textContent='פסטיבל המפרץ פתוח';$('action').textContent='לסיכום המשמרת';toast('יום הפסטיבל הסתיים בהצלחה. אפשר להמשיך לטייל בעיר.');};
+  $('again').onclick=()=>{if($('save-retry')&&!confirm('התוצאה טרם נשמרה. להתחיל בכל זאת משמרת חדשה?'))return;try{sessionStorage.removeItem(DRAFT);}catch{}city=round=null;mode='menu';$('sheet').hidden=true;$('hud').hidden=true;$('hud').inert=false;$('welcome').hidden=false;$('resume').hidden=true;world.reset();};
+ };
+ const addRetry=()=>{if($('save-retry')||!$('saved'))return;const b=document.createElement('button');b.id='save-retry';b.textContent='לנסות לשמור שוב';b.onclick=retry;$('saved').after(b);};
  const retry=async()=>{const btn=$('save-retry');if(btn)btn.disabled=true;
  try{const payload={id:attempt,name:round.participantName,quizId:quiz.id,contentHash:quizFingerprint(quiz),startedAt:round.startedAt,answers:Object.entries(round.answers).map(([id,a])=>({id,choice:a.choice}))};
  const res=await fetch('/api/afterbell/attempts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(6500)});if(!res.ok||!(await res.json()).saved)throw Error();
- $('saved').textContent='✓ התוצאה נשמרה בהיסטוריית המשחק.';btn?.remove();}catch{$('saved').textContent='השמירה לא הצליחה. המשמרת נשמרה בלשונית הזאת לניסיון חוזר.';if(!btn){const b=document.createElement('button');b.id='save-retry';b.textContent='לנסות לשמור שוב';b.onclick=retry;$('saved').after(b);}else btn.disabled=false;}finally{$('again').disabled=false;$('watch').disabled=false;}};
- await retry();$('watch').onclick=()=>{closeSheet();$('goal').textContent='פסטיבל המפרץ פתוח';$('action').textContent='לסיכום המשמרת';toast('יום הפסטיבל הסתיים בהצלחה. אפשר להמשיך לטייל בעיר.');};$('again').onclick=()=>{if($('save-retry')&&!confirm('התוצאה טרם נשמרה. להתחיל בכל זאת משמרת חדשה?'))return;try{sessionStorage.removeItem(DRAFT);}catch{}city=round=null;mode='menu';$('sheet').hidden=true;$('hud').hidden=true;$('hud').inert=false;$('welcome').hidden=false;$('resume').hidden=true;world.reset();};
+ finishSaved={text:'✓ התוצאה נשמרה בהיסטוריית המשחק.',retry:false};if($('saved'))$('saved').textContent=finishSaved.text;btn?.remove();}
+ catch{finishSaved={text:'השמירה לא הצליחה. המשמרת נשמרה בלשונית הזאת לניסיון חוזר.',retry:true};if($('saved'))$('saved').textContent=finishSaved.text;if(!btn)addRetry();else btn.disabled=false;}
+ finally{if(mode==='complete'){$('again').disabled=false;$('watch').disabled=false;}}};
+ render();await retry();
+}
+// Re-ask the questions answered wrongly, with the same shuffled options and the
+// explanation after each one. Nothing is scored or paid: this is for remembering.
+function reviewWrong(wrong,i,got,back){
+ if(i>=wrong.length){toast(`החזרה הושלמה · ${got} מתוך ${wrong.length} נכונות עכשיו 💪`);back();return;}
+ const q=wrong[i];let picked=null;
+ const draw=()=>{
+  const done=picked!==null;
+  sheet(`<div class="kicker">📚 חזרה על הטעויות · ${i+1} מתוך ${wrong.length}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small class="q-meta"><span>בפעם הקודמת: ${esc(q.choices[round.answers[q.id].choice])}</span><span>בלי מטבעות</span></small>
+ ${q.options.map(o=>`<button data-opt="${o.original}" ${done?'disabled':''} class="${done&&o.original===q.correct?'right':done&&o.original===picked?'wrong':''}"><bdi>${esc(o.text)}</bdi></button>`).join('')}
+ ${done?`<div class="explain" role="status"><b>${picked===q.correct?'נכון! עכשיו זה יושב.':'עדיין לא. התשובה הנכונה מסומנת.'}</b><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${i+1<wrong.length?'לשאלה הבאה':'לסיכום המשמרת'} ←</button>`:`<button id="skip-review" class="link-btn">לדלג לסיכום</button>`}`,'review');
+  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{picked=Number(b.dataset.opt);if(picked===q.correct)got++;draw();});
+  if($('next-q'))$('next-q').onclick=()=>reviewWrong(wrong,i+1,got,back);
+  if($('skip-review'))$('skip-review').onclick=back;
+ };
+ draw();
 }
 let pointer=null;
 function stick(e){const r=$('joystick').getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/30,z=(e.clientY-r.top-r.height/2)/30,d=Math.max(1,Math.hypot(x,z));world.setStick(x/d,z/d);$('joystick').firstElementChild.style.transform=`translate(${x/d*24}px,${z/d*24}px)`;}
 $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.currentTarget.setPointerCapture(pointer);stick(e);};$('joystick').onpointermove=e=>{if(pointer===e.pointerId)stick(e);};
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
-window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode==='question'){const n=Number(e.key);if(n>=1&&n<=4){const opts=document.querySelectorAll('[data-opt]');opts[n-1]?.click();}if(e.key==='Enter'&&$('next-q'))$('next-q').click();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
+window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode==='question'||mode==='review'){const n=Number(e.key);if(n>=1&&n<=4){const opts=document.querySelectorAll('[data-opt]');opts[n-1]?.click();}if(e.key==='Enter'&&$('next-q'))$('next-q').click();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
 try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},()=>toast('התנגשות ברכב · אפשר להמשיך לנסוע'));}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
