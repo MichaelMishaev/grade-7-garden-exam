@@ -33,8 +33,11 @@ test('compact home shows three dates; calendar expands, closes and rolls over in
     for (const width of [320, 375, 390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 844 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `no horizontal overflow at ${width}`);
-      assert.equal(await page.locator('footer').evaluate(el => el.getBoundingClientRect().bottom <= 844), true, `core content fits first screen at ${width}`);
+      assert.equal(await page.locator('.home-games').evaluate(el => el.getBoundingClientRect().bottom <= 844), true, `core content fits first screen at ${width}`);
     }
+    assert.equal(await page.locator('.home-explanations').getAttribute('aria-labelledby'), 'explanations-heading');
+    assert.equal(await page.locator('.home-explanations a').getAttribute('href'), 'explanations.html');
+    assert.equal(await page.locator('.home-header-actions a[href="explanations.html"]').count(), 0);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator('.calendar-expand').click();
     assert.equal(await page.locator('#calendar-dialog').isVisible(), true);
