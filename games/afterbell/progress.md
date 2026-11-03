@@ -153,3 +153,8 @@ Manual van contact checks oriented vehicle bounds, stops inward movement and giv
 The map now connects the original neighborhoods with a northern station, court and firehouse, an eastern shipyard, freight terminal and ferry. The dispatch board reports fights, electrical fires, crashes and roadworks at eight sites. Crews arrive and clear scenes; nearby walkers give them space, and real traffic queues, yields and reroutes. The shift clock restores the current calls on reload. An observation camera keeps on-scene activity visible from the selected shoulder.
 
 Verification includes all four incident types in mobile Chromium and WebKit, all six new destinations, queue formation and release, and returning to the original home landmark. The full-stack library AI grading retry retains the same pre-existing expected-failed/actual-none mismatch.
+
+## Pedestrian reactions and urgent scene response
+A moving player van gives ordinary walking residents and handoff residents a short hop and knockback, with one cue per contact. They land outside buildings and resume their routines. Auto-driven vans yield while residents step aside.
+A fresh agent expanded the phase animations and wrote short crew/action/next-step captions. Scene dispatch starts urgent driving, which travels faster on a clear road, attempts a checked pass, or takes an earlier road detour. Steering and cancelling end the mode.
+The final changes were copied into /tmp/prepx-scene-response on feat/city-scene-response because another map expansion began in the original shared worktree. This preview runs on loopback port 4399.

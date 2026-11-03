@@ -25,3 +25,5 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 #calls{color:#85522a}.city-report{border-inline-start:4px solid #b76c40;padding:4px 12px;margin:16px 0}.city-report h3{margin:4px 0}.city-report p{margin:6px 0}.city-report small{color:#53685c}.row #dispatch{white-space:nowrap}
 
 .jobcard{z-index:1}.jobcard #scene-report{border-inline-start:3px solid #bf7145;padding-inline-start:7px;color:#73442e;font-weight:700}
+
+#scene-guide{position:fixed;z-index:1;bottom:135px;right:16px;width:min(320px,calc(100% - 32px));background:#fff9e9f2;border:1px solid #b6c2ad;border-inline-start:4px solid #bc7045;border-radius:10px;padding:12px;box-shadow:0 4px 22px #25494129}#scene-guide strong{font-size:17px}#scene-guide p{font-size:13px;margin:5px 0 8px}#scene-guide button{font-size:13px;width:100%}

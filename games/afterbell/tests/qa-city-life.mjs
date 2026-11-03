@@ -24,14 +24,25 @@ try{
    const event=s.life.events.find(e=>e.type===type);assert.ok(event,JSON.stringify(s.life));
    await page.click('#dispatch');const i=s.life.events.findIndex(e=>e.id===event.id);
    assert.ok(await page.locator('.city-report h3').nth(i).isVisible());await page.click('[data-observe="'+i+'"]');
+   assert.ok((await state()).driving);
+   if(type==='fire'){
+     assert.ok((await state()).life.urgent);
+     await page.keyboard.press('ArrowRight');await tick(40);
+     assert.equal((await state()).life.urgent,false);
+     await page.click('#dispatch');const index=(await state()).life.events.findIndex(e=>e.id===event.id);
+     await page.click('[data-observe="'+index+'"]');
+   }
    await arrive(event.observer);
    s=await state();if(s.life.shiftTime<workAt)s=await tick((workAt-s.life.shiftTime)*1000+20);
    assert.ok(s.life.events.some(e=>e.id===event.id&&e.phase==='working'),JSON.stringify({type,life:s.life}));
-   assert.equal(s.stage,0);await page.screenshot({path:'output/city-incident-'+type+'.png'});
+   assert.equal(s.stage,0);assert.ok(await page.locator('#scene-guide').isVisible());
+   assert.ok((await page.locator('#scene-now').innerText()).length>4);
+   assert.ok((await page.locator('#scene-next').innerText()).length>4);
+   await page.screenshot({path:'output/city-incident-'+type+'.png'});
    if(type==='fight'){
      await page.reload();await page.click('#resume');s=await tick(1);
      assert.equal(s.life.events.find(e=>e.id===event.id)?.phase,'working');
-     await page.click('#vehicle');
+     if(!(await state()).driving)await page.click('#vehicle');
    }
  }
  await page.click('#map');assert.equal(await page.locator('[data-place]').count(),14);

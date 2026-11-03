@@ -8,8 +8,8 @@ const grid={step:2,radius:1,bound:CITY_EDGE};
 // Two metres on either side of the centre line leaves room for the van's body.
 export function onRoad(x,z){
  const street=Math.round(x/STREET_STEP)*STREET_STEP, cross=Math.round(z/STREET_STEP)*STREET_STEP;
- return (Math.abs(x-street)<=2 && street>=northSouthStreets[0] && street<=northSouthStreets.at(-1) && z>=streetEnds.north && z<=streetEnds.south)
-   || (Math.abs(z-cross)<=2 && cross>=eastWestStreets[0] && cross<=eastWestStreets.at(-1) && x>=CITY_BOUNDS.west && x<=CITY_BOUNDS.east);
+ return (Math.abs(x-street)<=2.000001 && street>=northSouthStreets[0] && street<=northSouthStreets.at(-1) && z>=streetEnds.north && z<=streetEnds.south)
+   || (Math.abs(z-cross)<=2.000001 && cross>=eastWestStreets[0] && cross<=eastWestStreets.at(-1) && x>=CITY_BOUNDS.west && x<=CITY_BOUNDS.east);
 }
 
 function access(point,blocked){
@@ -47,10 +47,10 @@ function followLanes(start,points,outside){
  return result;
 }
 
-export function drivingRoute(start,goal,blocked){
+export function drivingRoute(start,goal,blocked,accessBlocked=blocked){
  if(blocked(start.x,start.z)||blocked(goal.x,goal.z))return null;
  if(distance(start,goal)<1)return [];
- const entry=access(start,blocked),exit=access(goal,blocked);
+ const entry=access(start,accessBlocked),exit=access(goal,accessBlocked);
  if(!entry||!exit)return null;
  const a=entry.at(-1),b=exit.at(-1);
  const outside=(x,z)=>!onRoad(x,z)||blocked(x,z);

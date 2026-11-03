@@ -1,6 +1,8 @@
 import * as T from 'three';
 import {places,inCity,CITY_EDGE} from './city-data.js';
 import {drawCityGroundAndRoads,drawOuterDistricts,drawDistrictLandmark} from './city-districts.js';
+import {overtakeRoute} from './city-overtake.js';
+import {pedestrianReaction} from './city-pedestrians.js';
 import {cityIncidentsAt,incidentTrafficAt,incidentLaneBlocked} from './city-incidents.js';
 import {createIncidentScene} from './city-incident-scene.js';
 import {vansTouch,safeSpeed} from './city-traffic.js';
@@ -171,7 +173,7 @@ export function cityWorld(host,onMove,onImpact){
    Object.assign(g.userData,{clock:0,vx:0,vz:0});g.userData.move(0);
  }
  function addResident(x,z,i){
-   const g=person(palette[i%6]);walkers.push(g);routes.push(circuit(g,x+5,z+5,46,1.6+i%3*.25,i*7,2+i%3));
+   const g=person(palette[i%6]);walkers.push(g);const move=circuit(g,x+5,z+5,46,1.6+i%3*.25,i*7,2+i%3);routes.push(move);move(0);g.userData.clock=0;
  }
  for(let i=0;i<20;i++)addTraffic(((i%5)-2)*56,(Math.floor(i/5)-2)*56,6+i%3,i*4.1);
  for(let i=0;i<32;i++)addResident((i%8-4)*56,(Math.floor(i/8)-2)*56,i);
@@ -191,20 +193,6 @@ export function cityWorld(host,onMove,onImpact){
  scene.add(ambient);
  const transform=new T.Matrix4();
  function moveStreetActors(){
-   routes.forEach((move,i)=>{
-     move(time);
-     const g=walkers[i];
-     for(const e of events){
-       const dx=g.position.x-e.x,dz=g.position.z-e.z,d=Math.hypot(dx,dz);
-       if(d>=14||d<.01)continue;
-       // Keep a clear space at the scene and turn toward the activity from the sidewalk.
-       if(d<8){
-         const x=e.x+dx/d*8,z=e.z+dz/d*8;
-         if(!blocked(x,z)){g.position.x=x;g.position.z=z;}
-       }
-       g.rotation.y=Math.atan2(e.x-g.position.x,e.z-g.position.z);break;
-     }
-   });
    let index=0;
    for(const g of actors){
      g.updateMatrix();
@@ -225,7 +213,7 @@ export function cityWorld(host,onMove,onImpact){
  party.position.set(places.pier.x,0,places.pier.z);scene.add(party);party.visible=false;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const incidentScene=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
- let shiftTime=0,events=[],incidentKey='',observing=null;
+ let shiftTime=0,events=[],incidentKey='',observing=null,urgent=false,passAt=0,passes=0;
  let viewX=.58,viewZ=.815,viewHeight=108,focusX=0,focusZ=0;
  const keys=new Set();let stick={x:0,z:0},px=places.home.x,pz=places.home.z+2,heading=0,time=0,destination=places.home,path=[],active=false,paused=false,driving=false,loaded=false,manual=false,jump=0,vy=0;
  const forward=new T.Vector3(-.58,0,-.815),right=new T.Vector3(.815,0,-.58);
@@ -240,6 +228,47 @@ export function cityWorld(host,onMove,onImpact){
    impactSide=Math.sign((g.position.x-px)*Math.cos(heading)-(g.position.z-pz)*Math.sin(heading));
    dust.position.set((px+g.position.x)/2,.6,(pz+g.position.z)/2);
    onImpact();
+ }
+ let pedestrianHits=0;
+ const residents=[...walkers,...locals];
+ for(const g of residents)Object.assign(g.userData,{x:g.position.x,z:g.position.z,homeX:g.position.x,homeZ:g.position.z,offsetX:0,offsetZ:0,contact:false});
+ function advanceResidents(dt,travelSpeed){
+   for(let i=0;i<residents.length;i++){
+     const g=residents[i],m=g.userData;
+     if(!m.reaction){
+       if(i<walkers.length){
+         m.clock+=dt;routes[i](m.clock);
+         const decay=Math.exp(-dt*1.4);m.offsetX*=decay;m.offsetZ*=decay;
+         const x=g.position.x+m.offsetX,z=g.position.z+m.offsetZ;
+         if(!blocked(x,z)){m.x=x;m.z=z;}
+       }else{
+         const factor=driving&&path.length&&Math.hypot(px-m.x,pz-m.z)<12?0:1-Math.exp(-dt*1.4);
+         const x=m.x+(m.homeX-m.x)*factor,z=m.z+(m.homeZ-m.z)*factor;
+         if(!blocked(x,z)){m.x=x;m.z=z;}
+       }
+     }
+     if(!m.reaction){
+       for(const e of events){
+         const dx=m.x-e.x,dz=m.z-e.z,d=Math.hypot(dx,dz);
+         if(d>=8||d<.01)continue;
+         const x=e.x+dx/d*8,z=e.z+dz/d*8;
+         if(!blocked(x,z)){m.x=x;m.z=z;}
+       }
+     }
+     if(!m.reaction&&active&&driving&&path.length){
+       const sx=Math.sin(heading),sz=Math.cos(heading),dx=m.x-px,dz=m.z-pz;
+       const ahead=dx*sx+dz*sz,side=dx*sz-dz*sx;
+       if(ahead>-1&&ahead<11&&Math.abs(side)<3.2){
+         const direction=side<0?-1:1,x=m.x+sz*direction*dt*3,z=m.z-sx*direction*dt*3;
+         if(!blocked(x,z)){m.offsetX+=x-m.x;m.offsetZ+=z-m.z;m.x=x;m.z=z;}
+       }
+     }
+     const wasReacting=!!m.reaction;if(!wasReacting){m.baseX=m.x-m.offsetX;m.baseZ=m.z-m.offsetZ;}
+     const pose=pedestrianReaction(m,{x:px,z:pz,heading,speed:active&&driving?travelSpeed:0},time,blocked,reduced);
+     if(pose.started){pedestrianHits++;onImpact('person');}
+     if(wasReacting||pose.started){m.offsetX=pose.x-m.baseX;m.offsetZ=pose.z-m.baseZ;}
+     g.position.set(pose.x,pose.y,pose.z);g.rotation.z=pose.tilt;
+   }
  }
  function advanceTraffic(dt){
    for(const g of traffic){
@@ -275,13 +304,13 @@ export function cityWorld(host,onMove,onImpact){
    const start={x:px,z:pz},goal={x,z};
    const base=(x,z)=>blocked(x,z)||extraBlock(x,z);
    if(events.length){
-     const route=drivingRoute(start,goal,(x,z)=>base(x,z)||incidentLaneBlocked(events,x,z));
+     const route=drivingRoute(start,goal,(x,z)=>base(x,z)||incidentLaneBlocked(events,x,z),(x,z)=>blocked(x,z)||incidentLaneBlocked(events,x,z));
      if(route)return route;
    }
    // If every approach is temporarily closed, keep the destination and wait at the cordon.
-   return drivingRoute(start,goal,base);
+   return drivingRoute(start,goal,base,blocked);
  }
- function go(x,z){const route=driving?roadPlan(x,z):findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
+ function go(x,z){urgent=false;observing=null;const route=driving?roadPlan(x,z):findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;}
  function advanceEvents(dt){
    shiftTime+=dt;events=cityIncidentsAt(shiftTime);
    const key=events.map(e=>e.id+'-'+e.phase).join('|');
@@ -320,24 +349,39 @@ export function cityWorld(host,onMove,onImpact){
    if(!paused&&dt>0){time+=dt;impactAge+=dt;if(active)advanceEvents(dt);advanceTraffic(dt);}
    if(!paused)frameIncident(dt);
    braking=false;
+   const oldX=px,oldZ=pz;
    if(active&&!paused){
      let sx=stick.x+Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
      let sy=-stick.z+Number(keys.has('ArrowUp')||keys.has('KeyW'))-Number(keys.has('ArrowDown')||keys.has('KeyS'));
      let dx=sx*right.x+sy*forward.x,dz=sx*right.z+sy*forward.z;
-     if(sx||sy)path=[];
+     if(sx||sy){path=[];urgent=false;}
      while(path.length&&Math.hypot(path[0].x-px,path[0].z-pz)<.001){const reached=path.shift();px=reached.x;pz=reached.z;}
      if(path.length){dx=path[0].x-px;dz=path[0].z-pz;}
      const len=Math.hypot(dx,dz);
      if(len>.0001){
        const angle=Math.atan2(dx,dz),guided=path.length>0;
-       let speed=driving?31:10;
+       const limit=driving?(urgent?42:31):10;
+       let speed=limit;
        if(driving&&guided){
          const ahead=safeSpeed(px,pz,angle,speed,traffic);
          const pace=events.length?incidentTrafficAt(events,px,pz,angle):1;
-         speed=Math.min(ahead.speed,speed*pace);braking=speed<31;
+         speed=Math.min(ahead.speed,speed*pace);braking=speed<limit;
          if(braking&&dt>0)brakeTicks++;
+         if(urgent&&ahead.obstruction&&time>=passAt){
+           passAt=time+.5;
+           const pass=overtakeRoute({x:px,z:pz},angle,ahead.obstruction,traffic,(x,z)=>blocked(x,z)||incidentLaneBlocked(events,x,z));
+           if(pass){
+
+             // Stay on the current straight before merging into the remaining route.
+             const next=path.find(p=>Math.hypot(p.x-px,p.z-pz)>20);
+             if(next&&Math.abs((next.x-px)*dz/len-(next.z-pz)*dx/len)<4.5&&(next.x-px)*dx/len+(next.z-pz)*dz/len>Math.hypot(pass.at(-1).x-px,pass.at(-1).z-pz)+3){
+               const rejoin=path.findIndex(p=>Math.hypot(p.x-px,p.z-pz)>Math.hypot(pass.at(-1).x-px,pass.at(-1).z-pz));
+               if(rejoin>=0&&clearSegment(pass.at(-1),path[rejoin],blocked)){path=[...pass,...path.slice(rejoin)];speed=0;passes++;}
+             }
+           }
+         }
          yieldTime=speed<4?yieldTime+dt:0;
-         if(yieldTime>.9&&time>=replanAt&&ahead.obstruction){
+         if(yieldTime>(urgent?.25:.9)&&time>=replanAt&&ahead.obstruction){
            replanAt=time+2;
            const p=ahead.obstruction.position;
            const clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
@@ -346,6 +390,13 @@ export function cityWorld(host,onMove,onImpact){
          }
        }else yieldTime=0;
        if(driving&&!guided&&impactAge<.24)speed*=impactAge/.24;
+       if(driving&&guided){
+         for(const g of residents){
+           const sx=Math.sin(angle),sz=Math.cos(angle),dx=g.position.x-px,dz=g.position.z-pz;
+           const ahead=dx*sx+dz*sz;
+           if(ahead>0&&ahead<12&&Math.abs(dx*sz-dz*sx)<2.7){speed=Math.min(speed,Math.max(0,(ahead-4)*3));braking=true;}
+         }
+       }
        const step=Math.min(guided?len:Infinity,speed*dt),nx=px+dx/len*step,nz=pz+dz/len*step;
        const hit=driving&&traffic.find(g=>{
          const p=g.position;
@@ -368,6 +419,8 @@ export function cityWorld(host,onMove,onImpact){
      }
      vy-=20*dt;jump=Math.max(0,jump+vy*dt);if(!jump)vy=0;onMove(px,pz,dt);
    }
+   if(!path.length)urgent=false;
+   if(!paused&&dt>0)advanceResidents(dt,Math.hypot(px-oldX,pz-oldZ)/dt);
    avatar.position.set(px,jump,pz);avatar.rotation.y=heading;avatar.visible=active&&!driving;
    car.position.set(driving?px:px+3.6,0,driving?pz:pz+2);car.rotation.y=heading;car.visible=active&&driving;
    const rebound=!reduced&&impactAge<.55?Math.sin(impactAge*26)*Math.exp(-impactAge*7)*impactPower:0;
@@ -401,7 +454,7 @@ export function cityWorld(host,onMove,onImpact){
  let last=performance.now();function frame(now){if(!manual)update(Math.max(0,Math.min(.05,(now-last)/1000)));last=now;requestAnimationFrame(frame);}fit();requestAnimationFrame(frame);
  addEventListener('resize',fit);
  const movementKeys=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space'];
- addEventListener('keydown',e=>{if(!active||paused||!movementKeys.includes(e.code))return;e.preventDefault();keys.add(e.code);if(e.code==='Space'&&!jump&&!driving)vy=8;});addEventListener('keyup',e=>keys.delete(e.code));
+ addEventListener('keydown',e=>{if(!active||paused||!movementKeys.includes(e.code))return;e.preventDefault();keys.add(e.code);if(e.code!=='Space'){path=[];urgent=false;}if(e.code==='Space'&&!jump&&!driving)vy=8;});addEventListener('keyup',e=>keys.delete(e.code));
  addEventListener('blur',()=>{keys.clear();stick={x:0,z:0};});
  const ray=new T.Raycaster(),plane=new T.Plane(new T.Vector3(0,1,0),0);
  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused)return;ray.setFromCamera(new T.Vector2(2*e.clientX/innerWidth-1,1-2*e.clientY/innerHeight),camera);const hit=new T.Vector3();if(ray.ray.intersectPlane(plane,hit)&&!blocked(hit.x,hit.z))go(hit.x,hit.z);});
@@ -413,8 +466,12 @@ export function cityWorld(host,onMove,onImpact){
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
-     return {shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,brakeTicks,impactVisible:dust.visible,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
-   },observe(id){observing=id;},events:incidentReports,yielding:()=>braking,start(x,z,elapsed=0){shiftTime=elapsed;events=cityIncidentsAt(shiftTime);observing=events.find(e=>Math.hypot(e.observer.x-x,e.observer.z-z)<4)?.id||null;viewX=.58;viewZ=.815;viewHeight=108;focusX=focusZ=0;incidentKey='';impactAge=1;impacts=brakeTicks=yieldTime=replanAt=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){if(driving===v)return;const goal=path.at(-1);driving=v;if(goal)go(goal.x,goal.z);},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){events=[];shiftTime=0;drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
+     return {shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,brakeTicks,impactVisible:dust.visible,pedestrianHits,urgent,passes,pedestrians:residents.slice(0,3).map(g=>({x:g.position.x,z:g.position.z,y:g.position.y,reacting:!!g.userData.reaction})),car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
+   },respondTo(event){
+     const wasDriving=driving;driving=true;
+     if(!go(event.observer.x,event.observer.z)){driving=wasDriving;return false;}
+     observing=event.id;urgent=true;return true;
+   },observe(id){observing=id;},events:incidentReports,yielding:()=>braking,start(x,z,elapsed=0){shiftTime=elapsed;events=cityIncidentsAt(shiftTime);observing=events.find(e=>Math.hypot(e.observer.x-x,e.observer.z-z)<4)?.id||null;viewX=.58;viewZ=.815;viewHeight=108;focusX=focusZ=0;incidentKey='';urgent=false;passes=0;pedestrianHits=0;impactAge=1;impacts=brakeTicks=yieldTime=replanAt=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];urgent=false;},setPaused(v){paused=v;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},drive(v){if(driving===v)return;const goal=path.at(-1);driving=v;if(goal)go(goal.x,goal.z);},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){events=[];shiftTime=0;drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
    getPlayer:()=>({x:px,z:pz,y:jump}),project(p){const v=new T.Vector3(p.x,6,p.z).project(camera);return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2,visible:Math.abs(v.x)<.9&&Math.abs(v.y)<.85};},
    advance(ms){manual=true;for(let t=0;t<Math.min(ms,90000);t+=1000/60)update(1/60,false);update(0);},pixelRatio:renderer.getPixelRatio()};
 }

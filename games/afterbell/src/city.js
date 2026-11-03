@@ -59,8 +59,22 @@ function refresh(){
  if($('calls').textContent!==count){$('calls').textContent=count;$('dispatch').setAttribute('aria-label','מוקד העיר · דיווחים פעילים: '+count);}
  const selected=events.find(e=>e.id===followedEvent);
  if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
+ const watching=selected&&Math.hypot(city.x-selected.observer.x,city.z-selected.observer.z)<12;
+ if(watching&&$('notice').textContent.startsWith('נסיעה דחופה')){clearTimeout(timer);$('notice').textContent='';}
+ $('scene-guide').hidden=!watching;
+ if(watching){
+  const now=selected.stageLabel||incidentPhase[selected.phase],next=selected.nextStep||'';
+  if($('scene-now').textContent!==now)$('scene-now').textContent=now;
+  if($('scene-next').textContent!==next)$('scene-next').textContent=next;
+ }
+ $('goal').textContent=selected?'נסיעה דחופה · '+selected.title:objective(city).title;
+ if(watching)$('goal').textContent='בזירה · '+selected.title;
+ else if(selected){
+  const travel=world.yielding()?'מחפשים מעבר פנוי':'מתקדמים לזירה';
+  $('status').textContent=travel+' · '+Math.round(Math.hypot(city.x-selected.observer.x,city.z-selected.observer.z))+' מ׳';
+ }
  const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
- const report=nearby?nearby.title+' · '+incidentPhase[nearby.phase]:'';
+ const report=nearby?nearby.title+' · '+(nearby.stageLabel||incidentPhase[nearby.phase]):'';
  $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=world.project(p);$('pin').hidden=!pin.visible;$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';
 }
@@ -138,7 +152,7 @@ function interact(){
  city.phase='quiz';save();question();
 }
 $('action').onclick=interact;
-$('route').onclick=()=>{if(mode!=='explore')return;const p=places[objective(city).place];if(Math.hypot(city.x-p.x,city.z-p.z)<=4.3){interact();return;}if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
+$('route').onclick=()=>{if(mode!=='explore')return;followedEvent=null;world.observe(null);const p=places[objective(city).place];if(Math.hypot(city.x-p.x,city.z-p.z)<=4.3){interact();return;}if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
 $('vehicle').onclick=()=>{if(mode!=='explore')return;city.driving=!city.driving;world.drive(city.driving);save();updateTarget();refresh();toast(city.driving?roles[city.role].vehicle+' מוכן לנסיעה':'חזרה להליכה');};
 function map(){
  const {west,east,north,south}=CITY_BOUNDS,width=east-west,height=south-north+32;
@@ -157,17 +171,18 @@ function dispatch(){
  const events=world.events();
  const reports=events.map((event,i)=>{
   const distance=Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z));
-  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+  return `<section class="city-report"><small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${esc(event.title)}</h3><p><b>${esc(event.stageLabel||incidentPhase[event.phase])}</b> · ${esc(event.crew||'')}</p><p>${esc(event.detail)}</p><p class="next-step">בהמשך — ${esc(event.nextStep||'חזרה לשגרה')}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}">נסיעה דחופה לזירה · ${distance} מ׳</button></section>`;
  }).join('');
  sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
  $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};
  document.querySelectorAll('[data-observe]').forEach(b=>b.onclick=()=>{
   const event=events[Number(b.dataset.observe)],{observer}=event;closeSheet();
-  if(!world.go(observer.x,observer.z))toast('הגישה חסומה כרגע. אפשר לנסות שוב בהמשך.');
-  else{world.observe(event.id);followedEvent=event.id;toast('בדרך לנקודת תצפית · המשימה נשמרת.');}
+  if(!world.respondTo(event))toast('הגישה חסומה כרגע. אפשר לנסות שוב בהמשך.');
+  else{city.driving=true;updateTarget();save();followedEvent=event.id;toast('נסיעה דחופה · בדרך לזירה');}
  });
 }
 $('dispatch').onclick=dispatch;
+$('leave-scene').onclick=()=>{followedEvent=null;world.observe(null);world.stop();$('scene-guide').hidden=true;refresh();};
 async function finish(){
  const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();
  const bestKey='prepx-best-'+quiz.id;if(score>Number(read(localStorage,bestKey)||0))put(localStorage,bestKey,String(score));
@@ -184,7 +199,7 @@ $('joystick').onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;e.c
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(pointer!==e.pointerId)return;pointer=null;world.setStick(0,0);$('joystick').firstElementChild.style.transform='';});
 window.addEventListener('keydown',e=>{if(e.repeat)return;if(mode==='shop'&&e.code==='Escape'){$('leave-shop').click();return;}if(mode==='dispatch'&&e.code==='Escape'){$('close-dispatch').click();return;}if(mode==='map'&&e.code==='Escape'){closeSheet();return;}if(mode!=='explore')return;if(e.code==='KeyE')interact();if(e.code==='KeyV')$('vehicle').click();if(e.code==='KeyM')map();});
 window.addEventListener('pagehide',save);
-try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},()=>toast('התנגשות ברכב · אפשר להמשיך לנסוע'));}
+try{world=cityWorld($('scene'),(x,z,dt)=>{if(!city)return;city.x=x;city.z=z;round.elapsed+=dt;saveClock+=dt;if(saveClock>1){save();saveClock=0;}},kind=>toast(kind==='person'?'הולך רגל מעד · האטו ושמרו מרחק':'התנגשות ברכב · אפשר להמשיך לנסוע'));}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
 setInterval(refresh,100);drawRoles();loadQuiz();
 window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; x -240 to 352, z -352 to 188 at the waterfront',player:world?.getPlayer(),target:city?objective(city):null,driving:city?.driving,answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio}});

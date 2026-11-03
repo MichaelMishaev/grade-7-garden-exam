@@ -15,13 +15,14 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
  }
  const boxes=batch(new T.BoxGeometry(1,1,1)),stones=batch(new T.IcosahedronGeometry(1,0));
  const pose=new T.Group(),color=new T.Color();
- let originX=0,originZ=0,heading=0,sin=0,cos=1;
+ let originX=0,originZ=0,heading=0,sin=0,cos=1,rise=0,tilt=0;
  function origin(x,z,angle){
-   originX=x;originZ=z;heading=angle;sin=Math.sin(angle);cos=Math.cos(angle);
+   originX=x;originZ=z;heading=angle;sin=Math.sin(angle);cos=Math.cos(angle);rise=tilt=0;
  }
  function piece(mesh,c,x,y,z,w,h,d,pitch=0,roll=0){
-   pose.position.set(originX+x*cos+z*sin,y,originZ-x*sin+z*cos);
-   pose.rotation.set(pitch,heading,roll,'YXZ');pose.scale.set(w,h,d);pose.updateMatrix();
+   const depth=z*Math.cos(tilt)-y*Math.sin(tilt),height=y*Math.cos(tilt)+z*Math.sin(tilt)+rise;
+   pose.position.set(originX+x*cos+depth*sin,height,originZ-x*sin+depth*cos);
+   pose.rotation.set(pitch-tilt,heading,roll,'YXZ');pose.scale.set(w,h,d);pose.updateMatrix();
    mesh.setMatrixAt(mesh.count,pose.matrix);mesh.setColorAt(mesh.count,color.set(c));mesh.count++;
  }
  const box=(...v)=>piece(boxes,...v),rock=(...v)=>piece(stones,...v);
@@ -34,10 +35,10 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    rock('#f2833b',x,.94,z,.45,.68,.45);
    box('#fff4ce',x,1,z,.47,.14,.47);
  }
- function person(anchor,x,z,turn,shirt,gesture=0,uniform=false,lean=0){
+ function person(anchor,x,z,turn,shirt,gesture=0,uniform=false,lean=0,stride=0){
    at(anchor,x,z,turn);
-   box('#334851',-.36,1.04,0,.54,1.18,.7);
-   box('#334851',.36,1.04,.1,.54,1.18,.7);
+   box('#334851',-.36,1.04,stride*.35,.54,1.18,.7,stride*.4);
+   box('#334851',.36,1.04,.1-stride*.35,.54,1.18,.7,-stride*.4);
    box(shirt,0,2.12,lean*.42,1.42,1.24,.8,lean);
    for(const side of [-1,1]){
      const pitch=side>0?gesture:gesture*.45;
@@ -45,11 +46,11 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
      box('#be896a',side*.87,1.67+Math.abs(pitch)*.23,.16+Math.sin(pitch)*.85,.34,.37,.37);
    }
    box('#cf9875',0,3.22,lean,1,.98,.89);
-   box(uniform?'#efbc50':'#534445',0,3.72,lean,1.04,.22,.94);
-   if(uniform)box('#ebe780',0,2.13,0,1.48,.19,.86);
+   box(uniform==='police'?'#334c6d':uniform?'#efbc50':'#534445',0,3.72,lean,1.04,.22,.94);
+   if(uniform)box(uniform==='police'?'#e1e4db':'#ebe780',0,2.13,0,1.48,.19,.86);
  }
- function vehicle(anchor,x,z,turn,body,kind){
-   at(anchor,x,z,turn);
+ function vehicle(anchor,x,z,turn,body,kind,lift=0,pitch=0){
+   at(anchor,x,z,turn);rise=lift;tilt=pitch;
    const truck=kind==='fire'||kind==='tow',length=truck?7.4:5.4;
    box('#303f4c',0,1.02,0,3.05,.75,length);
    box(body,0,1.62,0,3.25,1.25,length);
@@ -77,6 +78,15 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
      for(const side of [-1,1])box(kind==='tow'||kind==='traffic'?'#fdc35a':side<0?'#438ec9':'#ed6352',side*.65,3.72,cab,.57,.26,.5);
    }
  }
+ // Rods share the existing box batch: hoses, winches and signals add no draw calls.
+ const up=new T.Vector3(0,1,0),direction=new T.Vector3();
+ function rod(c,ax,ay,az,bx,by,bz,width=.12){
+   pose.position.set(originX+(ax+bx)/2*cos+(az+bz)/2*sin,(ay+by)/2,originZ-(ax+bx)/2*sin+(az+bz)/2*cos);
+   direction.set((bx-ax)*cos+(bz-az)*sin,by-ay,-(bx-ax)*sin+(bz-az)*cos);
+   const length=direction.length();
+   pose.quaternion.setFromUnitVectors(up,direction.normalize());pose.scale.set(width,length,width);pose.updateMatrix();
+   boxes.setMatrixAt(boxes.count,pose.matrix);boxes.setColorAt(boxes.count,color.set(c));boxes.count++;
+ }
  // Dispatch is reported first; crews drive in, work in place, then depart.
  function responder(e,kind,c,parking){
    if(e.phase==='reported')return;
@@ -103,16 +113,29 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    const retreat=e.phase==='reported'?ease(e.phaseProgress):1;
    person(e,-2.3-retreat*2.2,-.8,-1.9,'#8e75a0');
    responder(e,'fire','#c34a3c',-8);
-   if(e.phase==='responding')person(e,-2.15,-1.4,.85,'#d27542',.55,true);
+   if(e.phase==='responding'&&e.phaseProgress>.48){
+     const arrive=ease((e.phaseProgress-.48)/.52),step=reduced?0:Math.sin(t*7)*.75;
+     person(e,-2.8,-9+5.7*arrive,.65,'#3b5262',.3,true,0,step);
+     person(e,-4.1,-10+5.4*arrive,.65,'#3b5262',.2,true,0,-step);
+   }
    if(work||e.phase==='clearing'){
      at(e,-2,-3);cone(0,0);cone(3.5,.4);
      const exit=e.phase==='clearing'?ease(e.phaseProgress):0;
-     person(e,-2.8-exit*2,-3.3-exit*2,.65,'#3b5262',.86,true);
-     if(work&&e.phaseProgress<.93){
-       at(e,0,0);
-       for(let i=1;i<=6;i++){
-         const u=i/7;
-         rock('#a7dddf',-2.55*(1-u),2.48+1.1*Math.sin(u*Math.PI),-2.8*(1-u),.13,.12,.19);
+     person(e,-2.8-exit*2,-3.3-exit*2,.65,'#3b5262',1.12,true);
+     person(e,-4.1-exit*2,-4.6-exit*2,.65,'#3b5262',.6,true);
+     at(e,0,0);
+     const laid=work?ease(e.phaseProgress/.15):1-exit;
+     rod('#4a5552',-4.7,.38,-8,-4.1,.38,-4.6*laid-8*(1-laid),.2);
+     rod('#4a5552',-4.1,.38,-4.6,-2.65,2.48,-2.8,.2);
+     rod('#b9c1b7',-2.65,2.48,-2.8,-2.2,2.6,-2.3,.24);
+     if(work&&e.phaseProgress>.15&&e.phaseProgress<.94){
+       for(let i=0;i<12;i++){
+         const u=reduced?(i+.5)/12:(i/12+t*1.7)%1;
+         rock('#9cd8e5',-2.3*(1-u),2.6+2.1*Math.sin(u*Math.PI)-.25*u,-2.4*(1-u),.2+u*.15,.2,.32);
+       }
+       for(let i=0;i<4;i++){
+         const u=reduced?.5:(t*1.6+i/4)%1;
+         rock('#d2eff0',(i%2?1:-1)*u*.9,.4+u*.5,(i<2?1:-1)*u*.8,.15,.17,.15);
        }
      }
    }
@@ -128,24 +151,36 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    const curb=Math.sign((e.x-e.lane.x)*Math.cos(e.heading)-(e.z-e.lane.z)*Math.sin(e.heading))||1;
    person(e,curb*(1.2+back),3.3+back,Math.PI,'#92779d');
    responder(e,'police','#e5e6d6',-8);
-   if(!active)person(e,-.3,leave*.5,0,'#3e6382',.72*(1-separate));
- }
- function crash(e){
-   const clear=e.phase==='clearing'?ease((e.phaseProgress-.28)/.72):0;
-   // The tow truck hooks onto the disabled van before pulling it out.
-   vehicle(e.lane,0,2.75+clear*23,0,'#e6b269','van');
-   vehicle(e.lane,-.16,-2.7+clear*15,.09,'#71a6ae','car');
-   box('#537c82',0,2.31,2.16,2.6,.2,.76,-.25,.05);
-   for(const side of [-1,1])box('#ebaa59',side*1.27,1.7,-2.74,.53,.33,.12);
-   if(e.phase!=='reported'){
-     at(e.lane,0,0);cone(-1.5,-7);cone(-2,-11);
+   if(e.phase==='responding'&&e.phaseProgress>.55){
+     const approach=1-ease((e.phaseProgress-.55)/.45),step=reduced?0:Math.sin(t*7)*.7;
+     person(e,-1.9,-7*approach,0,'#3e6382',.55,'police',0,step);
+     person(e,1.9,-8*approach,Math.PI,'#3e6382',.55,'police',0,-step);
    }
+   if(!active){
+     person(e,-.7, -1.5*separate+leave*.3,0,'#3e6382',.85*(1-separate)+.3,'police');
+     person(e,.7,1.5*separate+leave*.3,Math.PI,'#3e6382',.85*(1-separate)+.3,'police');
+   }
+ }
+ function crash(e,t){
+   const work=e.phase==='working',clearing=e.phase==='clearing';
+   const clear=clearing?ease((e.phaseProgress-.28)/.72):0;
+   const load=work?ease((e.phaseProgress-.24)/.64):clearing?1:0;
+   // The van's front wheels rise onto the tow cradle; both depart together.
+   vehicle(e.lane,0,2.75+load*.65+clear*24,0,'#e6b269','van',load*.5,load*.17);
+   vehicle(e.lane,-.16,-2.7+clear*15,.09,'#71a6ae','car');
+   at(e.lane,0,0);
+   box('#ebaa59',-1.4,1.7,-.1,.53,.33,.12);box('#ebaa59',1.1,1.7,-.1,.53,.33,.12);
+   if(e.phase!=='reported'){cone(-1.5,-7);cone(-2,-11);}
    person(e.lane,4.6,-.1,-Math.PI/2,'#986b96');
    person(e.lane,4.9,2.65,-2.5,'#698e87');
    responder(e,'tow','#e1a248',8.4);
-   if(e.phase==='working'){
-     person(e.lane,2.7,4.8,-Math.PI/2,'#d8a247',.55,true);
-     at(e.lane,0,0);box('#687276',0,1.19,5.76,.13,.13,1.32);
+   if(work||clearing){
+     const away=clearing?ease(e.phaseProgress):0,step=reduced?0:Math.sin(t*6)*.55;
+     person(e.lane,2.7,4.8+away*5,-Math.PI/2,'#d8a247',work&&load<.1?.85:.25,true,0,away?step:0);
+     at(e.lane,0,clear*24);
+     box('#dd9e40',0,.9+load*.72,5.1+load*.35,2.55,.22,1.2,-load*.17);
+     rod('#687276',0,1.85,6.8,0,1.1+load*.8,5.1+load*.35,.12);
+     for(const side of [-1,1])rod('#d3a34f',side*1.2,1.1,6.3,side*1.2,.9+load*.72,5.1+load*.35,.16);
    }
  }
  function jam(e,t,traffic){
@@ -181,8 +216,15 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    if(e.phase!=='reported'){
      // Marshal stands beside the taper to signal the waiting lane.
      const move=e.phase==='responding'?1-ease(e.phaseProgress):0;
-     const wave=e.phase==='working'&&e.stageAge%10<5&&!reduced ? .35*Math.sin(t*2.2):0;
-     person(e.lane,3.8,-6.3-12*move,Math.PI,'#c78c32',open>.5 ? .32:1.12+wave,true);
+     const go=e.phase==='working'&&e.stageAge%10<5;
+     const wave=go&&!reduced ? .35*Math.sin(t*2.2):0;
+     person(e.lane,3.8,-6.3-12*move,Math.PI,'#c78c32',open>.5 ? .32:go?.55+wave:1.4,true,0,reduced?0:Math.sin(t*7)*move*.7);
+     at(e.lane,3.8,-6.3-12*move);
+     // The paddle stays readable even with reduced motion: red stop / green go.
+     rod('#555c56',-1.1,2,-.1,-1.1,4.8,-.1,.1);
+     box(go?'#489969':'#d94f43',-1.1,4.8,-.1,1.5,1.3,.2);
+     box('#fff4d9',-1.1,4.8,-.22,.9,.2,.05);
+     if(go)box('#fff4d9',-1.1,4.8,-.23,.2,.8,.05);
    }
  }
  let lastTime=-Infinity,lastState='';
@@ -193,7 +235,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    for(const e of events){
      if(e.type==='fire')fire(e,time);
      else if(e.type==='fight')fight(e,time);
-     else if(e.type==='crash')crash(e);
+     else if(e.type==='crash')crash(e,time);
      else if(e.type==='jam')jam(e,time,traffic);
    }
    for(const mesh of [boxes,stones]){

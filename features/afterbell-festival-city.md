@@ -41,3 +41,14 @@ The player can explore beyond the original grid during a shift, monitor simulate
 | C16 | A non-graphic fight, a fire, a traffic accident and a jam each show a distinct cause, scene, response and clearance. Responders and bystanders change behavior across phases. |
 | C17 | Affected traffic slows, queues or takes a detour. A cleared scene releases its road restriction. |
 | C18 | Hebrew city dispatch shows the incident location, current status and an observation route. The mission remains available and reload preserves the simulation clock. |
+
+C19. A moving player van contacting a walking resident causes one short hop, small knockback and recovery. The landing remains within the city and clear of solid buildings. Sustained overlap does not retrigger the reaction. Auto-drive yields to residents. A stationary van and a walking hero do not cause knockback. Reduced motion keeps the short displacement and recovery without the hop or tumble.
+
+C20. Scene visits offer an urgent guided drive that accelerates on clear streets, passes a slower car only when the road and opposing traffic allow it, and takes an early detour if blocked. Manual input or cancelling directions ends urgent mode. The van slows for pedestrians and arriving at the scene ends the rush.
+C21. Dispatch and on-scene captions name the responding crew, explain the current visible action and say what happens next. Firefighting, towing, police separation and alternating traffic have distinct movement cues matching the phase.
+
+## Field expeditions in the expanded bay
+Students can explore connected western and northern districts from the existing city entry point. A Hebrew RTL field journal offers six optional assignments for the selected subject. A student accepts one, travels or rides the tram, works with the station's materials, retries with feedback, and stamps the journal. Field practice is separate from graded shift answers. The current assignment and stamps use the existing session draft. Old drafts start with an empty journal.
+- EXP-1. Bounds cover at least four times the former area. Six signed stations join the same streets and map. Check geometry and routes.
+- EXP-2. Each subject offers six contextual activities across at least four interaction formats. Check subject switch, errors, retries and completion.
+- EXP-3. Accepting, abandoning and resuming preserve shift progress. A finished activity has one stamp per shift. Check mobile browser, reload and keyboard controls.
