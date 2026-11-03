@@ -244,3 +244,14 @@ Michael: "terminal not clear to kids". Replaced the `$ python3 if_else.py` promp
 "What are these two dark windows?" help open by default with plainer wording, and a
 "your code works, but the mission is not done yet" note that points back to the green card.
 The hub card got a black terminal-style button straight into `if-else.html#terminal`.
+
+### Easy mode for struggling 12-year-olds — 2026-11-03
+Michael: "must be easy to use for 12 years old kids that try to study and its hard".
+Six missions now start with zero typing: 1 just press Run (pre-solved, `startsSolved`),
+2 tap the 🔢 "Change the number" suggestion then Run, 3 fix two mistakes, 4 type a four-line
+if / else, 5 add an elif (the ➕ suggestion gives the structure, the kid edits the number and
+the word), 6 free play. Every mission card has a dashed "👉 do this now" line naming the exact
+button; a finished card turns green with "🎉 Done! Tap Next mission". After two unsuccessful
+runs the hint opens by itself, prefixed "💡 Here is a hint:". Error messages were shortened to
+one action each. "Try a change" suggestion chips (`suggestions` in code-runner.js) edit the code
+for the learner and explain what to look for; chips that do not fit the current code are greyed.

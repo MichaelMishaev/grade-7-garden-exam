@@ -34,23 +34,36 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
     await page.locator('#mission-reset').click();
     assert.equal(await page.locator('#idea-note').isVisible(), false);
 
-    // Mission 1: run as-is, then change the score.
+    // Mission 1: just press Run. The card turns green and tells the kid what to tap next.
+    assert.equal(await page.locator('.terminal-help').evaluate(el => el.open), false);
+    assert.match(await page.locator('#mission-step').textContent(), /^👉 Press ▶ Run/);
     await page.locator('#run').click();
     assert.match(await page.locator('#terminal-output').textContent(), /Running your code…\nYou passed!\nNext lesson\n/);
-    assert.equal(await page.locator('.terminal-help').evaluate(el => el.open), true);
+    assert.equal(await page.locator('.terminal-success').count(), 1);
+    assert.equal(await page.locator('#mission-card').getAttribute('data-done'), 'true');
+    assert.match(await page.locator('#mission-step').textContent(), /Done! Tap Next mission/);
     assert.equal(await page.locator('.mac-badge').first().textContent(), 'YOUR CODE · tap to edit');
-    assert.equal(await page.locator('.terminal-note').count(), 1);
-    await page.locator('#code-editor').fill('score = 40\nif score >= 60:\n    print("You passed!")\nelse:\n    print("Keep practicing!")\nprint("Next lesson")');
+    await page.locator('#mission-next').click();
+
+    // Mission 2: one suggestion chip, then Run. No typing.
+    assert.match(await page.locator('#mission-label').textContent(), /MISSION 2 of 6/);
+    assert.equal(await page.locator('[data-mission-dot]').count(), 6);
+    await page.locator('#run').click();
+    assert.equal(await page.locator('.terminal-note').count(), 1, 'runs but mission not done');
+    assert.equal(await page.locator('#mission-hint-text').isVisible(), false);
+    await page.locator('#run').click();
+    assert.equal(await page.locator('#mission-hint-text').isVisible(), true, 'second miss opens the hint automatically');
+    assert.match(await page.locator('#mission-hint-text').textContent(), /^💡 Here is a hint:/);
+    await page.locator('[data-idea="number"]').click();
     await page.locator('#run').click();
     assert.equal(await page.locator('.terminal-success').count(), 1);
     assert.equal(await page.locator('#mission-status').getAttribute('data-done'), 'true');
     await page.locator('#mission-next').click();
 
-    // Mission 2: broken program shows a red line-numbered message; Show me fixes it.
-    assert.match(await page.locator('#mission-label').textContent(), /MISSION 2 of 5/);
-    assert.equal(await page.locator('[data-mission-dot]').count(), 5);
+    // Mission 3: broken program shows a red line-numbered message; Show me fixes it.
+    assert.match(await page.locator('#mission-label').textContent(), /MISSION 3 of 6/);
     await page.locator('#run').click();
-    assert.match(await page.locator('.terminal-error').textContent(), /^✕ Line 2: .*colon/);
+    assert.match(await page.locator('.terminal-error').textContent(), /^✕ Line 2: add a colon/);
     assert.equal(await page.locator('#code-gutter .gutter-error').textContent(), '2');
     await page.locator('#code-editor').press('End');
     assert.equal(await page.locator('#code-gutter .gutter-error').count(), 1, 'marker stays until the code changes');
@@ -63,7 +76,7 @@ test('if/else terminal: missions, kid-friendly errors, indent help, bilingual co
     assert.equal(await page.locator('.terminal-success').count(), 1);
     await page.locator('#mission-next').click();
 
-    // Mission 3: write from scratch with Tab and the Indent button; Enter auto-indents after a colon.
+    // Mission 4: write from scratch with Tab and the Indent button; Enter auto-indents after a colon.
     await page.locator('#code-editor').fill('age = 13\nif age >= 13:');
     await page.locator('#code-editor').focus();
     await page.keyboard.press('End');

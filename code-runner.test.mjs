@@ -78,14 +78,16 @@ test('runaway programs and dangerous input stay harmless', () => {
 });
 
 test('missions have solutions that pass their own checks and starters that do not', () => {
-  assert.ok(missions.length >= 3);
+  assert.equal(missions.length, 6);
+  assert.equal(missions.filter((m) => m.startsSolved).length, 1, 'only the first mission is pre-solved');
   for (const mission of missions) {
     assert.ok(mission.title.en && mission.title.he && mission.hint.en && mission.hint.he);
     const solved = runProgram(mission.solution);
     assert.equal(solved.ok, true, mission.id);
     assert.equal(mission.check(solved.output, mission.solution), true, mission.id);
+    assert.ok(mission.step.en && mission.step.he, mission.id);
     const starter = runProgram(mission.starter);
-    assert.equal(starter.ok && mission.check(starter.output, mission.starter), false, `${mission.id} starter must not already pass`);
+    if (!mission.startsSolved) assert.equal(starter.ok && mission.check(starter.output, mission.starter), false, `${mission.id} starter must not already pass`);
   }
 });
 

@@ -6,7 +6,7 @@ const copy = {
   en: {
     mission: 'MISSION', of: 'of', hint: '💡 Hint', hide_hint: '💡 Hide hint', show: '👀 Show me', reset: '↺ Reset code',
     run: '▶ Run', indent: '⇥ Indent', ideas: '💡 Try a change:', back: '← Back', next: 'Next mission →', finish: 'Finish ✓',
-    todo: 'Not done yet', done: '✓ Mission done!', waiting: 'Nothing yet. Press ▶ Run and the computer will answer here.',
+    todo: 'Not done yet', done: '✓ Mission done!', done_step: '🎉 Done! Tap Next mission →', auto_hint: '💡 Here is a hint:', waiting: 'Nothing yet. Press ▶ Run and the computer will answer here.',
     running: '▶ Running your code…', editor_badge: 'YOUR CODE · tap to edit', output_badge: 'THE COMPUTER ANSWERS',
     success: '✓ Mission done! The computer printed exactly what we wanted.', nothing: '(the program printed nothing)',
     not_yet: 'Your code works! But the mission is not done yet. Look at the green card above: what should the computer print? Change the code and press Run again.',
@@ -15,7 +15,7 @@ const copy = {
   he: {
     mission: 'משימה', of: 'מתוך', hint: '💡 רמז', hide_hint: '💡 הסתרת הרמז', show: '👀 הראו לי', reset: '↺ איפוס הקוד',
     run: '▶ הפעלה', indent: '⇥ הזחה', ideas: '💡 נסו שינוי:', back: '→ חזרה', next: 'למשימה הבאה ←', finish: 'סיום ✓',
-    todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
+    todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', done_step: '🎉 כל הכבוד! לחצו על למשימה הבאה', auto_hint: '💡 הנה רמז:', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
     running: '▶ מריץ את הקוד שלכם…', editor_badge: 'הקוד שלכם · לחצו כדי לערוך', output_badge: 'המחשב עונה',
     success: '✓ המשימה הושלמה! המחשב הדפיס בדיוק מה שרצינו.', nothing: '(התוכנית לא הדפיסה כלום)',
     not_yet: 'הקוד שלכם עובד! אבל המשימה עוד לא הושלמה. הסתכלו בכרטיס הירוק למעלה: מה המחשב צריך להדפיס? שנו את הקוד ולחצו שוב על הפעלה.',
@@ -38,6 +38,7 @@ export function initTerminal({ getLanguage, onFinish }) {
   let hintOpen = false;
   let lastRun = null; // { result, passed } for the current mission
   let ideaNote = null; // { en, he } after a suggestion was applied
+  const attempts = missions.map(() => 0); // unsuccessful runs per mission, for the automatic hint
 
   const language = () => (getLanguage() === 'he' ? 'he' : 'en');
   const text = (key) => copy[language()][key];
@@ -119,7 +120,9 @@ export function initTerminal({ getLanguage, onFinish }) {
     byId('mission-label').textContent = `${text('mission')} ${index + 1} ${text('of')} ${missions.length}`;
     byId('mission-title').textContent = mission.title[lang];
     byId('mission-task').textContent = mission.task[lang];
-    for (const id of ['mission-label', 'mission-title', 'mission-task']) { byId(id).lang = lang; byId(id).dir = hebrew ? 'rtl' : 'ltr'; }
+    byId('mission-step').textContent = completed.has(index) ? text('done_step') : mission.step[lang];
+    byId('mission-card').dataset.done = String(completed.has(index));
+    for (const id of ['mission-label', 'mission-title', 'mission-task', 'mission-step']) { byId(id).lang = lang; byId(id).dir = hebrew ? 'rtl' : 'ltr'; }
     const status = byId('mission-status');
     status.textContent = completed.has(index) ? text('done') : text('todo');
     status.dataset.done = String(completed.has(index));
@@ -128,7 +131,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     hintButton.textContent = hintOpen ? text('hide_hint') : text('hint');
     hintButton.setAttribute('aria-expanded', String(hintOpen));
     hintText.hidden = !hintOpen;
-    hintText.textContent = mission.hint[lang];
+    hintText.textContent = (attempts[index] >= 2 && !completed.has(index) ? text('auto_hint') + ' ' : '') + mission.hint[lang];
     hintText.lang = lang;
     hintText.dir = hebrew ? 'rtl' : 'ltr';
     byId('mission-solution').textContent = text('show');
@@ -188,8 +191,10 @@ export function initTerminal({ getLanguage, onFinish }) {
     const result = runProgram(editor.value);
     const passed = result.ok && mission.check(result.output, editor.value);
     if (passed) completed.add(index);
+    else if (!completed.has(index)) { attempts[index] += 1; if (attempts[index] >= 2) hintOpen = true; }
     lastRun = { result, passed };
     render();
+    if (passed) byId('mission-card').scrollIntoView({ block: 'nearest' });
     if (!result.ok && result.error.line) {
       // Put the caret on the offending line so the learner sees where to look.
       const lines = editor.value.split('\n');
@@ -272,6 +277,7 @@ export function initTerminal({ getLanguage, onFinish }) {
   });
   byId('terminal-restart').addEventListener('click', () => {
     completed.clear();
+    attempts.fill(0);
     drafts.forEach((_, i) => { drafts[i] = missions[i].starter; });
     editor.value = missions[0].starter;
     index = 0;

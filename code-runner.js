@@ -218,12 +218,12 @@ export function runProgram(source) {
 
 const messages = {
   en: {
-    missing_colon: 'Line {line}: an if, elif or else line must end with a colon  :',
-    expect_indent: 'Line {line}: this line must be indented (press ⇥ Indent) so it belongs to the branch above.',
+    missing_colon: 'Line {line}: add a colon  :  at the end of this line.',
+    expect_indent: 'Line {line}: tap ⇥ Indent to push this line in. It belongs to the line above.',
     unexpected_indent: 'Line {line}: this line is indented, but there is no if or else above it. Remove the spaces.',
     empty_block: 'Line {line}: after the colon, write at least one indented line.',
     else_without_if: 'Line {line}: else / elif needs an if right before it.',
-    unknown_name: 'Line {line}: I don’t know a name called “{detail}”. Did you set it with = first? Text needs quotes.',
+    unknown_name: 'Line {line}: “{detail}” is not set yet. Write  {detail} = ...  first, or put text in quotes.',
     unterminated_string: 'Line {line}: a quote was opened but never closed. Text needs quotes on both sides: "like this".',
     bad_condition: 'Line {line}: I can’t read this condition. Use a comparison like score >= 60 (two = signs for equal: ==).',
     bad_expression: 'Line {line}: I can’t read the value after =. Try a number like 75 or text in quotes.',
@@ -236,12 +236,12 @@ const messages = {
     too_long: 'Line {line}: that program is too long for this little terminal.'
   },
   he: {
-    missing_colon: 'שורה {line}: שורת if, elif או else חייבת להסתיים בנקודתיים  :',
-    expect_indent: 'שורה {line}: השורה הזו צריכה הזחה (לחצו ⇥ הזחה) כדי שתשתייך לענף שמעליה.',
+    missing_colon: 'שורה {line}: הוסיפו נקודתיים  :  בסוף השורה.',
+    expect_indent: 'שורה {line}: לחצו ⇥ הזחה כדי לדחוף את השורה פנימה. היא שייכת לשורה שמעליה.',
     unexpected_indent: 'שורה {line}: השורה מוזחת, אבל אין מעליה if או else. מחקו את הרווחים.',
     empty_block: 'שורה {line}: אחרי הנקודתיים כותבים לפחות שורה אחת מוזחת.',
     else_without_if: 'שורה {line}: else / elif צריך if ממש לפניו.',
-    unknown_name: 'שורה {line}: אני לא מכיר שם בשם ״{detail}״. הגדרתם אותו עם = קודם? טקסט צריך מירכאות.',
+    unknown_name: 'שורה {line}: ״{detail}״ עוד לא הוגדר. כתבו קודם  {detail} = ...  או שימו טקסט במירכאות.',
     unterminated_string: 'שורה {line}: פתחתם מירכאות ולא סגרתם. טקסט צריך מירכאות משני הצדדים: "ככה".',
     bad_condition: 'שורה {line}: לא הצלחתי לקרוא את התנאי. השתמשו בהשוואה כמו score >= 60 (שוויון נכתב עם ==).',
     bad_expression: 'שורה {line}: לא הצלחתי לקרוא את הערך אחרי =. נסו מספר כמו 75 או טקסט במירכאות.',
@@ -275,35 +275,48 @@ print("Next lesson")`;
 export const missions = [
   {
     id: 'run',
-    title: { en: 'Run it, then change it', he: 'הריצו, ואז שנו' },
-    task: { en: 'Press Run and read what the computer says. Then change the score so it prints “Keep practicing!”.', he: 'לחצו על הפעלה וקראו מה המחשב אומר. אחר כך שנו את הציון כך שיודפס “Keep practicing!”.' },
+    title: { en: 'Just press Run', he: 'רק לחצו על הפעלה' },
+    task: { en: 'Nothing to type. Press the green ▶ Run button and read what the computer says in the bottom window.', he: 'אין מה להקליד. לחצו על הכפתור הירוק ▶ הפעלה וקראו מה המחשב אומר בחלון התחתון.' },
+    step: { en: '👉 Press ▶ Run', he: '👉 לחצו על ▶ הפעלה' },
     starter: lessonProgram,
-    hint: { en: 'Line 1 sets the score. Any number below 60 makes the condition False, so the else branch runs.', he: 'שורה 1 קובעת את הציון. כל מספר מתחת ל־60 הופך את התנאי ל־False, ולכן ענף else מתבצע.' },
+    startsSolved: true,
+    hint: { en: 'The green ▶ Run button is right under the code window.', he: 'הכפתור הירוק ▶ הפעלה נמצא ממש מתחת לחלון הקוד.' },
+    solution: lessonProgram,
+    check: (output) => output[0] === 'You passed!' && output[1] === 'Next lesson'
+  },
+  {
+    id: 'change',
+    title: { en: 'Make it say “Keep practicing!”', he: 'גרמו לו להגיד “Keep practicing!”' },
+    task: { en: 'The score is 75, so the computer says “You passed!”. Make the score smaller than 60 and run again.', he: 'הציון הוא 75, ולכן המחשב אומר “You passed!”. הקטינו את הציון מתחת ל־60 והריצו שוב.' },
+    step: { en: '👉 Tap 🔢 Change the number, then ▶ Run', he: '👉 לחצו על 🔢 שנו את המספר, ואז ▶ הפעלה' },
+    starter: lessonProgram,
+    hint: { en: 'Line 1 sets the score. Any number below 60 makes the rule False, so the else path runs.', he: 'שורה 1 קובעת את הציון. כל מספר מתחת ל־60 הופך את התנאי ל־False, ולכן מסלול else רץ.' },
     solution: lessonProgram.replace('75', '40'),
     check: (output) => output[0] === 'Keep practicing!' && output[1] === 'Next lesson'
   },
   {
     id: 'fix',
     title: { en: 'Fix the broken program', he: 'תקנו את התוכנית השבורה' },
-    task: { en: 'This program has two mistakes. Press Run, read the red message, fix it, and run again until it prints “You passed!”.', he: 'בתוכנית יש שתי טעויות. לחצו על הפעלה, קראו את ההודעה האדומה, תקנו והריצו שוב עד שיודפס “You passed!”.' },
+    task: { en: 'Two small mistakes hide in this code. Run it, read the red line, fix that line, run again. Repeat until it says “You passed!”.', he: 'בקוד מסתתרות שתי טעויות קטנות. הריצו, קראו את השורה האדומה, תקנו את השורה, הריצו שוב. חזרו על זה עד שיודפס “You passed!”.' },
+    step: { en: '👉 Press ▶ Run and read the red line', he: '👉 לחצו על ▶ הפעלה וקראו את השורה האדומה' },
     starter: `score = 75
 if score >= 60
     print("You passed!")
 else:
 print("Keep practicing!")
 print("Next lesson")`,
-    hint: { en: 'Every if and else line ends with a colon. Every line inside a branch is pushed in with ⇥ Indent.', he: 'כל שורת if ו־else מסתיימת בנקודתיים. כל שורה בתוך ענף נדחפת פנימה עם ⇥ הזחה.' },
+    hint: { en: 'Line 2 needs a colon  :  at the end. Line 5 needs ⇥ Indent so it belongs to else.', he: 'שורה 2 צריכה נקודתיים  :  בסוף. שורה 5 צריכה ⇥ הזחה כדי להשתייך ל־else.' },
     solution: lessonProgram,
     check: (output) => output[0] === 'You passed!' && output[1] === 'Next lesson'
   },
   {
     id: 'write',
     title: { en: 'Write your own if / else', he: 'כתבו if / else משלכם' },
-    task: { en: 'age is 13. Write an if / else that prints “Teen” when age is at least 13, and “Kid” otherwise.', he: 'age הוא 13. כתבו if / else שמדפיס “Teen” כשהגיל לפחות 13, ו־“Kid” אחרת.' },
+    task: { en: 'age is 13. Print “Teen” when age is at least 13, and “Kid” otherwise. Type it under line 1.', he: 'age הוא 13. הדפיסו “Teen” כשהגיל לפחות 13, ו־“Kid” אחרת. הקלידו מתחת לשורה 1.' },
+    step: { en: '👉 Type  if age >= 13:  then Enter. Stuck? Tap 👀 Show me', he: '👉 הקלידו  if age >= 13:  ואז Enter. נתקעתם? לחצו על 👀 הראו לי' },
     starter: `age = 13
-# write your if / else below
 `,
-    hint: { en: 'Start with: if age >= 13:  then an indented print("Teen"), then else: and an indented print("Kid").', he: 'התחילו עם: if age >= 13:  ואז print("Teen") מוזח, אחר כך else: ו־print("Kid") מוזח.' },
+    hint: { en: 'Four lines: if age >= 13:  /  print("Teen") pushed in  /  else:  /  print("Kid") pushed in.', he: 'ארבע שורות: if age >= 13:  /  print("Teen") מוזח  /  else:  /  print("Kid") מוזח.' },
     solution: `age = 13
 if age >= 13:
     print("Teen")
@@ -314,12 +327,14 @@ else:
   {
     id: 'elif',
     title: { en: 'Three paths with elif', he: 'שלושה מסלולים עם elif' },
-    task: { en: 'temperature is 30. Print “Hot” when it is at least 30, “Nice” when it is at least 20, and “Cold” otherwise.', he: 'temperature הוא 30. הדפיסו “Hot” כשהטמפרטורה לפחות 30, “Nice” כשהיא לפחות 20, ו־“Cold” אחרת.' },
+    task: { en: 'temperature is 30. Print “Hot” at 30 or more, “Nice” at 20 or more, “Cold” otherwise. Add the middle path with elif.', he: 'temperature הוא 30. הדפיסו “Hot” מ־30 ומעלה, “Nice” מ־20 ומעלה, ו־“Cold” אחרת. הוסיפו את המסלול האמצעי עם elif.' },
+    step: { en: '👉 Tap ➕ Add an elif path, then change its number to 20 and its word to Nice', he: '👉 לחצו על ➕ הוסיפו מסלול elif, ואז שנו את המספר ל־20 ואת המילה ל־Nice' },
     starter: `temperature = 30
 if temperature >= 30:
     print("Hot")
-`,
-    hint: { en: 'After the if block add  elif temperature >= 20:  with print("Nice"), then  else:  with print("Cold"). Only one path runs.', he: 'אחרי ה־if הוסיפו  elif temperature >= 20:  עם print("Nice"), ואז  else:  עם print("Cold"). רק מסלול אחד מתבצע.' },
+else:
+    print("Cold")`,
+    hint: { en: 'Between the if block and else: add  elif temperature >= 20:  and under it print("Nice") pushed in.', he: 'בין בלוק ה־if ל־else: הוסיפו  elif temperature >= 20:  ומתחתיו print("Nice") מוזח.' },
     solution: `temperature = 30
 if temperature >= 30:
     print("Hot")
@@ -327,15 +342,26 @@ elif temperature >= 20:
     print("Nice")
 else:
     print("Cold")`,
-    check: (output, source) => output.length === 1 && output[0] === 'Hot' && /^elif\b/m.test(source) && /^else\b/m.test(source)
+    check: (output, source) => output.length === 1 && output[0] === 'Hot' && /^elif\b/m.test(source) && /^else\b/m.test(source) && /"Nice"|'Nice'/.test(source)
   },
   {
     id: 'free',
     title: { en: 'Your turn: invent a program', he: 'תורכם: המציאו תוכנית' },
     task: { en: 'Make up your own if / else. Any variable, any rule, any messages. It counts when it runs and prints at least one line.', he: 'המציאו if / else משלכם. כל משתנה, כל כלל, כל הודעה. זה נחשב כשהתוכנית רצה ומדפיסה לפחות שורה אחת.' },
-    starter: `# your idea here. For example:\n# pet = "cat"\n# if pet == "cat":\n#     print("Meow")\n# else:\n#     print("Woof")\n`,
+    step: { en: '👉 Tap 🧱 Insert a new if / else, then change the words', he: '👉 לחצו על 🧱 הכניסו if / else חדש, ואז שנו את המילים' },
+    starter: `# your idea here. For example:
+# pet = "cat"
+# if pet == "cat":
+#     print("Meow")
+# else:
+#     print("Woof")
+`,
     hint: { en: 'Pick something you like: a pet, a game score, the weather. Set it with =, then if ... : and else: with a print in each.', he: 'בחרו משהו שאתם אוהבים: חיית מחמד, ניקוד במשחק, מזג אוויר. קבעו אותו עם =, ואז if ... : ו־else: עם print בכל אחד.' },
-    solution: `pet = "cat"\nif pet == "cat":\n    print("Meow")\nelse:\n    print("Woof")`,
+    solution: `pet = "cat"
+if pet == "cat":
+    print("Meow")
+else:
+    print("Woof")`,
     check: (output, source) => output.length > 0 && /^if\b/m.test(source) && /^else\b/m.test(source)
   }
 ];

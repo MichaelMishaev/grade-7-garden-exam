@@ -635,3 +635,7 @@ code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .idea-note { margin: 10px 0 0; padding: 10px 14px; border-radius: 12px; background: #eaf3ff; border: 2px solid #b9d6f7; color: #16395c; font-size: 14px; line-height: 1.5; }
 @media (hover: hover) and (pointer: fine) { .explanation-page .idea-buttons button:not(:disabled):hover { background: #e9fbdc; } }
 .idea-row:has(.idea-label[dir="rtl"]) .idea-buttons { direction: rtl; }
+/* Easy mode: the "do this now" line and the finished-mission state. */
+.mission-card .mission-step { margin-top: 10px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 2px dashed #8ed54f; font-weight: 800; font-size: 15px; line-height: 1.45; color: #1f4d00; }
+.mission-card[data-done="true"] { background: #e4f8d2; border-color: #8ed54f; }
+.mission-card[data-done="true"] .mission-step { border-style: solid; background: #58cc02; color: #163800; }
