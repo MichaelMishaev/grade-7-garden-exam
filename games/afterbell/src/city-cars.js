@@ -75,10 +75,10 @@ export function buildCar(T,part,box,tube,brandId,color){
  // Lights: Teslas get a full-width tail bar, everything else paired tail lamps.
  const tailY=S==='bus'?1.9:S==='wedge'?2.1:1.8;
  if(b.tail==='bar'){
-  const bar=part(shell,box,'#ff2f3f',0,tailY,-3.03,3.2,.16,.08);bar.material.emissive.set('#ff1020');
+  const bar=part(shell,box,'#ff2f3f',0,tailY,-3.03,3.2,.16,.08);bar.material.emissive.set('#ff1020');bar.userData.tail=true;
   const strip=part(shell,box,'#ffffff',0,1.62,3.03,2.9,.07,.08);strip.material.emissive.set('#ffffff');
  }else{
-  for(const side of [-1,1]){const l=part(shell,box,'#e5382f',side*1.35,tailY-.1,-3.03,.7,.34,.08);l.material.emissive.set('#a01a14');}
+  for(const side of [-1,1]){const l=part(shell,box,'#e5382f',side*1.35,tailY-.1,-3.03,.7,.34,.08);l.material.emissive.set('#a01a14');l.userData.tail=true;}
  }
  for(const side of [-1,1]){
   const hl=part(shell,box,lamp,side*1.25,1.45,3.04,.8,.3,.1);hl.material.emissive.set('#ffe9a0');

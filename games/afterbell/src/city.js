@@ -142,6 +142,7 @@ function start(resume){
 }
 $('entry').onsubmit=e=>{e.preventDefault();start(false);};$('player-name').oninput=()=>$('player-name').setCustomValidity('');$('resume').onclick=()=>start(true);
 function sheet(html,nextMode){
+ clearTimeout(timer);$('notice').textContent='';
  world.setPaused(true);mode=nextMode;$('sheet').hidden=false;$('hud').inert=true;$('sheet-body').innerHTML=html;$('sheet').scrollTop=0;
  const focus=$('sheet-title');if(focus){focus.tabIndex=-1;focus.focus({preventScroll:true});}
 }

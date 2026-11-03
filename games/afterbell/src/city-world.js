@@ -302,7 +302,7 @@ export function cityWorld(host,onMove,onImpact){
  }
  function frameIncident(dt){
    const e=events.find(e=>e.id===observing);
-   let aimX=.58,aimZ=.815,height=108,offsetX=0,offsetZ=0;
+   let aimX=.58,aimZ=.815,height=driving&&moving&&momentum>.5?122:108,offsetX=0,offsetZ=0;
    if(e&&Math.hypot(px-e.observer.x,pz-e.observer.z)<9){
      // View from the safe shoulder, so the building across the road cannot hide the scene.
      const dx=e.observer.x-e.x,dz=e.observer.z-e.z,distance=Math.hypot(dx,dz)||1;
@@ -387,6 +387,8 @@ export function cityWorld(host,onMove,onImpact){
      p.scale.setScalar((.19+.25*impactPower)*(1-impactAge/.38));
    });
    car.rotation.x=rebound*.18;car.rotation.z=-rebound*impactSide*.13-(driving?turnLean:0);car.position.y=Math.abs(rebound)*.3;
+   const glow=driving&&(braking||impactAge<.3||(!moving&&momentum===0))?2.8:.8;
+   if(car.userData.glow!==glow){car.userData.glow=glow;for(const m of car.userData.shell?.children||[])if(m.userData.tail)m.material.emissiveIntensity=glow;}
    parcel.visible=active&&loaded;parcel.position.set(px+(driving?0:Math.sin(heading)),driving?3.9:2.1+jump,pz+(driving?0:Math.cos(heading)));
    marker.visible=ring.visible=active&&!!destination;
    if(destination){marker.position.set(destination.x,6+(reduced?0:Math.sin(time*3)*.5),destination.z);marker.rotation.y=time*.65;ring.position.set(destination.x,.5,destination.z);}
