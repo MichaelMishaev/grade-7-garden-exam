@@ -1,0 +1,8 @@
+/* Secondary share actions stay outside the test navigation links. */
+.test-share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.test-share-button { min-height: 44px; min-width: 72px; padding: 8px 16px; border: 1px solid #b7cbd9; border-radius: 12px; background: #fff; color: #36576c; font: inherit; font-weight: 700; cursor: pointer; }
+.test-share-button:focus-visible, .test-share-manual input:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
+.test-share-button:disabled { opacity: .65; cursor: wait; }
+.test-share-status { color: #36576c; font-size: 13px; }
+.test-share-manual { width: 100%; color: #36576c; font-size: 13px; }
+.test-share-manual input { display: block; box-sizing: border-box; width: 100%; min-height: 44px; margin-top: 6px; padding: 8px; border: 1px solid #b7cbd9; border-radius: 8px; font: inherit; }

@@ -84,3 +84,57 @@ test('copy fallback, silent cancellation, manual selection, retry and subdirecto
   assert.match(await status.textContent(), /הקישור הועתק/);
   assert.equal(await input.isVisible(), false);
 }));
+
+test('sharing inside all 11 tests preserves quiz identity, stays outside stages and never shares attempt state', { skip }, () => withPage(async (page, base) => {
+  const paths = ['garden-exam.html', 'library-exam.html', 'physics-exam.html', 'english-exam.html',
+    ...['facts', 'questions', 'instructions', 'physics-basics', 'physics-units', 'physics-precision', 'physics-pole'].map(id => `practice.html?quiz=${id}`)];
+  let posts = 0;
+  await page.route('**/api/submit-exam', route => { posts++; return route.abort(); });
+  await page.route('**/api/practice-result', route => { posts++; return route.abort(); });
+  for (const path of paths) {
+    await page.goto(`${base}/${path}${path.includes('?') ? '&' : '?'}source=inline&name=private#answer`);
+    const button = page.locator('main > .test-share .test-share-button');
+    await button.waitFor();
+    if (path.startsWith('practice')) await page.waitForFunction(() => document.getElementById('quiz-title').textContent.length > 0);
+    assert.equal(await button.count(), 1);
+    await page.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async data => window.shared = data }));
+    const storage = await page.evaluate(() => JSON.stringify([localStorage, sessionStorage]));
+    await button.click();
+    const shared = await page.evaluate(() => window.shared);
+    assert.equal(shared.url, `${base}/${path}`);
+    assert.match(shared.title, /PrepX/);
+    assert.equal(await page.evaluate(() => JSON.stringify([localStorage, sessionStorage])), storage);
+    const box = await button.boundingBox();
+    assert.ok(box.width >= 44 && box.height >= 44);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if (!path.startsWith('practice')) {
+      await page.locator('#student-name').fill('בדיקה');
+      await page.locator('#begin').click();
+      await page.locator('#question-stage.active').waitFor();
+      assert.equal(await button.isVisible(), true);
+      await button.click();
+      assert.equal((await page.evaluate(() => window.shared)).url, `${base}/${path}`);
+    }
+  }
+  assert.equal(posts, 0);
+}));
+
+test('in-test copy and manual fallback preserve answers and work from the question screen', { skip }, () => withPage(async (page, base) => {
+  await page.goto(`${base}/library-exam.html?source=inline#question`);
+  await page.locator('#student-name').fill('בדיקה');
+  await page.locator('#begin').click();
+  await page.locator('#question-stage.active').waitFor();
+  const button = page.locator('main > .test-share .test-share-button');
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => window.copied = text } });
+  });
+  await button.click();
+  assert.equal(await page.evaluate(() => window.copied), `${base}/library-exam.html`);
+  await page.evaluate(() => navigator.clipboard.writeText = async () => { throw new Error('denied'); });
+  await button.click();
+  const input = page.locator('.test-share-manual input');
+  assert.equal(await input.isVisible(), true);
+  assert.equal(await input.inputValue(), `${base}/library-exam.html`);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+}));

@@ -30,3 +30,22 @@ skips; full-stack e2e skipped 10 tests without its database flag. Additive migra
 seed and verification passed on a newly created, isolated local database. Tests
 that reset schemas were not enabled; no existing database was reset or changed.
 Native sharing was mocked; physical-device share sheets were not exercised.
+
+## In-test sharing extension
+
+The same control appears below the header inside all four exam pages and the
+practice page, outside the changing question/result screens, so it remains
+available throughout an attempt. It shares a fresh test URL: preserve only the
+`quiz` selector for practice, discard other query parameters and fragments.
+Title is read when sharing, after asynchronous quiz content has loaded.
+
+| ID | Observable acceptance criterion | Verification |
+| --- | --- | --- |
+| SH-6 | All 11 test URLs show a share button inside the test; the button stays visible during questions and results. | Focused mobile browser test |
+| SH-7 | In-test sharing contains only the exam path or practice path plus quiz id, and no draft, name, source or fragment. | Mock share on every test URL |
+| SH-8 | Copy/manual fallbacks work inside tests and do not change stored attempts or submit answers. | Focused browser test |
+
+Extension verification: SH-6–SH-8 pass in the expanded sharing browser suite
+(4 tests total). Full automated run: 311 passed, 8 database-dependent skips;
+full-stack e2e: 10 database-dependent skips. Reviewed exam and practice screenshots
+at 390×844; isolated local migration/seed/verify passed with zero content changes.
