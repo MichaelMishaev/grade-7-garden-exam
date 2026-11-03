@@ -45,13 +45,15 @@ $('roles').onclick=e=>{const b=e.target.closest('[data-role]');if(b){role=b.data
 async function loadQuiz(){
  const id=$('quiz').value,version=++loadId;let q=snapshot.quizzes.find(q=>q.id===id),src='snapshot';$('start').disabled=true;$('resume').hidden=true;
  try{const res=await fetch('/api/afterbell/quizzes/'+encodeURIComponent(id),{signal:AbortSignal.timeout(3500)});if(res.ok){const live=await res.json();if(live.id===id&&validQuiz(live)){q=live;src='database';}}}catch{}
- if(loadId!==version)return;quiz=q;source=src;$('start').disabled=!world;$('resume').hidden=!restore();$('campus-link').href='./campus.html?quiz='+encodeURIComponent(id);renderBest();
+ if(loadId!==version)return;quiz=q;source=src;$('start').disabled=!world;const saved=restore();$('resume').hidden=!saved;if(saved)$('resume').textContent=`המשך המשמרת · ${roles[saved.city.role].icon} משימה ${Math.min(saved.city.stage+1,3)}/3`;$('campus-link').href='./campus.html?quiz='+encodeURIComponent(id);renderBest();
 }
 $('quiz').onchange=loadQuiz;
 function renderBest(){
  const best=Number(read(localStorage,'prepx-best-'+quiz.id)||0),shifts=Number(read(localStorage,'prepx-city-shifts-'+quiz.id)||0);
+ const unplayed=Object.keys(roles).filter(r=>read(localStorage,'prepx-city-shift-'+r)===null);
+ const nudge=shifts&&unplayed.length?`<span class="nudge">💡 עוד לא נהגתם ב־<bdi>${esc(CAR_BRANDS[ROLE_CARS[unplayed[0]]].name)}</bdi>? בחרו ${esc(roles[unplayed[0]].name)}.</span>`:'';
  $('best').hidden=false;
- $('best').innerHTML=shifts?`<b>${'★'.repeat(starsFor(best))+'☆'.repeat(3-starsFor(best))}</b> השיא שלכם: <b>${best}/100</b> · ${shifts===1?'משמרת אחת הושלמה':shifts+' משמרות הושלמו'}${best<100?' · אפשר לשפר!':' · שיא מושלם!'}`:'🚀 המשמרת הראשונה בנושא הזה · כל תשובה נכונה שווה מטבעות לחנות';
+ $('best').innerHTML=nudge+(shifts?`<b>${'★'.repeat(starsFor(best))+'☆'.repeat(3-starsFor(best))}</b> השיא שלכם: <b>${best}/100</b> · ${shifts===1?'משמרת אחת הושלמה':shifts+' משמרות הושלמו'}${best<100?' · אפשר לשפר!':' · שיא מושלם!'}`:'🚀 המשמרת הראשונה בנושא הזה · כל תשובה נכונה שווה מטבעות לחנות');
 }
 function updateTarget(){const obj=objective(city),p=places[obj.place];world.target(p);world.drive(city.driving);world.cargo(city.phase==='deliver');
  $('chapter').textContent=roles[city.role].icon+' '+roles[city.role].name+' · משימה '+Math.min(city.stage+1,3)+' מתוך 3';
