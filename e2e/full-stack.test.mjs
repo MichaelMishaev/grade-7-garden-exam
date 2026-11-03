@@ -230,3 +230,20 @@ test('library attempt: code and attempt are stored, a failed AI grading is retri
     assert.equal(resendCalls.length, emails);
   } finally { app.close(); app.closeAllConnections?.(); }
 });
+
+
+test('English submission travels through HTTP, mocked email, and Postgres with 20 matched answers', { skip }, async () => {
+  const rows = source.questions.filter(q => q.exam_id === 'english-v1-practice');
+  const body = { exam: 'english-v1-practice', name: 'QA English E2E', answers: rows.map(q => ({ question: q.prompt, answer: q.choices ? q.choices[q.correct] : 'QA writing' })) };
+  const before = resendCalls.length;
+  assert.equal((await post(base, body)).status, 200);
+  assert.equal(resendCalls.length, before + 1);
+  assert.match(JSON.parse(resendCalls.at(-1).init.body).subject, /ENG-001/);
+  const stored = await rowFor(body.name);
+  assert.equal(stored.length, 1);
+  assert.equal(stored[0].exam_id, 'english-v1-practice');
+  const answers = await sql`SELECT question_id, auto_correct FROM submission_answers WHERE submission_id = ${stored[0].id}`;
+  assert.equal(answers.length, 20);
+  assert.ok(answers.every(a => a.question_id));
+  assert.equal(answers.filter(a => a.auto_correct === true).length, 17);
+});

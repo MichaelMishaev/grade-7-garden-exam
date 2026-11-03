@@ -119,7 +119,112 @@
           ['physics-precision', 'מודדים כמו פיזיקאים', 'סרגל, עובי דף וליפופי תיל', '3'],
           ['physics-pole', 'מיישמים ומתכננים', 'יחידות, הזמנת לוח ומדידת גרגרים', '4']
         ]
-      }
+      },
+      english: {
+  "title": "אנגלית",
+  "description": "מבחן בתאריך 9.11. הבנת הנקרא, אוצר מילים, חלקי דיבר, הווה פשוט וכתיבה.",
+  "variants": [
+    {
+      "id": "english-v1-practice",
+      "title": "גרסה 1 · מבחן תרגול באנגלית",
+      "detail": "שאלות מקוריות לפי דוגמאות המורה · בחירה, נכון או לא נכון וכתיבה",
+      "date": "9.11",
+      "count": "20 שאלות",
+      "href": "english-exam.html",
+      "references": [
+        {
+          "id": "english-teacher-material",
+          "kind": "site",
+          "title": "חומר המורה ודוגמאות התרגול למבחן באנגלית",
+          "url": "https://docs.google.com/document/d/1feJMJs_EXvdRq6xC-TQj_Nzcf6Rh7uYNHxxrG81j1qU/edit",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "חלקי דיבר",
+              "title": "חלקי דיבר"
+            },
+            {
+              "part": "הווה פשוט — חיוב",
+              "title": "הווה פשוט — חיוב"
+            },
+            {
+              "part": "הווה פשוט — שלילה",
+              "title": "הווה פשוט — שלילה"
+            },
+            {
+              "part": "הווה פשוט — שאלות",
+              "title": "הווה פשוט — שאלות"
+            },
+            {
+              "part": "כתיבה — אדם שאני מעריך",
+              "title": "כתיבה — אדם שאני מעריך"
+            }
+          ]
+        },
+        {
+          "id": "english-reading",
+          "kind": "passage",
+          "title": "טקסט התרגול המקורי: A guide I admire",
+          "url": "english-exam.html#article",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "פסקה 1",
+              "title": "פסקה 1"
+            },
+            {
+              "part": "פסקה 2",
+              "title": "פסקה 2"
+            },
+            {
+              "part": "פסקה 3",
+              "title": "פסקה 3"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-12",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 12",
+          "url": "https://wordwall.net/resource/36327179",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 12",
+              "title": "אוצר מילים — עמוד 12"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-20",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 20",
+          "url": "https://wordwall.net/resource/36327199",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 20",
+              "title": "אוצר מילים — עמוד 20"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-28",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 28",
+          "url": "https://wordwall.net/resource/36327212",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 28",
+              "title": "אוצר מילים — עמוד 28"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
     };
     const examDates = {
       'hebrew-v1-garden': '2026-10-29',
@@ -214,9 +319,9 @@
       document.dispatchEvent(new Event('exam-cards-ready'));
       document.getElementById('practice-section').remove();
       const shortcut = document.querySelector('.practice-shortcut');
-      const firstPractice = document.querySelector('.variant-content section');
+      const firstPractice = document.querySelector('.variant-content section[id$="-practice"]');
       if (firstPractice) shortcut.href = '#' + firstPractice.id;
-      else shortcut.hidden = true;
+      else shortcut.remove();
     }
     showBestScores();
     }

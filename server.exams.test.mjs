@@ -129,7 +129,7 @@ test('unknown exam values are rejected before anything is sent', () => withServe
     assert.deepEqual(await response.json(), { error: 'Unknown exam' });
   }
   assert.equal(calls.length, 0);
-  assert.deepEqual(Object.keys(exams), ['hebrew-v1-garden', 'hebrew-v2-library', 'physics-v1-assessment']);
+  assert.deepEqual(Object.keys(exams), ['hebrew-v1-garden', 'hebrew-v2-library', 'physics-v1-assessment', 'english-v1-practice']);
 }));
 
 test('physics idempotency key is stable per payload, per student, and never equal to the garden key', () => withServer(async ({ submit, calls }) => {
@@ -185,7 +185,7 @@ test('physics email render: title, subtitle, marks, pending labels and escaping'
 // docs/TESTING.md §1, §6, §8: permanent test codes, attempt numbers, and the full email content.
 test('every table exam has a unique permanent code, shown in the subject, the text and the html with the attempt number', () => withServer(async ({ submit, calls }) => {
   assert.deepEqual(Object.fromEntries(Object.entries(exams).map(([id, e]) => [id, e.code])),
-    { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001' });
+    { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001', 'english-v1-practice': 'ENG-001' });
   assert.equal(new Set(Object.values(exams).map((e) => e.code)).size, Object.keys(exams).length);
   const library = { ...legacyPayloads[1], exam: 'hebrew-v2-library', attempt: 3 };
   assert.equal((await submit(library)).status, 200);
@@ -239,3 +239,21 @@ test('table exams measure the duration with the server clock; legacy payloads ke
   await submit({ ...legacyPayloads[0], finishedAt: '2026-10-28T10:31:00.000Z' }); // legacy: the page's times as sent
   assert.match(calls[2].body.text, /משך: 31 דקות/);
 }, { db: null }));
+
+
+test('English: exactly 20 answers use the shared teacher pipeline and preserve the named exam', () => withServer(async ({ submit, calls, stored }) => {
+  const rows = extractContent().questions.filter(q => q.exam_id === 'english-v1-practice');
+  const payload = { exam: 'english-v1-practice', name: 'QA English', answers: rows.map(q => ({ question: q.prompt, answer: q.choices ? q.choices[q.correct] : 'Original written response', ...(q.choices ? { correct: true } : {}) })) };
+  assert.equal((await submit({ ...payload, answers: payload.answers.slice(1) })).status, 400);
+  assert.equal((await submit({ ...payload, answers: [...payload.answers, payload.answers[0]] })).status, 400);
+  assert.equal(calls.length, 0);
+  assert.equal((await submit(payload)).status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].headers.Authorization, 'Bearer test-secret');
+  assert.equal(calls[0].body.from, env.RESEND_FROM_EMAIL);
+  assert.deepEqual(calls[0].body.to, ['345287@gmail.com']);
+  assert.match(calls[0].body.subject, /ENG-001/);
+  assert.match(calls[0].body.text, /20\. /);
+  assert.match(calls[0].headers['Idempotency-Key'], /^english-exam\//);
+  assert.equal(stored[0].examId, 'english-v1-practice');
+}));
