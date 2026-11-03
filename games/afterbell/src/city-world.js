@@ -6,6 +6,7 @@ import {createIncidentScene} from './city-incident-scene.js';
 import {vansTouch,safeSpeed} from './city-traffic.js';
 import {drivingRoute} from './city-roads.js';
 import {findRoute,clearSegment} from './navigation.js';
+import {buildCar,trafficBrand,ROLE_CARS,CAR_BRANDS} from './city-cars.js';
 
 export function cityWorld(host,onMove,onImpact){
  const scene=new T.Scene();scene.background=new T.Color('#a8dce2');scene.fog=new T.Fog('#b8e1df',225,430);
@@ -109,17 +110,14 @@ export function cityWorld(host,onMove,onImpact){
    for(const side of [-1,1]){part(g,box,'#364d62',side*.44,.8,0,.64,1.55,.7);part(g,box,color,side*1.03,2.1,0,.43,1.35,.66);part(g,box,'#313e45',side*.26,3.65,.54,.13,.15,.05);}
    return g;
  }
- function van(c){
-   const g=new T.Group();part(g,box,c,0,1.26,0,3.6,1.45,6);part(g,box,'#fff3d5',0,2.66,-.42,3.15,1.65,3.7);
-   part(g,box,'#577d8e',0,2.7,1.46,2.85,1.12,.12);
-   for(const side of [-1,1]){
-     part(g,box,'#577d8e',side*1.61,2.75,-.35,.12,.95,2.5);
-     for(const z of [-1.88,1.88])part(g,box,'#33464a',side*1.82,.69,z,.46,1.18,1.15);
-     part(g,box,'#ffe6a9',side*1.15,1.35,3.04,.7,.45,.12);
-   }return g;
- }
- const avatar=person('#df745d'),car=van('#e99943'),parcel=new T.Group();
+ function van(brand,c){return buildCar(T,part,box,tube,brand,c);}
+ const avatar=person('#df745d'),car=new T.Group(),parcel=new T.Group();
  part(parcel,box,'#ffe0a1',0,0,0,1.2,1.05,1);part(parcel,box,'#bc7950',0,.54,0,.2,.08,1.05);scene.add(avatar,car,parcel);
+ function setCar(brand,color){
+   const old=car.userData.shell;if(old){car.remove(old);}
+   const shell=van(brand,color);car.add(shell);car.userData.shell=shell;car.userData.brand=brand;car.userData.body=shell.userData.body;
+ }
+ setCar(ROLE_CARS.courier,'#e99943');
  const cap=new T.Group();part(cap,box,'#129c9e',0,4.38,0,1.46,.43,1.26);part(cap,box,'#166869',0,4.22,.78,1.52,.16,.62);avatar.add(cap);cap.visible=false;
  const accessories={scarf:new T.Group(),glasses:new T.Group(),pack:new T.Group(),beacon:new T.Group()};
  const {scarf,glasses,pack,beacon}=accessories;
@@ -166,7 +164,7 @@ export function cityWorld(host,onMove,onImpact){
  }
  const traffic=[],walkers=[],routes=[];
  function addTraffic(x,z,speed,offset){
-   const g=van(palette[traffic.length%6]);traffic.push(g);
+   const tb=trafficBrand(traffic.length),g=van(tb.id,tb.color);traffic.push(g);
    g.userData.move=circuit(g,x+2,z+2,52,speed,offset);
    Object.assign(g.userData,{clock:0,vx:0,vz:0});g.userData.move(0);
  }
@@ -405,8 +403,9 @@ export function cityWorld(host,onMove,onImpact){
  addEventListener('blur',()=>{keys.clear();stick={x:0,z:0};});
  const ray=new T.Raycaster(),plane=new T.Plane(new T.Vector3(0,1,0),0);
  renderer.domElement.addEventListener('pointerup',e=>{if(!active||paused)return;ray.setFromCamera(new T.Vector2(2*e.clientX/innerWidth-1,1-2*e.clientY/innerHeight),camera);const hit=new T.Vector3();if(ray.ray.intersectPlane(plane,hit)&&!blocked(hit.x,hit.z))go(hit.x,hit.z);});
- return {outfit(color,gear){
-     car.children[0].material.color.set(color);
+ return {carName:()=>CAR_BRANDS[car.userData.brand].name,outfit(color,gear,role){
+     if(ROLE_CARS[role]&&car.userData.brand!==ROLE_CARS[role])setCar(ROLE_CARS[role],color);
+     car.userData.body.material.color.set(color);
      const jacket=gear.includes('jacket')?'#9236ab':color;
      for(const i of [0,4,7])avatar.children[i].material.color.set(jacket);
      for(const [id,mesh] of Object.entries(accessories))mesh.visible=gear.includes(id);

@@ -4,6 +4,7 @@ import {items,emptyWallet,pay,toggleItem} from './city-wallet.js';
 import snapshot from './content-snapshot.json';
 import {validQuiz,makeRound,answer,progress,academicScore,starsFor,restoreRound} from './core.js';
 import {quizFingerprint} from './fingerprint.js';
+import {ROLE_CARS,CAR_BRANDS} from './city-cars.js';
 import {roles,places,objective,currentJob,inCity,CITY_BOUNDS,northSouthStreets,eastWestStreets,streetEnds} from './city-data.js';
 import {cityWorld} from './city-world.js';
 
@@ -35,7 +36,7 @@ const requested=new URLSearchParams(location.search).get('quiz')||savedQuiz;
 if(snapshot.quizzes.some(q=>q.id===requested))$('quiz').value=requested;
 $('player-name').value=read(localStorage,'prepx-afterbell-name')||'';
 if(requested)$('campus-link').href='./campus.html?quiz='+encodeURIComponent(requested);
-function drawRoles(){$('roles').innerHTML=Object.entries(roles).map(([id,r])=>`<button type="button" data-role="${id}" aria-pressed="${role===id}">${r.icon} ${r.name}</button>`).join('');}
+function drawRoles(){$('roles').innerHTML=Object.entries(roles).map(([id,r])=>`<button type="button" data-role="${id}" aria-pressed="${role===id}">${r.icon} ${r.name}<small class="role-car" dir="ltr">${CAR_BRANDS[ROLE_CARS[id]].name}</small></button>`).join('');}
 $('roles').onclick=e=>{const b=e.target.closest('[data-role]');if(b){role=b.dataset.role;drawRoles();}};
 async function loadQuiz(){
  const id=$('quiz').value,version=++loadId;let q=snapshot.quizzes.find(q=>q.id===id),src='snapshot';$('start').disabled=true;$('resume').hidden=true;
@@ -45,7 +46,7 @@ async function loadQuiz(){
 $('quiz').onchange=loadQuiz;
 function updateTarget(){const obj=objective(city),p=places[obj.place];world.target(p);world.drive(city.driving);world.cargo(city.phase==='deliver');
  $('chapter').textContent=roles[city.role].icon+' '+roles[city.role].name+' · משימה '+Math.min(city.stage+1,3)+' מתוך 3';
- $('goal').textContent=obj.title;$('vehicle').textContent=city.driving?'לצאת מהרכב':'לעלות לרכב';$('action').textContent=obj.action;$('pin').textContent=p.name;
+ $('goal').textContent=obj.title;$('vehicle').textContent=city.driving?'לצאת מהרכב':'לעלות ל־'+world.carName();$('action').textContent=obj.action;$('pin').textContent=p.name;
 }
 function refresh(){
  if(!city||mode!=='explore')return;
@@ -78,7 +79,7 @@ function syncWallet(change){
   fallbackWallets.set(key,wallet);
   try{localStorage.setItem(key,JSON.stringify(wallet));}catch{toast('המטבעות זמינים רק עד לסגירת הדף.');}
   $('coins').textContent=wallet.coins;
-  world.outfit(roles[city.role].color,wallet.equipped);
+  world.outfit(roles[city.role].color,wallet.equipped,city.role);
  };
  return navigator.locks?navigator.locks.request(key,update):Promise.resolve(update());
 }
@@ -121,14 +122,15 @@ function reference(q){
  const ref=quiz.references.find(r=>r.id===q.ref.id);if(!ref)return '';
  const u=new URL(ref.url||'/subject.html?subject='+quiz.subject_id,'https://hitech.agnon.online');return ['https:','http:'].includes(u.protocol)?`<a href="${esc(u.href)}" target="_blank" rel="noopener">מקור: ${esc(ref.title)} ${esc(q.ref.part||'')} ↗</a>`:'';
 }
+let streak=0;
 function question(){
  const index=city.stage,p=progress(round,index);
  if(!p.next&&!feedback){city.stage++;syncWallet();city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! קיבלתם 15 מטבעות.':'המסירה הושלמה · קיבלתם 15 מטבעות.');return;}
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
  sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title">${esc(q.prompt)}</h2><small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
  ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}">${esc(o.text)}</button>`).join('')}
- ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b><p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
- document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){feedback=city.feedback=q.id;save();syncWallet();question();}});
+ ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 רצף של ${streak} תשובות נכונות ברצף</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
+ document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){streak=round.answers[q.id]?.correct?streak+1:0;feedback=city.feedback=q.id;save();syncWallet();question();}});
  if($('next-q'))$('next-q').onclick=()=>{feedback=city.feedback=null;save();question();};
 }
 function interact(){
@@ -139,7 +141,7 @@ function interact(){
 }
 $('action').onclick=interact;
 $('route').onclick=()=>{if(mode!=='explore')return;const p=places[objective(city).place];if(Math.hypot(city.x-p.x,city.z-p.z)<=4.3){interact();return;}if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
-$('vehicle').onclick=()=>{if(mode!=='explore')return;city.driving=!city.driving;world.drive(city.driving);save();updateTarget();refresh();toast(city.driving?roles[city.role].vehicle+' מוכן לנסיעה':'חזרה להליכה');};
+$('vehicle').onclick=()=>{if(mode!=='explore')return;city.driving=!city.driving;world.drive(city.driving);save();updateTarget();refresh();toast(city.driving?world.carName()+' מוכן לנסיעה':'חזרה להליכה');};
 function map(){
  const {west,east,north,south}=CITY_BOUNDS,width=east-west,height=south-north+32;
  const target=objective(city).place,entries=Object.entries(places);

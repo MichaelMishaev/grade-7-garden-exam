@@ -25,3 +25,6 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
 #calls{color:#85522a}.city-report{border-inline-start:4px solid #b76c40;padding:4px 12px;margin:16px 0}.city-report h3{margin:4px 0}.city-report p{margin:6px 0}.city-report small{color:#53685c}.row #dispatch{white-space:nowrap}
 
 .jobcard{z-index:1}.jobcard #scene-report{border-inline-start:3px solid #bf7145;padding-inline-start:7px;color:#73442e;font-weight:700}
+
+.role-car{display:block;margin-top:2px;font-size:10px;font-weight:600;color:#53685c;letter-spacing:.02em}#roles button[aria-pressed=true] .role-car{color:#214f46}
+.streak{margin:6px 0;font-weight:800;color:#b4501f}
