@@ -158,3 +158,8 @@ Verification includes all four incident types in mobile Chromium and WebKit, all
 A moving player van gives ordinary walking residents and handoff residents a short hop and knockback, with one cue per contact. They land outside buildings and resume their routines. Auto-driven vans yield while residents step aside.
 A fresh agent expanded the phase animations and wrote short crew/action/next-step captions. Scene dispatch starts urgent driving, which travels faster on a clear road, attempts a checked pass, or takes an earlier road detour. Steering and cancelling end the mode.
 The final changes were copied into /tmp/prepx-scene-response on feat/city-scene-response because another map expansion began in the original shared worktree. This preview runs on loopback port 4399.
+
+## Physical scenery collisions
+- Added full van footprint contact against fixed scenery; trees, poles and parked vehicles now register as solids.
+- Benches, bins, crates and cones receive impulse, hop, friction and wall blocking. Building impacts shed bounded cosmetic bumper/hood/mirror pieces; new shifts repair damage. Hebrew cues and deterministic state expose outcomes.
+- Verified: 101 game tests pass, one PostgreSQL-dependent test skipped; Chromium and WebKit 390px wall damage/object shove/settling/pause checks pass. Chromium standard eight-route drive (301 road samples, zero impacts) and all four incident approaches/six outer landmarks pass. Official game client run and gameplay screenshots inspected. Physics props render in two instanced batches. Preview remains on port4399; no production publication. Damage resets on entering/resuming a shift; it is not persisted.
