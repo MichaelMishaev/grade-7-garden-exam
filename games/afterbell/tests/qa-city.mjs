@@ -9,7 +9,7 @@ await mkdir('output',{recursive:true});
 try{
  for(const [role,width] of [['courier',390],['tech',320],['press',1280]]){
   const p=await b.newPage({viewport:{width,height:width===320?568:844},isMobile:width<600,hasTouch:width<600});
-  const errors=[];let saves=0;const selected=role==='tech'?snapshot.quizzes.find(q=>q.subject_id==='physics'):snapshot.quizzes.find(q=>q.id==='facts');
+  const errors=[];let saves=0;const selected=process.env.CITY_QA_QUIZ?snapshot.quizzes.find(q=>q.id===process.env.CITY_QA_QUIZ):role==='tech'?snapshot.quizzes.find(q=>q.subject_id==='physics'):snapshot.quizzes.find(q=>q.id==='facts');
   p.on('pageerror',e=>errors.push(e.message));
   await p.route('**/api/afterbell/attempts',async r=>{saves++;assert.equal(r.request().postDataJSON().quizId,selected.id);await r.fulfill({json:{saved:true}});});
   await p.goto(base+'?quiz='+selected.id);await p.locator('#start:enabled').waitFor();

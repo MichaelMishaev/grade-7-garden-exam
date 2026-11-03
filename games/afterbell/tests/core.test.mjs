@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { makeRound, validQuiz, answer, progress, canEscape, academicScore, restoreRound, NPCS, EQUIPMENT } from '../src/core.js';
 const {quizzes}=JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url),'utf8'));
 
-test('all 62 source questions retain valid answers, explanations and existing source references',()=>{
-  assert.equal(quizzes.reduce((n,q)=>n+q.questions.length,0),62);
+test('all 75 source questions retain valid answers, explanations and existing source references',()=>{
+  assert.equal(quizzes.reduce((n,q)=>n+q.questions.length,0),75);
   for(const q of quizzes)assert.ok(validQuiz(q));
 });
 

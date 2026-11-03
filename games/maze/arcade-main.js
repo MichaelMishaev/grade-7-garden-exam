@@ -59,7 +59,7 @@ function intro(){
   const saved=hasSaved&&state&&launched===false&&!recovery;
   show(title('סבב קצר · 3 שאלות מתוך מאגר קיים','שלושה גשרים. שומר אחד.')+'<div class="intro-boss" aria-hidden="true">◆ ◆ ◆</div><p class="arcade-copy">חוצים שלושה גשרים, עונים על שלוש שאלות ואוספים גבישים. בסוף מתחמקים מהשומר ושוברים את המגן שלו. גם אחרי טעות ממשיכים!</p><p class="sample-warning">זהו סבב תרגול קצר, ולא המבחן או כל מאגר השאלות. השאלות ללא הגבלת זמן.</p>'+
     (recovery?'<p role="alert" class="storage-warning">השמירה הקודמת לא ניתנת לשחזור בטוח. היא נשארה ללא שינוי. אפשר לנסות לטעון שוב, או לשחק סבב חדש ללא שמירה.</p>':'')+
-    `<label for="quiz-select">במה מתרגלים?</label><select id="quiz-select">${Object.entries({hebrew:'עברית',physics:'פיזיקה'}).map(([subject,label])=>`<optgroup label="${label}">${MAZE_QUIZZES.filter(q=>q.subjectId===subject).map(q=>`<option value="${q.id}"${q.id===state?.content.id?' selected':''}>${label} · ${text(q.title)}</option>`).join('')}</optgroup>`).join('')}</select><div class="arcade-buttons">`+
+    `<label for="quiz-select">במה מתרגלים?</label><select id="quiz-select">${Object.entries({hebrew:'עברית',physics:'פיזיקה',english:'אנגלית'}).map(([subject,label])=>`<optgroup label="${label}">${MAZE_QUIZZES.filter(q=>q.subjectId===subject).map(q=>`<option value="${q.id}"${q.id===state?.content.id?' selected':''}>${label} · ${text(q.title)}</option>`).join('')}</optgroup>`).join('')}</select><div class="arcade-buttons">`+
     (saved?button('resume-run',state.phase==='victory'?'להציג את הסבב שהושלם':'להמשיך את הסבב השמור'):recovery?button('retry-save','לנסות לטעון את השמירה שוב'):'' )+
     button('new-run',recovery?'סבב חדש ללא שמירה':saved?'סבב חדש · ארנק חדש מ־0':'להתחיל סבב ארקייד',!saved)+
     (saved&&state.phase!=='victory'?'<small class="small-note">סבב חדש מחליף את ההתקדמות של הסבב הפעיל. הסיכום האחרון שהושלם נשאר באוסף.</small>':'')+
@@ -83,7 +83,7 @@ function renderQuestion(){
   const q=arcadeQuestion(state),present=questionPresentation(q);
   show(title(`גשר ${state.stage+1} מתוך 3 · שאלה ללא הגבלת זמן`,text(present.prompt||q.prompt))+
     (present.context?`<p class="question-context">${text(present.context)}</p>`:'')+
-    `<div class="answers">${state.choices[state.stage].map((choice,i)=>`<button class="answer" data-choice="${choice}"><span class="answer-index">${i+1}</span>${text(q.choices[choice])}</button>`).join('')}</div><details><summary>חומר המקור</summary>${source(q)}</details>`+button('question-pause','השהיה או יציאה',false));
+    `<div class="answers">${state.choices[state.stage].map((choice,i)=>`<button class="answer" data-choice="${choice}"><span class="answer-index">${i+1}</span><bdi>${text(q.choices[choice])}</bdi></button>`).join('')}</div><details><summary>חומר המקור</summary>${source(q)}</details>`+button('question-pause','השהיה או יציאה',false));
   document.querySelectorAll('[data-choice]').forEach(el=>fresh(el,()=>apply({type:'answer',choice:Number(el.dataset.choice),generation:state.generation})));
   bind('question-pause',()=>openPanel('pause'));
 }

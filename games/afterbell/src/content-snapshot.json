@@ -1655,6 +1655,377 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-v1-practice",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "אנגלית · אוצר מילים ודקדוק",
+      "description": "תרגול למבחן 9.11: אוצר מילים, חלקי דיבר והווה פשוט. הבנת הנקרא וכתיבה במבחן המלא.",
+      "references": [
+        {
+          "id": "english-teacher-material",
+          "kind": "site",
+          "title": "חומר המורה ודוגמאות התרגול למבחן באנגלית",
+          "url": "https://docs.google.com/document/d/1feJMJs_EXvdRq6xC-TQj_Nzcf6Rh7uYNHxxrG81j1qU/edit",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "חלקי דיבר",
+              "title": "חלקי דיבר"
+            },
+            {
+              "part": "הווה פשוט — חיוב",
+              "title": "הווה פשוט — חיוב"
+            },
+            {
+              "part": "הווה פשוט — שלילה",
+              "title": "הווה פשוט — שלילה"
+            },
+            {
+              "part": "הווה פשוט — שאלות",
+              "title": "הווה פשוט — שאלות"
+            },
+            {
+              "part": "כתיבה — אדם שאני מעריך",
+              "title": "כתיבה — אדם שאני מעריך"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-12",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 12",
+          "url": "https://wordwall.net/resource/36327179",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 12",
+              "title": "אוצר מילים — עמוד 12"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-20",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 20",
+          "url": "https://wordwall.net/resource/36327199",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 20",
+              "title": "אוצר מילים — עמוד 20"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-28",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 28",
+          "url": "https://wordwall.net/resource/36327212",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 28",
+              "title": "אוצר מילים — עמוד 28"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the Hebrew meaning of “journey”.",
+          "choices": [
+            "מסע",
+            "גשר",
+            "בחירה",
+            "סכנה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול אוצר המילים בעמוד 12, journey פירושו מסע.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the word that means “זהיר”.",
+          "choices": [
+            "careful",
+            "wide",
+            "usual",
+            "possible"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 12, careful פירושו זהיר.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the word that means “ארוחה”.",
+          "choices": [
+            "meal",
+            "bowl",
+            "guide",
+            "world"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 20, meal פירושו ארוחה.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "medium",
+          "prompt": "Choose the best word: “I want to ___ the school club.”",
+          "choices": [
+            "join",
+            "feed",
+            "receive",
+            "serve"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 28, join פירושו להצטרף; מצטרפים למועדון.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “The guide helps visitors”, what is the part of speech of “guide”?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "guide מציין אדם ולכן הוא שם עצם במשפט הזה.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “The children walk to school”, what is the part of speech of “walk”?",
+          "choices": [
+            "Verb",
+            "Noun",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "walk מתאר פעולה ולכן הוא פועל.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “She is a careful guide”, what is the part of speech of “careful”?",
+          "choices": [
+            "Adjective",
+            "Noun",
+            "Verb"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "careful מתאר את המדריכה ולכן הוא שם תואר.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “My aunt ___ near the river every day.”",
+          "choices": [
+            "walks",
+            "walk",
+            "walking",
+            "are walk"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בהווה פשוט מוסיפים s לפועל עם נושא בגוף שלישי יחיד, כמו my aunt.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — חיוב"
+          }
+        },
+        {
+          "id": "english-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “The children ___ English at school.”",
+          "choices": [
+            "study",
+            "studies",
+            "studying",
+            "is study"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם נושא ברבים משתמשים בצורת הבסיס study.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — חיוב"
+          }
+        },
+        {
+          "id": "english-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “Maya ___ work on Sundays.”",
+          "choices": [
+            "doesn’t",
+            "don’t",
+            "isn’t",
+            "aren’t"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם Maya משתמשים ב־doesn’t ואחריו פועל בצורת הבסיס.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שלילה"
+          }
+        },
+        {
+          "id": "english-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה",
+          "difficulty": "medium",
+          "prompt": "Is this sentence grammatically correct? “They don’t lives in a city.”",
+          "choices": [
+            "True",
+            "False"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "אחרי don’t הפועל בצורת הבסיס: They don’t live in a city.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שלילה"
+          }
+        },
+        {
+          "id": "english-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות",
+          "difficulty": "hard",
+          "prompt": "Choose the correct question.",
+          "choices": [
+            "Does your aunt help visitors?",
+            "Does your aunt helps visitors?",
+            "Do your aunt help visitors?",
+            "Your aunt does help visitors?"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "שאלה עם your aunt נפתחת ב־Does ואחריו הנושא ופועל הבסיס help.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שאלות"
+          }
+        },
+        {
+          "id": "english-18",
+          "position": 18,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות",
+          "difficulty": "hard",
+          "prompt": "Is this sentence grammatically correct? “Do the children study English every day?”",
+          "choices": [
+            "True",
+            "False"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם children משתמשים ב־Do, ואחריו הנושא ופועל הבסיס study.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שאלות"
+          }
+        }
+      ]
     }
   ]
 }
