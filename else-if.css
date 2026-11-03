@@ -1,0 +1,84 @@
+.elif-lesson .lesson-heading-row h1 { font-size: 28px; }
+.elif-lesson .lesson-heading-row h1 small { display: block; font: 12px/1.5 Arial,sans-serif; letter-spacing: normal; color: #526474; }
+.elif-lesson .elif-idea { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0; }
+.elif-idea > div { flex: 1; padding: 22px 12px; border: 2px solid #dce7ed; border-radius: 16px; background: white; text-align: center; }
+.elif-idea code { display: block; font-size: 25px; font-weight: bold; margin-bottom: 10px; }
+.elif-idea span { font-size: 13px; line-height: 1.5; }
+.elif-lesson .decision-board { padding: 16px; }
+.elif-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.elif-lesson .elif-check { background: white; border: 2px solid #c4d6e2; border-radius: 16px; padding: 14px; }
+.check-order { display: block; font: bold 12px ui-monospace,monospace; color: #526474; margin-bottom: 8px; }
+.elif-check code { font-size: 22px; font-weight: bold; }
+.elif-check strong { font-size: 12px; margin-top: 8px; color: #286500; }
+.elif-check[data-result="false"] strong { color: #14608e; }
+.elif-check[data-result="unchecked"] { border-style: dashed; background: #f7fafc; }
+.elif-check[data-result="unchecked"] strong { color: #526474; }
+.elif-connection { color: #526474; font-size: 12px; font-weight: bold; margin: 12px 0; line-height: 1.4; }
+.elif-lesson .decision-board .branch-paths { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.elif-lesson .choice-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-height: 132px; padding: 12px 6px; text-align: center; }
+.elif-lesson .choice-card strong { font-size: 15px; }
+.elif-lesson .choice-card code { font-size: 16px; }
+.elif-lesson .choice-symbol { width: 32px; height: 32px; font-size: 20px; }
+.elif-lesson #elif-path .choice-symbol { background: #e0f2ff; color: #14608e; }
+.elif-lesson #elif-path.selected .choice-card { background: #edf7ff; border-color: #6ea9ce; box-shadow: 0 4px 0 #c0dce9; }
+.elif-lesson #else-path .choice-symbol { background: #fff1cf; color: #866015; }
+.elif-lesson #else-path.selected .choice-card { background: #fff8e8; border-color: #d6b66d; box-shadow: 0 4px 0 #e8d9ad; }
+.elif-lesson .board-finish { margin-top: 18px; }
+.elif-lesson .execution-progress { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.elif-lesson .execution-progress > span { font-size: 11px; }
+.elif-lesson .code-panel pre { font-size: 12px; line-height: 2.2; }
+.elif-lesson .output-panel { min-height: 112px; gap: 10px; padding: 16px; }
+.elif-lesson .output-panel #output-branch { font-size: 22px; }
+.elif-lesson #rule-settings { flex: 1; }
+.elif-lesson .rule-help-row > details { max-width: 300px; }
+.elif-lesson #question-card legend { width: 100%; }
+.elif-lesson .question-code { display: block; padding: 10px; margin: 10px 0; border-radius: 10px; background: #f1f5f7; font: 13px ui-monospace,monospace; direction: ltr; text-align: left; }
+@media (min-width:1000px) {
+ .elif-lesson #playground > .execution-progress { grid-template-columns: 1fr 1fr; }
+ .elif-lesson .code-panel pre { line-height: 1.95; }
+ .elif-lesson .code-panel .output-panel { min-height: 105px; }
+ .elif-lesson .rule-help-row { font-size: 12px; }
+}
+@media (max-width:650px) {
+ .elif-lesson .lesson-heading-row h1 { font-size: 23px; }
+ .elif-lesson .lesson-heading-row h1 small { font-size: 10px; }
+ .elif-lesson .decision-board { padding: 10px; }
+ .elif-checks { gap: 8px; }
+ .elif-lesson .elif-check { padding: 10px 6px; }
+ .elif-check code { font-size: 17px; }
+ .elif-check strong { min-height: 15px; font-size: 11px; }
+ .check-order { font-size: 11px; margin-bottom: 5px; }
+ .elif-connection { font-size: 11px; margin: 10px 0; }
+ .elif-lesson .decision-board .branch-paths { gap: 7px; }
+ .elif-lesson .choice-card { min-height: 130px; padding: 9px 4px; }
+ .elif-lesson .choice-card strong { font-size: 12px; min-height: 28px; }
+ .elif-lesson .choice-card small { font-size: 10px; }
+ .elif-lesson .board-finish { margin-top: 12px; }
+ .elif-lesson .elif-idea { flex-wrap: wrap; }
+ .elif-idea > div { padding: 16px 8px; }
+ .elif-lesson .rule-help-row:has(details[open]) > details[open] { max-width: none; }
+ .elif-lesson .code-panel pre { font-size: 12px; line-height: 2.25; }
+}
+.elif-lesson .score-play.current { outline: 3px solid #58b900; outline-offset: 3px; }
+.elif-lesson .execution-progress > span.bypassed { border-top-style: dashed; color: #687f8e; }
+@media (max-width:650px) {
+ .elif-lesson .elif-check { padding: 7px 6px; }
+ .elif-connection { margin: 7px 0; }
+ .elif-lesson .choice-card { min-height: 110px; gap: 4px; padding: 7px 4px; }
+ .elif-lesson .choice-symbol { width: 26px; height: 26px; font-size: 18px; }
+ .elif-lesson .choice-card strong { min-height: 26px; }
+ .elif-lesson .board-finish { margin-top: 9px; padding: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .elif-lesson .flow-node { transition: none; } }
+@media (max-width:650px) {
+ .elif-lesson .decision-board { padding:8px; }
+ .elif-lesson .elif-check { padding:5px 6px; }
+ .elif-lesson .choice-card { min-height:80px; }
+ .elif-lesson .choice-symbol { display:none; }
+ .elif-lesson .elif-connection { margin:6px 0; }
+}
+@media (max-width:650px) {
+ .elif-lesson .board-finish { margin-top:5px; }
+ .elif-lesson .check-order { margin-bottom:2px; }
+ .elif-lesson .elif-connection { margin:4px 0; }
+}

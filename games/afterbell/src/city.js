@@ -1,3 +1,4 @@
+import {questionMedia} from '../../english-question-media.js';
 import {prepareCargo} from './city-job.js';
 import './city.css';
 import {items,emptyWallet,pay,toggleItem,witness} from './city-wallet.js';
@@ -34,7 +35,7 @@ function restore(){
  }catch{return null;}
 }
 const savedQuiz=(()=>{try{return JSON.parse(read(sessionStorage,DRAFT))?.round?.quizId;}catch{return null;}})();
-$('quiz').innerHTML=['hebrew','physics'].map(id=>`<optgroup label="${id==='hebrew'?'עברית':'פיזיקה'}">${snapshot.quizzes.filter(q=>q.subject_id===id).map(q=>`<option value="${esc(q.id)}">${esc(q.title)}</option>`).join('')}</optgroup>`).join('');
+$('quiz').innerHTML=Object.entries({hebrew:'עברית',physics:'פיזיקה',english:'אנגלית'}).map(([id,label])=>`<optgroup label="${label}">${snapshot.quizzes.filter(q=>q.subject_id===id).map(q=>`<option value="${esc(q.id)}">${esc(q.title)}</option>`).join('')}</optgroup>`).join('');
 const requested=new URLSearchParams(location.search).get('quiz')||savedQuiz;
 if(snapshot.quizzes.some(q=>q.id===requested))$('quiz').value=requested;
 $('player-name').value=read(localStorage,'prepx-afterbell-name')||'';
@@ -147,8 +148,8 @@ function question(){
  const index=city.stage,p=progress(round,index);
  if(!p.next&&!feedback){city.stage++;syncWallet();city.phase=city.stage===3?'final':'pickup';save();closeSheet();toast(city.stage===3?'כל העיר מוכנה! קיבלתם 15 מטבעות.':'המסירה הושלמה · קיבלתם 15 מטבעות.');return;}
  const q=round.questions.find(q=>q.id===(feedback||p.next)),a=round.answers[q.id],job=currentJob(city);
- sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title">${esc(q.prompt)}</h2><small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
- ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}">${esc(o.text)}</button>`).join('')}
+ sheet(`<div class="kicker">✓ ${esc(job[2])} הגיע ליעד · ${esc(quiz.title)}</div><h2 id="sheet-title" dir="auto">${esc(q.prompt)}</h2>${questionMedia(q)}<small>שאלת תרגול · ${p.answered+(a?0:1)} מתוך ${p.total} במסירה הזאת</small>
+ ${q.options.map(o=>`<button data-opt="${o.original}" ${a?'disabled':''} class="${a&&o.original===q.correct?'right':a&&o.original===a.choice?'wrong':''}"><bdi>${esc(o.text)}</bdi></button>`).join('')}
  ${a?`<div class="explain" role="status"><b>${a.correct?'נכון! +5 מטבעות':'הפעם התשובה שונה.'}</b>${a.correct&&streak>=2?`<p class="streak">🔥 רצף של ${streak} תשובות נכונות ברצף</p>`:''}<p>${esc(q.explanation.he)}</p>${q.explanation.en?`<p dir="ltr" lang="en">${esc(q.explanation.en)}</p>`:''}${reference(q)}</div><button id="next-q" class="cta">${p.next?'לשאלה הבאה':'להמשיך במשמרת'} ←</button>`:reference(q)}`,'question');
  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{if(answer(round,q.id,Number(b.dataset.opt))){streak=round.answers[q.id]?.correct?streak+1:0;feedback=city.feedback=q.id;save();syncWallet();question();}});
  if($('next-q'))$('next-q').onclick=()=>{feedback=city.feedback=null;save();question();};

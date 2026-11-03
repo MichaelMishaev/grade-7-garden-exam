@@ -14,3 +14,5 @@ Partial catalog of maze features. Every feature must include a written specifica
 | AB-RELAY | [Starlight Relay](afterbell-starlight.md) | Local implementation | Playtesting | Game |
 
 | AB-CITY | [Festival City](afterbell-festival-city.md) | Local implementation | Playtesting | Game |
+
+| ENG-001 | [English exam](../docs/features/english-exam.md) | approved | 328 regression checks and 10 full-stack checks passed; release authorized | Release |

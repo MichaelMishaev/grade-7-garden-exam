@@ -45,6 +45,6 @@ export function questionPresentation(question) {
   const original = originals.get(question?.id);
   if (!sameAcademicQuestion(question, original)) return fallback;
   const copy = presentations[question.id];
-  const sourceLabel = question.ref.id === 'garden-passage' ? 'הגינה בבית הספר' : `מדידות · ${question.ref.part}`;
+  const sourceLabel = question.id.startsWith('english-') ? `אנגלית · ${question.ref.part}` : question.ref.id === 'garden-passage' ? 'הגינה בבית הספר' : `מדידות · ${question.ref.part}`;
   return { ...fallback, ...copy, sourceLabel, adapted: !!copy };
 }

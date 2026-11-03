@@ -1,0 +1,11 @@
+Generated with built-in image_gen; original 1254x1254 RGBA output, copied unchanged.
+
+Use case: illustration-story.
+Asset type: transparent square illustration for a children's computer-science lesson card, readable at 150 pixels.
+Primary request: a friendly small computer robot making one clear choice at a fork of two paths.
+Subject and scene: one cute rounded computer robot with a pale violet body, a dark navy screen face with two expressive eyes and a small smile, standing at a simple Y-shaped fork. One arm points decisively along the bright lime-green path while the other path is soft sky blue and remains unchosen. The two paths should be clearly separate and understandable as two alternatives.
+Style: polished playful soft 3D educational app illustration, rounded toy-like forms, clean matte material, simple bold silhouette, gentle studio lighting and subtle contact shadows. Friendly for children aged 11–13, clever and welcoming rather than babyish.
+Composition: centered square, robot and fork fill most of the frame with generous clean edge padding; slightly elevated three-quarter view so the fork and the selected route are immediately visible. Paths end within the image and no element is cropped.
+Color palette: lime green, pale violet, navy face and pale sky blue, restrained and high-contrast.
+Text: no words, no letters, no numbers.
+Constraints: genuinely transparent background; preserve alpha; no background panel, no scenery, no logos, no watermark, no unrelated objects, no photorealism, no busy detail. The robot must select only one of the two routes.

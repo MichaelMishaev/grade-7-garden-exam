@@ -1,0 +1,7 @@
+/* Keep three subject rows and the existing games visible on the compact home page. */
+.home-page .exam-card, .home-page .exam-card:first-child { min-height: 52px; padding: 6px 12px; }
+.home-page .subject-art { flex-basis: 32px; width: 32px; height: 32px; }
+.home-page .site-header { padding-bottom: 6px; }
+.home-page .intro { margin-bottom: 8px; }
+.home-page .home-games { margin-top: 8px; }
+.home-page footer { margin-top: 4px; }

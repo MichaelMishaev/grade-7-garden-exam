@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#ffffff">
   <title>גרסאות המבחן | PrepX</title>
   <link rel="stylesheet" href="styles.css?v=8">
-  <link rel="stylesheet" href="subject.css?v=6">
+  <link rel="stylesheet" href="subject.css?v=8">
+  <link rel="stylesheet" href="share-test.css?v=2">
   <link rel="stylesheet" href="exam-date-chip.css?v=1">
   <script type="module" src="exam-date-chip.js?v=1"></script>
   <link rel="stylesheet" href="branding.css?v=2">
@@ -64,6 +65,7 @@
   </div>
   <script src="quiz-core.js?v=3"></script>
   <script src="content-api.js?v=3"></script>
+  <script src="share-test.js?v=3"></script>
   <script>
     const subjects = {
       hebrew: {
@@ -119,7 +121,215 @@
           ['physics-precision', 'מודדים כמו פיזיקאים', 'סרגל, עובי דף וליפופי תיל', '3'],
           ['physics-pole', 'מיישמים ומתכננים', 'יחידות, הזמנת לוח ומדידת גרגרים', '4']
         ]
-      }
+      },
+      english: {
+  "title": "אנגלית",
+  "description": "מבחן בתאריך 9.11. הבנת הנקרא, אוצר מילים, חלקי דיבר, הווה פשוט וכתיבה.",
+  "variants": [
+    {
+      "id": "english-v1-practice",
+      "title": "גרסה 1 · מבחן תרגול באנגלית",
+      "detail": "שאלות מקוריות לפי דוגמאות המורה · בחירה, נכון או לא נכון וכתיבה",
+      "date": "9.11",
+      "count": "20 שאלות",
+      "href": "english-exam.html",
+      "references": [
+        {
+          "id": "english-teacher-material",
+          "kind": "site",
+          "title": "חומר המורה ודוגמאות התרגול למבחן באנגלית",
+          "url": "https://docs.google.com/document/d/1feJMJs_EXvdRq6xC-TQj_Nzcf6Rh7uYNHxxrG81j1qU/edit",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "חלקי דיבר",
+              "title": "חלקי דיבר"
+            },
+            {
+              "part": "הווה פשוט — חיוב",
+              "title": "הווה פשוט — חיוב"
+            },
+            {
+              "part": "הווה פשוט — שלילה",
+              "title": "הווה פשוט — שלילה"
+            },
+            {
+              "part": "הווה פשוט — שאלות",
+              "title": "הווה פשוט — שאלות"
+            },
+            {
+              "part": "כתיבה — אדם שאני מעריך",
+              "title": "כתיבה — אדם שאני מעריך"
+            }
+          ]
+        },
+        {
+          "id": "english-reading",
+          "kind": "passage",
+          "title": "טקסט התרגול המקורי: A guide I admire",
+          "url": "english-exam.html#article",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "פסקה 1",
+              "title": "פסקה 1"
+            },
+            {
+              "part": "פסקה 2",
+              "title": "פסקה 2"
+            },
+            {
+              "part": "פסקה 3",
+              "title": "פסקה 3"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-12",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 12",
+          "url": "https://wordwall.net/resource/36327179",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 12",
+              "title": "אוצר מילים — עמוד 12"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-20",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 20",
+          "url": "https://wordwall.net/resource/36327199",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 20",
+              "title": "אוצר מילים — עמוד 20"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-28",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 28",
+          "url": "https://wordwall.net/resource/36327212",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 28",
+              "title": "אוצר מילים — עמוד 28"
+            }
+          ]
+        },
+        {
+          "id": "english-parts-sort",
+          "kind": "site",
+          "title": "חלקי דיבר — מיון המורה",
+          "url": "https://wordwall.net/he/resource/10462641?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-parts-quiz",
+          "kind": "site",
+          "title": "חלקי דיבר — שאלון המורה",
+          "url": "https://wordwall.net/he/resource/95521835?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-negative-1",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב ושלילה 1",
+          "url": "https://wordwall.net/resource/8818577?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-negative-2",
+          "kind": "site",
+          "title": "הווה פשוט — שלילה 2",
+          "url": "https://wordwall.net/resource/30802053?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-affirmative-1",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב 1",
+          "url": "https://www.english-room.com/grammar/presentsimpletense_affirmative_1.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-affirmative-2",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב 2",
+          "url": "https://www.english-4u.de/en/tenses-exercises/present-simple.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-questions-1",
+          "kind": "site",
+          "title": "הווה פשוט — שאלות do / does",
+          "url": "https://agendaweb.org/exercises/verbs/do-does.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        },
+        {
+          "id": "english-questions-2",
+          "kind": "site",
+          "title": "הווה פשוט — שאלות 2 (קישור המורה)",
+          "url": "https://elt.oup.com/student/solutions/elementary/grammar/grammar_01_022e?srsltid=AYCX9vI9AHfe9RiNHcFBw9fPdCYarp6r16hGHYQINVwtxLyLfewiKfDa&cc=global&selLanguage=en",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
     };
     const examDates = {
       'hebrew-v1-garden': '2026-10-29',
@@ -191,7 +401,7 @@
         examLink.className = 'variant-start';
         examLink.href = variant.href;
         examLink.textContent = 'מתחילים את המבחן המלא ←';
-        content.append(examLink);
+        content.append(examLink, testShareControl(examLink, `${subject.title} · ${variant.title}`));
         if (variant.references?.length) content.append(referenceBlock(variant.references, index));
         if (variant.practiceQuizzes?.length) {
           const practice = document.getElementById('practice-section').cloneNode(true);
@@ -214,10 +424,16 @@
       document.dispatchEvent(new Event('exam-cards-ready'));
       document.getElementById('practice-section').remove();
       const shortcut = document.querySelector('.practice-shortcut');
-      const firstPractice = document.querySelector('.variant-content section');
+      const firstPractice = document.querySelector('.variant-content section[id$="-practice"]');
       if (firstPractice) shortcut.href = '#' + firstPractice.id;
-      else shortcut.hidden = true;
+      else shortcut.remove();
     }
+    document.querySelectorAll('a.quiz-row[href^="practice.html?quiz="]').forEach(link => {
+      const item = document.createElement('div');
+      item.className = 'shared-quiz';
+      link.before(item);
+      item.append(link, testShareControl(link, link.querySelector('strong').textContent));
+    });
     showBestScores();
     }
     // Each exam version's own study material ("חומר לימוד"); its questions point at parts of it.

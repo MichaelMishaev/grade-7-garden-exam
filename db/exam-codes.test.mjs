@@ -12,7 +12,7 @@ test('the server exams table and the extractor carry the same exam ids and codes
 test('codes are unique, well formed, and every extracted exam gets its code', () => {
   const codes = Object.values(examCodes);
   assert.equal(new Set(codes).size, codes.length);
-  assert.ok(codes.every(code => /^(HEB|PHY)-\d{3}$/.test(code)));
+  assert.ok(codes.every(code => /^(HEB|PHY|ENG)-\d{3}$/.test(code)));
   const content = extractContent();
   for (const id of Object.keys(examCodes)) assert.equal(content.exams.find(exam => exam.id === id)?.code, examCodes[id], id);
   assert.ok(content.exams.every(exam => exam.code === (examCodes[exam.id] ?? null)));

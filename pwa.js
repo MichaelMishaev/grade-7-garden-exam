@@ -49,6 +49,53 @@
   });
   dialog.addEventListener('close', () => { if (!button.hidden) button.focus(); });
 
+  // Share the public app entry point, never the current query, fragment or student state.
+  const appURL = 'https://hitech.agnon.online/';
+  const shareButton = document.getElementById('share-app');
+  const shareDialog = document.getElementById('app-share-help');
+  const shareStatus = document.getElementById('app-share-status');
+  const shareInput = document.getElementById('app-share-url');
+  const copyButton = document.getElementById('app-share-copy');
+  const copyAppURL = async () => {
+    try {
+      await navigator.clipboard.writeText(appURL);
+      shareStatus.textContent = 'הקישור הועתק. אפשר להדביק ולשתף אותו.';
+      return true;
+    } catch {
+      shareStatus.textContent = 'אפשר לבחור את הקישור ולהעתיק אותו, או לנסות שוב.';
+      return false;
+    }
+  };
+  shareButton.addEventListener('click', async () => {
+    shareButton.disabled = true;
+    try {
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ title: 'PrepX', url: appURL });
+          return;
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+        }
+      }
+      const copied = await copyAppURL();
+      shareInput.value = appURL;
+      if (!shareDialog.open) shareDialog.showModal();
+      if (!copied) { shareInput.focus(); shareInput.select(); }
+    } finally {
+      shareButton.disabled = false;
+    }
+  });
+  copyButton.addEventListener('click', async () => {
+    copyButton.disabled = true;
+    try {
+      if (!await copyAppURL()) { shareInput.focus(); shareInput.select(); }
+    } finally {
+      copyButton.disabled = false;
+    }
+  });
+  shareDialog.addEventListener('close', () => shareButton.focus());
+  shareButton.hidden = false;
+
   if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('sw.js').catch(() => {
       // Installation through the browser menu remains available; retry on the next visit.

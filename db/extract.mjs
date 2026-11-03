@@ -22,10 +22,10 @@ const gardenParts = [
   'פסקה 3', 'פסקה 1', 'פסקה 2', 'פסקה 2', 'פסקה 1', 'פסקה 3', 'פסקה 2', 'פסקה 1', 'פסקה 1', 'הטקסט כולו', null,
   'הכותרת ושורת הפרטים', 'הטקסט כולו'
 ];
-const passageByExam = { 'hebrew-v1-garden': 'garden', 'hebrew-v2-library': 'library' };
+const passageByExam = { 'hebrew-v1-garden': 'garden', 'hebrew-v2-library': 'library', 'english-v1-practice': 'english-reading' };
 // Permanent test codes (docs/TESTING.md §1): the single source for exams.code in the database. The `exams` table in
 // server.mjs repeats them for the email; db/exam-codes.test.mjs fails if the two ever differ.
-export const examCodes = { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001' };
+export const examCodes = { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001', 'english-v1-practice': 'ENG-001' };
 
 export function extractContent(root = defaultRoot) {
   const read = (file) => readFileSync(new URL(file, root), 'utf8');
@@ -35,9 +35,12 @@ export function extractContent(root = defaultRoot) {
   const practiceJs = read('practice.js');
   const subjectHtml = read('subject.html');
   const physicsJs = read('physics-exam.js');
+  const englishJs = read('english-exam.js');
+  const englishHtml = read('english-exam.html');
 
   const gardenPrompts = evaluate(between(gardenHtml, 'const questions = [', '];') + '];\nquestions;');
   const libraryQuestions = evaluate(between(libraryJs, 'const questions', 'const $') + '\nquestions;');
+  const englishQuestions = evaluate(between(englishJs, 'const questions', 'const $') + '\nquestions;');
   const physicsQuestions = evaluate(between(physicsJs, 'const questions', 'const sections') + '\nquestions;');
   const quizSource = evaluate(practiceJs.slice(0, practiceJs.indexOf('const byId')) + '\nquizzes;');
   const subjectSource = evaluate(between(subjectHtml, 'const subjects = {', 'const key =') + '\nsubjects;');
@@ -45,10 +48,11 @@ export function extractContent(root = defaultRoot) {
   const article = (html) => /<article[^>]*id="article"[^>]*>([\s\S]*?)<\/article>/.exec(html)[1].trim();
   const passages = [
     { id: 'garden', title: 'תלמידי כיתה ז׳ הקימו גינה בבית הספר', body_html: article(gardenHtml), source_file: 'garden-exam.html' },
+    { id: 'english-reading', title: 'A guide I admire', body_html: article(englishHtml), source_file: 'english-exam.html' },
     { id: 'library', title: 'הספרייה נפתחת גם בהפסקה', body_html: article(libraryHtml), source_file: 'library-exam.html' }
   ];
 
-  const art = { hebrew: 'assets/books.png', physics: 'assets/atom.png' };
+  const art = { hebrew: 'assets/books.png', physics: 'assets/atom.png', english: 'assets/books.png' };
   const subjects = Object.entries(subjectSource).map(([id, s], i) => ({
     id, title: s.title, description: s.description, art_path: art[id] ?? null, sort_order: i + 1
   }));
@@ -93,6 +97,7 @@ export function extractContent(root = defaultRoot) {
     })),
     ...libraryQuestions.map(examQuestion('hebrew-v2-library')),
     ...physicsQuestions.map(examQuestion('physics-v1-assessment')),
+    ...englishQuestions.map(examQuestion('english-v1-practice')),
     ...Object.entries(quizSource).flatMap(([quizId, quiz]) => quiz.questions.map((q, i) => ({
       id: `${quizId}-${pad(i + 1)}`, exam_id: null, quiz_id: quizId, position: i + 1, type: q.type || 'mcq',
       topic: null, difficulty: null, prompt: q.text, choices: q.choices ?? null, correct: q.correct,

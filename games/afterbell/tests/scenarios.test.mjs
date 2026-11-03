@@ -8,7 +8,7 @@ const roundFor=s=>({...makeRound(snapshot.quizzes.find(q=>s.quizzes.includes(q.i
 const motion=(r)=>({crouching:true,dashing:r.scenario.checkpoint===1,companion:{...scenarioGoal(r)}});
 function apply(r,a){const goal=scenarioGoal(r);return fieldAction(r,a,{...goal,y:r.scenario.checkpoint===3?0:1},motion(r));}
 function award(r,i){r.items.push(EQUIPMENT[i].id);r.understood.push(NPCS[i].id);for(const id of r.assignments[i])answer(r,id,r.questions.find(q=>q.id===id).correct);r.seals.push(NPCS[i].id);}
-test('30 exclusive task types, no shared puzzle types across any adventures; seven subject recommendations',()=>{
+test('30 exclusive task types, no shared puzzle types across any adventures; all subject recommendations',()=>{
  assert.equal(SCENARIOS.length,10);const kinds=SCENARIOS.flatMap(s=>s.steps.map(x=>x.kind));assert.equal(kinds.length,30);assert.equal(new Set(kinds).size,30);assert.deepEqual(new Set(kinds),new Set(Object.keys(TASK_SOLUTIONS)));
  for(const s of SCENARIOS)assert.ok(s.steps.every(t=>t.kind.startsWith(s.id+'-')));
  for(const q of snapshot.quizzes)assert.ok(SCENARIOS.find(s=>s.id===recommendedScenario(q.id)).quizzes.includes(q.id));

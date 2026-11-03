@@ -20,8 +20,8 @@ test('offline catalog is the existing public question snapshot without changed q
       const source = originalQuiz.questions.find(item => item.id === question.id);
       assert.equal(question.prompt, source.prompt); assert.deepEqual(question.choices, source.choices);
       assert.equal(question.correct, source.correct); assert.deepEqual(question.explanation, source.explanation);
-      assert.deepEqual(question.ref, source.ref); assert.equal(question.weight, 1.5);
-      assert.ok(question.reference.url.includes('garden-exam.html') || question.reference.url.includes('physics-measurements-grade-7.pdf'));
+      assert.deepEqual(question.ref, source.ref); assert.equal(question.weight, ({ easy: 1, medium: 1.5, hard: 2 })[source.difficulty] || 1.5);
+      assert.ok(question.reference.url.includes('garden-exam.html') || question.reference.url.includes('physics-measurements-grade-7.pdf') || originalQuiz.subject_id === 'english');
     }
   }
 });

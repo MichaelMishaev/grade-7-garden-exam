@@ -1657,6 +1657,4500 @@ export default {
           }
         }
       ]
+    },
+    {
+      "id": "english-v1-practice",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "אנגלית · אוצר מילים ודקדוק",
+      "description": "תרגול למבחן 9.11: אוצר מילים, חלקי דיבר והווה פשוט. הבנת הנקרא וכתיבה במבחן המלא.",
+      "references": [
+        {
+          "id": "english-teacher-material",
+          "kind": "site",
+          "title": "חומר המורה ודוגמאות התרגול למבחן באנגלית",
+          "url": "https://docs.google.com/document/d/1feJMJs_EXvdRq6xC-TQj_Nzcf6Rh7uYNHxxrG81j1qU/edit",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "חלקי דיבר",
+              "title": "חלקי דיבר"
+            },
+            {
+              "part": "הווה פשוט — חיוב",
+              "title": "הווה פשוט — חיוב"
+            },
+            {
+              "part": "הווה פשוט — שלילה",
+              "title": "הווה פשוט — שלילה"
+            },
+            {
+              "part": "הווה פשוט — שאלות",
+              "title": "הווה פשוט — שאלות"
+            },
+            {
+              "part": "כתיבה — אדם שאני מעריך",
+              "title": "כתיבה — אדם שאני מעריך"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-12",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 12",
+          "url": "https://wordwall.net/resource/36327179",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 12",
+              "title": "אוצר מילים — עמוד 12"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-20",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 20",
+          "url": "https://wordwall.net/resource/36327199",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 20",
+              "title": "אוצר מילים — עמוד 20"
+            }
+          ]
+        },
+        {
+          "id": "english-vocabulary-28",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 28",
+          "url": "https://wordwall.net/resource/36327212",
+          "attribution": null,
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 28",
+              "title": "אוצר מילים — עמוד 28"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the Hebrew meaning of “journey”.",
+          "choices": [
+            "מסע",
+            "גשר",
+            "בחירה",
+            "סכנה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול אוצר המילים בעמוד 12, journey פירושו מסע.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the word that means “זהיר”.",
+          "choices": [
+            "careful",
+            "wide",
+            "usual",
+            "possible"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 12, careful פירושו זהיר.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "easy",
+          "prompt": "Choose the word that means “ארוחה”.",
+          "choices": [
+            "meal",
+            "bowl",
+            "guide",
+            "world"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 20, meal פירושו ארוחה.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "אוצר מילים",
+          "difficulty": "medium",
+          "prompt": "Choose the best word: “I want to ___ the school club.”",
+          "choices": [
+            "join",
+            "feed",
+            "receive",
+            "serve"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול עמוד 28, join פירושו להצטרף; מצטרפים למועדון.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “The guide helps visitors”, what is the part of speech of “guide”?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "guide מציין אדם ולכן הוא שם עצם במשפט הזה.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “The children walk to school”, what is the part of speech of “walk”?",
+          "choices": [
+            "Verb",
+            "Noun",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "walk מתאר פעולה ולכן הוא פועל.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "חלקי דיבר",
+          "difficulty": "medium",
+          "prompt": "In “She is a careful guide”, what is the part of speech of “careful”?",
+          "choices": [
+            "Adjective",
+            "Noun",
+            "Verb"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "careful מתאר את המדריכה ולכן הוא שם תואר.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "חלקי דיבר"
+          }
+        },
+        {
+          "id": "english-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “My aunt ___ near the river every day.”",
+          "choices": [
+            "walks",
+            "walk",
+            "walking",
+            "are walk"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בהווה פשוט מוסיפים s לפועל עם נושא בגוף שלישי יחיד, כמו my aunt.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — חיוב"
+          }
+        },
+        {
+          "id": "english-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “The children ___ English at school.”",
+          "choices": [
+            "study",
+            "studies",
+            "studying",
+            "is study"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם נושא ברבים משתמשים בצורת הבסיס study.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — חיוב"
+          }
+        },
+        {
+          "id": "english-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה",
+          "difficulty": "medium",
+          "prompt": "Choose the correct form: “Maya ___ work on Sundays.”",
+          "choices": [
+            "doesn’t",
+            "don’t",
+            "isn’t",
+            "aren’t"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם Maya משתמשים ב־doesn’t ואחריו פועל בצורת הבסיס.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שלילה"
+          }
+        },
+        {
+          "id": "english-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה",
+          "difficulty": "medium",
+          "prompt": "Is this sentence grammatically correct? “They don’t lives in a city.”",
+          "choices": [
+            "True",
+            "False"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "אחרי don’t הפועל בצורת הבסיס: They don’t live in a city.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שלילה"
+          }
+        },
+        {
+          "id": "english-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות",
+          "difficulty": "hard",
+          "prompt": "Choose the correct question.",
+          "choices": [
+            "Does your aunt help visitors?",
+            "Does your aunt helps visitors?",
+            "Do your aunt help visitors?",
+            "Your aunt does help visitors?"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "שאלה עם your aunt נפתחת ב־Does ואחריו הנושא ופועל הבסיס help.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שאלות"
+          }
+        },
+        {
+          "id": "english-18",
+          "position": 18,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות",
+          "difficulty": "hard",
+          "prompt": "Is this sentence grammatically correct? “Do the children study English every day?”",
+          "choices": [
+            "True",
+            "False"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "עם children משתמשים ב־Do, ואחריו הנושא ופועל הבסיס study.",
+            "en": ""
+          },
+          "ref": {
+            "id": "english-teacher-material",
+            "part": "הווה פשוט — שאלות"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-vocabulary-12",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "אוצר מילים — תרגול המורה לעמוד 12",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 25 שאלות",
+      "references": [
+        {
+          "id": "english-vocabulary-12",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 12",
+          "url": "https://wordwall.net/he/resource/36327179?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 12",
+              "title": "אוצר מילים — עמוד 12"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-vocabulary-12-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “activity”?",
+          "choices": [
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה",
+            "סכנה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: activity — פעילות.",
+            "en": "The teacher's vocabulary pair is activity — פעילות."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “bridge”?",
+          "choices": [
+            "גשר",
+            "פעילות",
+            "בחירה, ברירה",
+            "סכנה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: bridge — גשר.",
+            "en": "The teacher's vocabulary pair is bridge — גשר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “choice”?",
+          "choices": [
+            "בחירה, ברירה",
+            "פעילות",
+            "גשר",
+            "סכנה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: choice — בחירה, ברירה.",
+            "en": "The teacher's vocabulary pair is choice — בחירה, ברירה."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “danger”?",
+          "choices": [
+            "סכנה",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: danger — סכנה.",
+            "en": "The teacher's vocabulary pair is danger — סכנה."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “journey”?",
+          "choices": [
+            "מסע",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: journey — מסע.",
+            "en": "The teacher's vocabulary pair is journey — מסע."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “mountain”?",
+          "choices": [
+            "הר",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: mountain — הר.",
+            "en": "The teacher's vocabulary pair is mountain — הר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “river”?",
+          "choices": [
+            "נהר",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: river — נהר.",
+            "en": "The teacher's vocabulary pair is river — נהר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “village”?",
+          "choices": [
+            "כפר",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: village — כפר.",
+            "en": "The teacher's vocabulary pair is village — כפר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “continue”?",
+          "choices": [
+            "להמשיך",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: continue — להמשיך.",
+            "en": "The teacher's vocabulary pair is continue — להמשיך."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “depend on”?",
+          "choices": [
+            "להסתמך על",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: depend on — להסתמך על.",
+            "en": "The teacher's vocabulary pair is depend on — להסתמך על."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “fix”?",
+          "choices": [
+            "לתקן",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: fix — לתקן.",
+            "en": "The teacher's vocabulary pair is fix — לתקן."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “imagine”?",
+          "choices": [
+            "לדמיין, להאמין",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: imagine — לדמיין, להאמין.",
+            "en": "The teacher's vocabulary pair is imagine — לדמיין, להאמין."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “prefer”?",
+          "choices": [
+            "להעדיף",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: prefer — להעדיף.",
+            "en": "The teacher's vocabulary pair is prefer — להעדיף."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “realize”?",
+          "choices": [
+            "להבין, לקלוט",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: realize — להבין, לקלוט.",
+            "en": "The teacher's vocabulary pair is realize — להבין, לקלוט."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “careful”?",
+          "choices": [
+            "זהיר",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: careful — זהיר.",
+            "en": "The teacher's vocabulary pair is careful — זהיר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “dangerous”?",
+          "choices": [
+            "מסוכן",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: dangerous — מסוכן.",
+            "en": "The teacher's vocabulary pair is dangerous — מסוכן."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “possible”?",
+          "choices": [
+            "אפשרי",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: possible — אפשרי.",
+            "en": "The teacher's vocabulary pair is possible — אפשרי."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-18",
+          "position": 18,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “unusual”?",
+          "choices": [
+            "יוצא דופן",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: unusual — יוצא דופן.",
+            "en": "The teacher's vocabulary pair is unusual — יוצא דופן."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-19",
+          "position": 19,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “usual”?",
+          "choices": [
+            "רגיל",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: usual — רגיל.",
+            "en": "The teacher's vocabulary pair is usual — רגיל."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-20",
+          "position": 20,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “wide”?",
+          "choices": [
+            "רחב",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: wide — רחב.",
+            "en": "The teacher's vocabulary pair is wide — רחב."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-21",
+          "position": 21,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “across”?",
+          "choices": [
+            "מעבר",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: across — מעבר.",
+            "en": "The teacher's vocabulary pair is across — מעבר."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-22",
+          "position": 22,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “any”?",
+          "choices": [
+            "איזשהו, כל",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: any — איזשהו, כל.",
+            "en": "The teacher's vocabulary pair is any — איזשהו, כל."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-23",
+          "position": 23,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “anybody”?",
+          "choices": [
+            "כל אחד",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: anybody — כל אחד.",
+            "en": "The teacher's vocabulary pair is anybody — כל אחד."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-24",
+          "position": 24,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “directly”?",
+          "choices": [
+            "ישירות",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: directly — ישירות.",
+            "en": "The teacher's vocabulary pair is directly — ישירות."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        },
+        {
+          "id": "english-vocabulary-12-25",
+          "position": 25,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 12",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “next to”?",
+          "choices": [
+            "ליד",
+            "פעילות",
+            "גשר",
+            "בחירה, ברירה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: next to — ליד.",
+            "en": "The teacher's vocabulary pair is next to — ליד."
+          },
+          "ref": {
+            "id": "english-vocabulary-12",
+            "part": "אוצר מילים — עמוד 12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-vocabulary-20",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "אוצר מילים — תרגול המורה לעמוד 20",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 25 שאלות",
+      "references": [
+        {
+          "id": "english-vocabulary-20",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 20",
+          "url": "https://wordwall.net/he/resource/36327199?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 20",
+              "title": "אוצר מילים — עמוד 20"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-vocabulary-20-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “bowl”?",
+          "choices": [
+            "קערה",
+            "מדריך",
+            "היסטוריה",
+            "עבודה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: bowl — קערה.",
+            "en": "The teacher's vocabulary pair is bowl — קערה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “guide”?",
+          "choices": [
+            "מדריך",
+            "קערה",
+            "היסטוריה",
+            "עבודה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: guide — מדריך.",
+            "en": "The teacher's vocabulary pair is guide — מדריך."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “history”?",
+          "choices": [
+            "היסטוריה",
+            "קערה",
+            "מדריך",
+            "עבודה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: history — היסטוריה.",
+            "en": "The teacher's vocabulary pair is history — היסטוריה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “job”?",
+          "choices": [
+            "עבודה",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: job — עבודה.",
+            "en": "The teacher's vocabulary pair is job — עבודה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “lemon”?",
+          "choices": [
+            "לימון",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: lemon — לימון.",
+            "en": "The teacher's vocabulary pair is lemon — לימון."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “meal”?",
+          "choices": [
+            "ארוחה",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: meal — ארוחה.",
+            "en": "The teacher's vocabulary pair is meal — ארוחה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “nation”?",
+          "choices": [
+            "אומה",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: nation — אומה.",
+            "en": "The teacher's vocabulary pair is nation — אומה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “oil”?",
+          "choices": [
+            "שמן",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: oil — שמן.",
+            "en": "The teacher's vocabulary pair is oil — שמן."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “world”?",
+          "choices": [
+            "עולם",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: world — עולם.",
+            "en": "The teacher's vocabulary pair is world — עולם."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “amaze”?",
+          "choices": [
+            "להדהים",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: amaze — להדהים.",
+            "en": "The teacher's vocabulary pair is amaze — להדהים."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “fall (fell) in love”?",
+          "choices": [
+            "להתאהב",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: fall (fell) in love — להתאהב.",
+            "en": "The teacher's vocabulary pair is fall (fell) in love — להתאהב."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “feed”?",
+          "choices": [
+            "להאכיל",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: feed — להאכיל.",
+            "en": "The teacher's vocabulary pair is feed — להאכיל."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “follow”?",
+          "choices": [
+            "ללכת בעקבות",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: follow — ללכת בעקבות.",
+            "en": "The teacher's vocabulary pair is follow — ללכת בעקבות."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “open”?",
+          "choices": [
+            "לפתוח",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: open — לפתוח.",
+            "en": "The teacher's vocabulary pair is open — לפתוח."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “receive”?",
+          "choices": [
+            "לקבל",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: receive — לקבל.",
+            "en": "The teacher's vocabulary pair is receive — לקבל."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-18",
+          "position": 18,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “serve”?",
+          "choices": [
+            "לשרת, להגיש",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: serve — לשרת, להגיש.",
+            "en": "The teacher's vocabulary pair is serve — לשרת, להגיש."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-19",
+          "position": 19,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “shake hands”?",
+          "choices": [
+            "ללחוץ ידיים",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: shake hands — ללחוץ ידיים.",
+            "en": "The teacher's vocabulary pair is shake hands — ללחוץ ידיים."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-20",
+          "position": 20,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “welcome”?",
+          "choices": [
+            "להגיד שלום, לקבל בברכה",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: welcome — להגיד שלום, לקבל בברכה.",
+            "en": "The teacher's vocabulary pair is welcome — להגיד שלום, לקבל בברכה."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-21",
+          "position": 21,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “amazing”?",
+          "choices": [
+            "מדהים",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: amazing — מדהים.",
+            "en": "The teacher's vocabulary pair is amazing — מדהים."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-22",
+          "position": 22,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “certain”?",
+          "choices": [
+            "בטוח",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: certain — בטוח.",
+            "en": "The teacher's vocabulary pair is certain — בטוח."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-23",
+          "position": 23,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “lovely”?",
+          "choices": [
+            "נעים, נחמד",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: lovely — נעים, נחמד.",
+            "en": "The teacher's vocabulary pair is lovely — נעים, נחמד."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-24",
+          "position": 24,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “main”?",
+          "choices": [
+            "עיקרי",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: main — עיקרי.",
+            "en": "The teacher's vocabulary pair is main — עיקרי."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-25",
+          "position": 25,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “typical”?",
+          "choices": [
+            "טיפוסי",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: typical — טיפוסי.",
+            "en": "The teacher's vocabulary pair is typical — טיפוסי."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-26",
+          "position": 26,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “warm”?",
+          "choices": [
+            "חם (התנהגות)",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: warm — חם (התנהגות).",
+            "en": "The teacher's vocabulary pair is warm — חם (התנהגות)."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        },
+        {
+          "id": "english-vocabulary-20-27",
+          "position": 27,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 20",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “according to”?",
+          "choices": [
+            "לפי",
+            "קערה",
+            "מדריך",
+            "היסטוריה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: according to — לפי.",
+            "en": "The teacher's vocabulary pair is according to — לפי."
+          },
+          "ref": {
+            "id": "english-vocabulary-20",
+            "part": "אוצר מילים — עמוד 20"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-vocabulary-28",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "אוצר מילים — תרגול המורה לעמוד 28",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 17 שאלות",
+      "references": [
+        {
+          "id": "english-vocabulary-28",
+          "kind": "site",
+          "title": "אוצר מילים — תרגול המורה לעמוד 28",
+          "url": "https://wordwall.net/he/resource/36327212?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "אוצר מילים — עמוד 28",
+              "title": "אוצר מילים — עמוד 28"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-vocabulary-28-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “band”?",
+          "choices": [
+            "להקה",
+            "מועדון",
+            "טופס",
+            "רשימה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: band — להקה.",
+            "en": "The teacher's vocabulary pair is band — להקה."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “club”?",
+          "choices": [
+            "מועדון",
+            "להקה",
+            "טופס",
+            "רשימה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: club — מועדון.",
+            "en": "The teacher's vocabulary pair is club — מועדון."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “form”?",
+          "choices": [
+            "טופס",
+            "להקה",
+            "מועדון",
+            "רשימה"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: form — טופס.",
+            "en": "The teacher's vocabulary pair is form — טופס."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “list”?",
+          "choices": [
+            "רשימה",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: list — רשימה.",
+            "en": "The teacher's vocabulary pair is list — רשימה."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “office”?",
+          "choices": [
+            "משרד",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: office — משרד.",
+            "en": "The teacher's vocabulary pair is office — משרד."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “team”?",
+          "choices": [
+            "קבוצה",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: team — קבוצה.",
+            "en": "The teacher's vocabulary pair is team — קבוצה."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “theater”?",
+          "choices": [
+            "תיאטרון",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: theater — תיאטרון.",
+            "en": "The teacher's vocabulary pair is theater — תיאטרון."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “variety”?",
+          "choices": [
+            "מגוון",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: variety — מגוון.",
+            "en": "The teacher's vocabulary pair is variety — מגוון."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “writing”?",
+          "choices": [
+            "כתיבה",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: writing — כתיבה.",
+            "en": "The teacher's vocabulary pair is writing — כתיבה."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “fill in”?",
+          "choices": [
+            "למלא",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: fill in — למלא.",
+            "en": "The teacher's vocabulary pair is fill in — למלא."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “join”?",
+          "choices": [
+            "להצטרף",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: join — להצטרף.",
+            "en": "The teacher's vocabulary pair is join — להצטרף."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “interested (in)”?",
+          "choices": [
+            "מעוניין ב...",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: interested (in) — מעוניין ב....",
+            "en": "The teacher's vocabulary pair is interested (in) — מעוניין ב...."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “around here”?",
+          "choices": [
+            "כאן בסביבה",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: around here — כאן בסביבה.",
+            "en": "The teacher's vocabulary pair is around here — כאן בסביבה."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “I’d love to”?",
+          "choices": [
+            "אשמח ל-",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: I’d love to — אשמח ל-.",
+            "en": "The teacher's vocabulary pair is I’d love to — אשמח ל-."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “Nice to meet you.”?",
+          "choices": [
+            "נעים להכיר",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: Nice to meet you. — נעים להכיר.",
+            "en": "The teacher's vocabulary pair is Nice to meet you. — נעים להכיר."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “What about … ?”?",
+          "choices": [
+            "מה לגבי...?",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: What about … ? — מה לגבי...?.",
+            "en": "The teacher's vocabulary pair is What about … ? — מה לגבי...?."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        },
+        {
+          "id": "english-vocabulary-28-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "אוצר מילים — תרגול המורה לעמוד 28",
+          "difficulty": "medium",
+          "prompt": "מה פירוש הביטוי “would you like … ?”?",
+          "choices": [
+            "האם תרצה...?",
+            "להקה",
+            "מועדון",
+            "טופס"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "בתרגול המורה: would you like … ? — האם תרצה...?.",
+            "en": "The teacher's vocabulary pair is would you like … ? — האם תרצה...?."
+          },
+          "ref": {
+            "id": "english-vocabulary-28",
+            "part": "אוצר מילים — עמוד 28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-parts-sort",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "חלקי דיבר — מיון המורה",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 29 שאלות",
+      "references": [
+        {
+          "id": "english-parts-sort",
+          "kind": "site",
+          "title": "חלקי דיבר — מיון המורה",
+          "url": "https://wordwall.net/he/resource/10462641?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-parts-sort-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “ball” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “ball” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, ball is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “dog” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “dog” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, dog is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “table” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “table” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, table is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “chair” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “chair” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, chair is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “door” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “door” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, door is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “window” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “window” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, window is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “book” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “book” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, book is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “pen” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “pen” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, pen is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “glass” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “glass” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, glass is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “picture” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “picture” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, picture is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “walk” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “walk” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, walk is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “go” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “go” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, go is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “drive” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “drive” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, drive is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “eat” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “eat” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, eat is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “run” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “run” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, run is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-16",
+          "position": 16,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “swim” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “swim” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, swim is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-17",
+          "position": 17,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “look” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “look” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, look is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-18",
+          "position": 18,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “speak” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “speak” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, speak is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-19",
+          "position": 19,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “buy” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “buy” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, buy is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-20",
+          "position": 20,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “like” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “like” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, like is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-21",
+          "position": 21,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “red” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “red” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, red is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-22",
+          "position": 22,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “tall” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “tall” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, tall is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-23",
+          "position": 23,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “short” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “short” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, short is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-24",
+          "position": 24,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “beautiful” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “beautiful” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, beautiful is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-26",
+          "position": 26,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “happy” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “happy” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, happy is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-27",
+          "position": 27,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “sad” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “sad” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, sad is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-28",
+          "position": 28,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “black” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “black” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, black is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-29",
+          "position": 29,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “thin” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “thin” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, thin is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-sort-30",
+          "position": 30,
+          "type": "mcq",
+          "topic": "חלקי דיבר — מיון המורה",
+          "difficulty": "medium",
+          "prompt": "לאיזו קבוצת חלקי דיבר שייכת המילה “fat” בתרגיל המורה?",
+          "choices": [
+            "Noun",
+            "Verb",
+            "Adjective"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "המילה “fat” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, fat is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-sort",
+            "part": "התרגיל המקורי"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-parts-quiz",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "חלקי דיבר — שאלון המורה",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 10 שאלות",
+      "references": [
+        {
+          "id": "english-parts-quiz",
+          "kind": "site",
+          "title": "חלקי דיבר — שאלון המורה",
+          "url": "https://wordwall.net/he/resource/95521835?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-parts-quiz-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Which of these is a verb?",
+          "choices": [
+            "Run",
+            "Table",
+            "Blue",
+            "Quickly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Run” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, Run is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Identify the noun.",
+          "choices": [
+            "Jump",
+            "Happiness",
+            "Bright",
+            "Swiftly"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "המילה “Happiness” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, Happiness is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Select the adjective.",
+          "choices": [
+            "Green",
+            "Sing",
+            "Dog",
+            "Carefully"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Green” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, Green is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Which word is a verb?",
+          "choices": [
+            "Dance",
+            "Chair",
+            "Red",
+            "Slowly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Dance” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, Dance is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Choose the noun.",
+          "choices": [
+            "Joy",
+            "Run",
+            "Tall",
+            "Quickly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Joy” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, Joy is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Identify the adjective.",
+          "choices": [
+            "Soft",
+            "Eat",
+            "Car",
+            "Loudly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Soft” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, Soft is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Which of these is a verb?",
+          "choices": [
+            "Write",
+            "Book",
+            "Yellow",
+            "Gently"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Write” מסווגת בתרגיל כ־Verb (פועל).",
+            "en": "In this activity, Write is classified as verb."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Select the noun.",
+          "choices": [
+            "Cat",
+            "Run",
+            "Bright",
+            "Quickly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Cat” מסווגת בתרגיל כ־Noun (שם עצם).",
+            "en": "In this activity, Cat is classified as noun."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Choose the adjective.",
+          "choices": [
+            "Happy",
+            "Jump",
+            "Tree",
+            "Slowly"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Happy” מסווגת בתרגיל כ־Adjective (שם תואר).",
+            "en": "In this activity, Happy is classified as adjective."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-parts-quiz-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "חלקי דיבר — שאלון המורה",
+          "difficulty": "medium",
+          "prompt": "Which word belongs to 'others'?",
+          "choices": [
+            "Quickly",
+            "Sing",
+            "Joy",
+            "Soft"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "המילה “Quickly” מסווגת בתרגיל כ־Adverb (תואר הפועל).",
+            "en": "In this activity, Quickly is classified as adverb."
+          },
+          "ref": {
+            "id": "english-parts-quiz",
+            "part": "התרגיל המקורי"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-negative-1",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "הווה פשוט — חיוב ושלילה 1",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 9 שאלות",
+      "references": [
+        {
+          "id": "english-negative-1",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב ושלילה 1",
+          "url": "https://wordwall.net/resource/8818577?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-negative-1-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "She ..... at the office.",
+          "choices": [
+            "doesn't work",
+            "work",
+            "don't work",
+            "works"
+          ],
+          "correct": 3,
+          "explanation": {
+            "he": "התשובה היא works. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is works. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-0",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "My father ..... ....... cigarettes. (NOT)",
+          "choices": [
+            "smokes",
+            "smoke",
+            "doesn't smoke",
+            "don't smoke"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא doesn't smoke. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't smoke. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-1",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "I .... .... meat. (NOT)",
+          "choices": [
+            "doesn't eat",
+            "don't eat",
+            "eat",
+            "does eat"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא don't eat. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't eat. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-2",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "We ..... to the radio.",
+          "choices": [
+            "live",
+            "listen",
+            "drink",
+            "listens"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא listen. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is listen. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-3",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "Alice and Mark .... ..... in London. (NOT)",
+          "choices": [
+            "isn't living",
+            "doesn't live",
+            "don't live",
+            "lives"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא don't live. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't live. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-4",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "You ..... to the cinema at weekends.",
+          "choices": [
+            "go",
+            "play",
+            "goes",
+            "plays"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא go. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is go. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-5",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "A teacher ________ in a school.",
+          "choices": [
+            "doesn't work",
+            "work",
+            "don't work",
+            "works"
+          ],
+          "correct": 3,
+          "explanation": {
+            "he": "התשובה היא works. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is works. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-6",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-1-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "A ___________ works on a building site.",
+          "choices": [
+            "farmer",
+            "builder",
+            "doctor",
+            "teacher"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "בנאי (builder) עובד באתר בנייה.",
+            "en": "A builder works on a building site."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "בחרו את בעל המקצוע המתאים."
+        },
+        {
+          "id": "english-negative-1-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב ושלילה 1",
+          "difficulty": "medium",
+          "prompt": "A waiter _________ in a shop.",
+          "choices": [
+            "works",
+            "work",
+            "doesn't work",
+            "don't work"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא doesn't work. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't work. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/3239408/070a96e6e56542f285d6409a41771cf9-7",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        }
+      ]
+    },
+    {
+      "id": "english-negative-2",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "הווה פשוט — שלילה 2",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 12 שאלות",
+      "references": [
+        {
+          "id": "english-negative-2",
+          "kind": "site",
+          "title": "הווה פשוט — שלילה 2",
+          "url": "https://wordwall.net/resource/30802053?wwmethod=link",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-negative-2-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "John ...................................computer games everyday.",
+          "choices": [
+            "don't plays",
+            "dosen't play",
+            "doesn't play"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא doesn't play. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't play. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-0",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "She .............................. a book in the morning.",
+          "choices": [
+            "doesn't read",
+            "not reads",
+            "don't read"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא doesn't read. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't read. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-1",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "Phil and Susan ............................. tennis at weekends.",
+          "choices": [
+            "don't plays",
+            "doesn't play",
+            "don't play"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא don't play. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't play. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-2",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "I  ................................... at the weekends",
+          "choices": [
+            "dosen't do karate",
+            "doesn't do karate",
+            "don't do karate"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא don't do karate. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't do karate. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-3",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "My mum ............................................ at 10PM every night.",
+          "choices": [
+            "doesn't goes to bed",
+            "doesn't go to bed",
+            "don't goes to bed"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא doesn't go to bed. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't go to bed. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-4",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "They ...................................................... cycling in the mornings.",
+          "choices": [
+            "don't goes",
+            "don't go",
+            "not go"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא don't go. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't go. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-5",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "He ................................................. in the evenings.",
+          "choices": [
+            "doesn't play",
+            "doesn't plays",
+            "doesn't plais"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא doesn't play. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't play. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-6",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "They...................................... yoga on Mondays.",
+          "choices": [
+            "don't does",
+            "don't do",
+            "doesn't do"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא don't do. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't do. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-7",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "Peter .......................................... swimming on Wednesdays.",
+          "choices": [
+            "doesn't go",
+            "don't goes",
+            "doesn't goes"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא doesn't go. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't go. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-8",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "Bill ............................................... TV at night.",
+          "choices": [
+            "don't watches",
+            "doesn't watch",
+            "doesn't watches"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא doesn't watch. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't watch. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-9",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "We...............  the homework at the weekends",
+          "choices": [
+            "don't do",
+            "doesn't do",
+            "doesn't does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא don't do. עם I/you/we/they משתמשים ב־don't ובפועל בצורת הבסיס.",
+            "en": "The answer is don't do. Use don't plus the base verb with I/you/we/they."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-10",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        },
+        {
+          "id": "english-negative-2-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "הווה פשוט — שלילה 2",
+          "difficulty": "medium",
+          "prompt": "My dad.............with my brothers",
+          "choices": [
+            "doesn't watches TV",
+            "don't watch TV",
+            "doesn't watch TV"
+          ],
+          "correct": 2,
+          "explanation": {
+            "he": "התשובה היא doesn't watch TV. עם he/she/it משתמשים ב־doesn't ובפועל בצורת הבסיס.",
+            "en": "The answer is doesn't watch TV. Use doesn't plus the base verb with he/she/it."
+          },
+          "ref": {
+            "id": "english-negative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בשלילה בהווה פשוט.",
+          "image": "https://user.cdn.wordwall.net/content-images/user/5242034/e7237e25c5594578bcfe4eccf6eb31bf-11",
+          "imageAlt": "תמונת ההקשר מתוך תרגיל המורה"
+        }
+      ]
+    },
+    {
+      "id": "english-affirmative-1",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "הווה פשוט — חיוב 1",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 15 שאלות",
+      "references": [
+        {
+          "id": "english-affirmative-1",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב 1",
+          "url": "https://www.english-room.com/grammar/presentsimpletense_affirmative_1.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-affirmative-1-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "She ___ noodles every Monday. (eat)",
+          "choices": [
+            "eats",
+            "eat",
+            "eating"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא eats. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is eats. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "Wichai ___ computer every day. (play)",
+          "choices": [
+            "plays",
+            "play",
+            "playing"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא plays. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is plays. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "They ___ English well. (speak)",
+          "choices": [
+            "speak",
+            "speaks",
+            "speaking"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא speak. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is speak. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "He ___ television every morning. (watch)",
+          "choices": [
+            "watches",
+            "watch",
+            "watching"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא watches. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is watches. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "I ___ up late. (get)",
+          "choices": [
+            "get",
+            "gets",
+            "getting"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא get. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is get. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "We ___ pictures every week. (draw)",
+          "choices": [
+            "draw",
+            "draws",
+            "drawing"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא draw. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is draw. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "The boys ___ in the pool. (swim)",
+          "choices": [
+            "swim",
+            "swims",
+            "swimming"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא swim. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is swim. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "My father ___ a new car. (drive)",
+          "choices": [
+            "drives",
+            "drive",
+            "driving"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא drives. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is drives. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "You ___ in the office. (work)",
+          "choices": [
+            "work",
+            "works",
+            "working"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא work. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is work. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "Mr. Manit ___ to London. (fly)",
+          "choices": [
+            "flies",
+            "fly",
+            "flying"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא flies. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is flies. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "I ___ my homework. (do)",
+          "choices": [
+            "do",
+            "does",
+            "doing"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is do. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "The teacher ___ to school every day. (walk)",
+          "choices": [
+            "walks",
+            "walk",
+            "walking"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא walks. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is walks. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "Jack ___ his bicycle. (ride)",
+          "choices": [
+            "rides",
+            "ride",
+            "riding"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא rides. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is rides. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "His mother ___ some fruit. (buy)",
+          "choices": [
+            "buys",
+            "buy",
+            "buying"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא buys. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is buys. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-1-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 1",
+          "difficulty": "medium",
+          "prompt": "The baby ___ every night. (cry)",
+          "choices": [
+            "cries",
+            "cry",
+            "crying"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא cries. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is cries. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-1",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        }
+      ]
+    },
+    {
+      "id": "english-affirmative-2",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "הווה פשוט — חיוב 2",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 15 שאלות",
+      "references": [
+        {
+          "id": "english-affirmative-2",
+          "kind": "site",
+          "title": "הווה פשוט — חיוב 2",
+          "url": "https://www.english-4u.de/en/tenses-exercises/present-simple.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-affirmative-2-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "My sister ___(read) a book.",
+          "choices": [
+            "reads",
+            "read",
+            "reading"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא reads. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is reads. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "Frank ___(like) dogs.",
+          "choices": [
+            "likes",
+            "like",
+            "liking"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא likes. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is likes. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "My parents ___(do) the shopping.",
+          "choices": [
+            "do",
+            "does",
+            "doing"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is do. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "We sometimes ___(meet) in front of the cinema.",
+          "choices": [
+            "meet",
+            "meets",
+            "meeting"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא meet. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is meet. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "Uncle George ___(go) to the doctor's.",
+          "choices": [
+            "goes",
+            "go",
+            "going"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא goes. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is goes. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "Our friends ___(play) football in the park.",
+          "choices": [
+            "play",
+            "plays",
+            "playing"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא play. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is play. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "She ___(go) to the park every Friday.",
+          "choices": [
+            "goes",
+            "go",
+            "going"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא goes. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is goes. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "He ___(ride) his bike every day.",
+          "choices": [
+            "rides",
+            "ride",
+            "riding"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא rides. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is rides. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "We ___(have) the best ideas.",
+          "choices": [
+            "have",
+            "has",
+            "having"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא have. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is have. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "Carol ___(say) goodbye.",
+          "choices": [
+            "says",
+            "say",
+            "saying"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא says. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is says. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "She ___(be) the best singer in our class.",
+          "choices": [
+            "is",
+            "am",
+            "are"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא is. ל־be בהווה הצורות am עם I, הצורה is עם he/she/it, והצורה are עם you/we/they.",
+            "en": "The answer is is. Be takes am with I, is with he/she/it, and are with you/we/they."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "My sister ___(live) in a big house.",
+          "choices": [
+            "lives",
+            "live",
+            "living"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא lives. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is lives. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-13",
+          "position": 13,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "The children ___(eat) hamburgers.",
+          "choices": [
+            "eat",
+            "eats",
+            "eating"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא eat. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is eat. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-14",
+          "position": 14,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "Bill ___(have) got two notebooks.",
+          "choices": [
+            "has",
+            "have",
+            "having"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא has. בחיוב בהווה פשוט מוסיפים s או es לפועל עם he/she/it; עם I/you/we/they משתמשים בצורת הבסיס. have הופך ל־has בגוף שלישי יחיד.",
+            "en": "The answer is has. Affirmative Present Simple adds -s or -es with he/she/it and uses the base form with I/you/we/they. Have becomes has with he/she/it."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        },
+        {
+          "id": "english-affirmative-2-15",
+          "position": 15,
+          "type": "mcq",
+          "topic": "הווה פשוט — חיוב 2",
+          "difficulty": "medium",
+          "prompt": "I ___(be) at home.",
+          "choices": [
+            "am",
+            "is",
+            "are"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא am. ל־be בהווה הצורות am עם I, הצורה is עם he/she/it, והצורה are עם you/we/they.",
+            "en": "The answer is am. Be takes am with I, is with he/she/it, and are with you/we/they."
+          },
+          "ref": {
+            "id": "english-affirmative-2",
+            "part": "התרגיל המקורי"
+          },
+          "context": "השלימו בחיוב בהווה פשוט בעזרת הפועל שבסוגריים."
+        }
+      ]
+    },
+    {
+      "id": "english-questions-1",
+      "subject_id": "english",
+      "exam_id": "english-v1-practice",
+      "title": "הווה פשוט — שאלות do / does",
+      "description": "כל הפריטים התקינים בתרגיל המורה · 12 שאלות",
+      "references": [
+        {
+          "id": "english-questions-1",
+          "kind": "site",
+          "title": "הווה פשוט — שאלות do / does",
+          "url": "https://agendaweb.org/exercises/verbs/do-does.htm",
+          "attribution": "תרגול שקושר במסמך המורה",
+          "parts": [
+            {
+              "part": "התרגיל המקורי",
+              "title": "התרגיל המקורי"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "english-questions-1-01",
+          "position": 1,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "What time ___ you go to bed ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-02",
+          "position": 2,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "___ your dog like bread ?",
+          "choices": [
+            "Do",
+            "Does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא Does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is Does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-03",
+          "position": 3,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "Where ___ he go on hollidays ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-04",
+          "position": 4,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "___ your mum read comics ?",
+          "choices": [
+            "Do",
+            "Does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא Does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is Does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-05",
+          "position": 5,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "What ___ you do on Mondays ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-06",
+          "position": 6,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "Why ___ I drink so much milk ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-07",
+          "position": 7,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "When ___ your parents have lunch ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-08",
+          "position": 8,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "___ she like pizza ?",
+          "choices": [
+            "Do",
+            "Does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא Does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is Does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-09",
+          "position": 9,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "___ they teach Spanish ?",
+          "choices": [
+            "Do",
+            "Does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא Do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is Do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-10",
+          "position": 10,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "___ Susan work every day ?",
+          "choices": [
+            "Do",
+            "Does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא Does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is Does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-11",
+          "position": 11,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "How ___ the children go to school ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 0,
+          "explanation": {
+            "he": "התשובה היא do. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is do. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        },
+        {
+          "id": "english-questions-1-12",
+          "position": 12,
+          "type": "mcq",
+          "topic": "הווה פשוט — שאלות do / does",
+          "difficulty": "medium",
+          "prompt": "How many days a week ___ she work ?",
+          "choices": [
+            "do",
+            "does"
+          ],
+          "correct": 1,
+          "explanation": {
+            "he": "התשובה היא does. בשאלה בהווה פשוט משתמשים ב־does עם he/she/it וב־do עם I/you/we/they; הפועל העיקרי נשאר בצורת הבסיס.",
+            "en": "The answer is does. Questions use does with he/she/it and do with I/you/we/they, followed by the base verb."
+          },
+          "ref": {
+            "id": "english-questions-1",
+            "part": "התרגיל המקורי"
+          }
+        }
+      ]
     }
   ]
 };

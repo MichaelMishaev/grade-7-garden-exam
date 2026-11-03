@@ -11,3 +11,12 @@
 .install-help .install-note { color: #526057; font-size: 14px; }
 .install-help button { width: 100%; min-height: 48px; border: 2px solid #bbed9a; border-radius: 14px; background: var(--green-soft); color: var(--green-dark); font: inherit; font-weight: 700; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .install-app:active { transform: none; } }
+
+.share-app { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; color: var(--green-dark); background: var(--green-soft); border: 2px solid #bbed9a; border-radius: 12px; cursor: pointer; }
+.share-app[hidden] { display: none; }
+.share-app:focus-visible, .app-share-help input:focus-visible { outline: 3px solid #7025ff; outline-offset: 4px; }
+.share-app:disabled { cursor: wait; }
+.app-share-help label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.app-share-help input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 10px; margin-bottom: 14px; border: 2px solid #d8e1e7; border-radius: 12px; background: #f7f9fa; color: #203225; font: inherit; font-size: 14px; }
+.app-share-help form { margin-top: 12px; }
+@media (max-width: 350px) { .home-page .site-header .home-brand-group .prepx-brand { width: 132px; } }

@@ -22,7 +22,9 @@ test('past-date chips label home and exam-version cards without marking today or
     assert.equal(await page.locator('.exam-date-chip').count(), 2, 'Israel midnight updates the open page');
     await page.clock.fastForward(120_000);
     assert.equal(await page.locator('.exam-date-chip').count(), 2, 'refreshes do not duplicate chips');
-    assert.equal(await page.locator('footer').evaluate(el => el.getBoundingClientRect().bottom <= 844), true);
+    // The new explanations section extends below the original compact study content.
+    assert.equal(await page.locator('.home-games').evaluate(el => el.getBoundingClientRect().bottom <= 844), true);
+    assert.equal(await page.locator('.home-explanations').evaluate(el => el.getBoundingClientRect().top >= document.querySelector('.home-games').getBoundingClientRect().bottom), true);
     await page.locator('a[href*="subject=hebrew"]').click();
     await page.locator('.variant-card .exam-date-chip').first().waitFor();
     assert.equal(await page.locator('.variant-card .exam-date-chip').count(), 2);
