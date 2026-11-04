@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>מסוף קוד | PrepX</title>
+  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="branding.css?v=2">
+  <link rel="stylesheet" href="explanations.css?v=20">
+  <script type="module" src="terminal.js?v=1"></script>
+  <style>
+    .terminal-page .site-header { padding-bottom: 24px; }
+    .terminal-page h1 { font-size: clamp(32px, 7vw, 46px); }
+    .terminal-page .intro { margin-bottom: 24px; }
+    .terminal-page h2 { font-size: 24px; margin: 28px 0 14px; }
+    .terminal-page .quiz-row { min-height: 100px; }
+    .terminal-page .quiz-icon { background: #e9fbdc; color: #327b1c; font-family: monospace; }
+    .terminal-page .free-choice { margin-top: 16px; border: 2px solid var(--line); border-radius: 19px; }
+    .terminal-page .free-choice .quiz-icon { background: #edf1f5; color: #273541; }
+    .terminal-page .syntax-note { margin: 24px 0; color: #576775; font-size: 15px; line-height: 1.7; }
+    .terminal-page button, .terminal-page .back-link { min-height: 44px; }
+    .terminal-page button { cursor: pointer; border: 1px solid #a9b4bd; border-radius: 8px; padding: 8px 12px; font: inherit; }
+    .terminal-page a:focus-visible, .terminal-page button:focus-visible, .terminal-page textarea:focus-visible { outline: 3px solid #327b1c; outline-offset: 3px; }
+    .terminal-page .mac-titlebar { direction: ltr; }
+    .terminal-page .editor-body { min-width: 0; }
+    .terminal-page .mac-window .editor-gutter { font-size: 16px; }
+    .terminal-page .editor-input { width: 100%; min-width: 0; font-size: 16px; }
+    .terminal-page .editor-toolbar { flex-wrap: wrap; }
+    .terminal-page .editor-toolbar button { min-height: 44px; background: #35363d; color: #e8e9ed; border-color: #636573; }
+    .terminal-page .editor-toolbar .run-button { background: #327b1c; border-color: #327b1c; color: white; margin-inline-start: auto; }
+    .terminal-page .editor-toolbar #reset-code { background: transparent; }
+    .terminal-page .editor-tip { flex-basis: 100%; text-align: center; }
+    .terminal-page .terminal-screen { direction: ltr; }
+    .terminal-page .status-text { text-align: right; direction: rtl; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body class="terminal-page">
+  <div class="page">
+    <header class="site-header">
+      <a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a>
+      <a class="back-link" href="index.html">לעמוד הבית ←</a>
+    </header>
+    <main>
+      <div id="subject-picker">
+        <div class="intro"><h1>מסוף קוד</h1><p>בוחרים נושא, כותבים קוד ורואים מה קורה.</p></div>
+        <h2>מה מתרגלים?</h2>
+        <div class="quiz-list">
+          <a class="quiz-row" href="if-else.html?lang=he#terminal">
+            <span class="quiz-icon" aria-hidden="true" dir="ltr">?:</span>
+            <span class="quiz-copy"><strong dir="ltr">if / else</strong><small>תנאים וקבלת החלטות · משימות עם רמזים</small></span>
+            <span class="arrow" aria-hidden="true">←</span>
+          </a>
+        </div>
+        <a class="quiz-row free-choice" href="#free">
+          <span class="quiz-icon" aria-hidden="true" dir="ltr">&gt;_</span>
+          <span class="quiz-copy"><strong>כתיבה חופשית</strong><small>הרעיונות שלכם, הקוד שלכם · בלי משימות</small></span>
+          <span class="arrow" aria-hidden="true">←</span>
+        </a>
+        <p class="syntax-note">כותבים בתחביר Python. כרגע המסוף תומך בחלק בסיסי של השפה: משתנים, חישובים, השוואות, <bdi>print</bdi> ותנאי <bdi>if / elif / else</bdi>.</p>
+      </div>
+      <section id="free-workspace" aria-labelledby="free-title" hidden>
+        <a class="back-link" href="terminal.html">לבחירת נושא ←</a>
+        <div class="intro"><h1 id="free-title" tabindex="-1">כתיבה חופשית</h1><p>שנו את הדוגמה או כתבו רעיון משלכם, ולחצו על הפעלה.</p></div>
+        <details class="syntax-note"><summary>מה אפשר לכתוב כאן?</summary><p>משתנים עם שמות באנגלית, מספרים, טקסט במירכאות, <bdi>True / False</bdi>, חישובים, השוואות, <bdi>print(...)</bdi> ותנאי <bdi>if / elif / else</bdi>. עד 200 שורות. לולאות, פונקציות, <bdi>input()</bdi> וייבוא ספריות עדיין אינם נתמכים. זהו תרגול בתחביר Python, ולא סביבת Python מלאה.</p></details>
+        <div class="mac-window">
+          <div class="mac-titlebar"><span class="mac-title">my_code.py</span><span class="mac-badge">הקוד שלכם</span></div>
+          <div class="editor-body"><pre id="code-gutter" class="editor-gutter" aria-hidden="true">1</pre><textarea id="code-editor" class="editor-input" rows="10" dir="ltr" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="עורך קוד Python" aria-describedby="editor-tip draft-notice"></textarea></div>
+          <div class="editor-toolbar"><button id="indent" type="button">⇥ הזחה</button><button id="reset-code" type="button">איפוס הדוגמה</button><button id="run" class="run-button" type="button">▶ הפעלה</button><span id="editor-tip" class="editor-tip">קיצור להפעלה: <bdi>Ctrl / ⌘ + Enter</bdi></span></div>
+        </div>
+        <div class="mac-window">
+          <div class="mac-titlebar"><span class="mac-title">פלט התוכנית</span></div>
+          <pre id="terminal-output" class="terminal-screen" role="status" aria-live="polite" aria-atomic="true"></pre>
+        </div>
+        <p id="draft-notice" class="syntax-note">הקוד רץ במכשיר שלכם ואינו נשלח למורה. הטיוטה נשמרת רק בלשונית הזו.</p>
+      </section>
+      <noscript><p>כדי להפעיל קוד יש לאפשר JavaScript בדפדפן. אפשר גם לפתוח את <a href="if-else.html?lang=he#terminal">תרגול התנאים</a>.</p></noscript>
+    </main>
+  </div>
+</body>
+</html>

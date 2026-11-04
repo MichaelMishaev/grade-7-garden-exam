@@ -1,0 +1,97 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createApp } from './server.mjs';
+
+let chromium;
+try { ({ chromium } = await import('/opt/homebrew/lib/node_modules/playwright/index.mjs')); } catch {}
+
+test('terminal: home, subject choice, free Python, errors, drafts and unavailable storage', { skip: !chromium && 'global Playwright not available' }, async () => {
+  const server = createApp({ env: {}, db: null, sendFetch: async () => { throw new Error('Email forbidden'); } });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const errors = [];
+    const writes = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('request', request => { if (request.method() !== 'GET') writes.push(request.url()); });
+    await page.route('https://hitech.agnon.online/**', route => route.abort());
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    const noOverflow = async () => assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.goto(origin);
+    await page.screenshot({ path: 'output/playwright/terminal-home-mobile.png', fullPage: true });
+    await page.locator('a[href="terminal.html"]').click();
+    assert.equal(await page.locator('#subject-picker').isVisible(), true);
+    await noOverflow();
+    assert.equal(await page.locator('#subject-picker .quiz-list a').count(), 1);
+    await page.locator('a[href="if-else.html?lang=he#terminal"]').click();
+    await page.locator('#run').click();
+    assert.match(await page.locator('.terminal-success').textContent(), /המשימה הושלמה/);
+    await page.goBack();
+    await page.locator('a[href="#free"]').click();
+    await page.locator('#free-workspace').waitFor({ state: 'visible' });
+    await page.locator('#run').click();
+    assert.match(await page.locator('#terminal-output').textContent(), /כל הכבוד/);
+    assert.equal(await page.locator('#code-editor').evaluate(el => getComputedStyle(el).direction), 'ltr');
+    assert.equal(await page.locator('#terminal-output').evaluate(el => getComputedStyle(el).direction), 'ltr');
+    const code = 'x = 4\nif x > 3:\n    print("Mine")\nelse:\n    print("Other")';
+    await page.locator('#code-editor').fill(code);
+    await page.locator('#code-editor').press('Control+Enter');
+    assert.equal(await page.locator('#terminal-output').textContent(), 'Mine');
+    await page.reload();
+    assert.equal(await page.locator('#code-editor').inputValue(), code);
+    await page.goBack();
+    assert.equal(await page.locator('#subject-picker').isVisible(), true);
+    await page.goForward();
+    assert.equal(await page.locator('#code-editor').inputValue(), code);
+    await page.locator('#code-editor').fill('if x > 3\n    print("Hi")');
+    await page.locator('#run').click();
+    assert.match(await page.locator('.terminal-error').textContent(), /שורה 1/);
+    assert.equal(await page.locator('.gutter-error').textContent(), '1');
+    await page.locator('#code-editor').fill('x = 2');
+    await page.locator('#run').click();
+    assert.match(await page.locator('#terminal-output').textContent(), /ללא פלט/);
+    await page.locator('#code-editor').fill('import os');
+    await page.locator('#run').click();
+    assert.equal(await page.locator('.terminal-error').count(), 1);
+    await page.locator('#code-editor').fill('print(1)\n'.repeat(201));
+    await page.locator('#run').click();
+    assert.equal(await page.locator('.terminal-error').count(), 1);
+    await page.locator('#reset-code').click();
+    await page.reload();
+    assert.match(await page.locator('#code-editor').inputValue(), /^score = 75/);
+    await page.locator('#code-editor').fill('if True:');
+    await page.locator('#code-editor').press('End');
+    await page.locator('#code-editor').press('Enter');
+    await page.locator('#code-editor').press('M');
+    assert.equal(await page.locator('#code-editor').inputValue(), 'if True:\n    M');
+    await page.locator('#code-editor').fill('print("<script>hello</script>")');
+    await page.locator('#run').click();
+    assert.equal(await page.locator('#terminal-output script').count(), 0);
+    assert.equal(await page.locator('#terminal-output').textContent(), '<script>hello</script>');
+    const controls = await page.locator('#free-workspace button').evaluateAll(nodes => nodes.map(el => el.getBoundingClientRect().height));
+    assert.equal(controls.every(height => height >= 44), true);
+    await noOverflow();
+    await page.locator('#reset-code').click();
+    await page.locator('#run').click();
+    await page.screenshot({ path: 'output/playwright/terminal-free-mobile.png', fullPage: true });
+    await page.locator('a[href="terminal.html"]').click();
+    await page.screenshot({ path: 'output/playwright/terminal-picker-mobile.png', fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await noOverflow();
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('Storage blocked'); } });
+    });
+    await page.goto(`${origin}/terminal.html#free`);
+    await page.reload();
+    assert.match(await page.locator('#draft-notice').textContent(), /אינה זמינה/);
+    await page.locator('#code-editor').fill('print("Still runs")');
+    await page.locator('#run').click();
+    assert.equal(await page.locator('#terminal-output').textContent(), 'Still runs');
+    assert.deepEqual(writes, []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    await new Promise(resolve => server.close(resolve));
+  }
+});

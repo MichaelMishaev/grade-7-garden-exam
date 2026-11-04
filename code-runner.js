@@ -275,48 +275,52 @@ print("Next lesson")`;
 export const missions = [
   {
     id: 'run',
-    title: { en: 'Just press Run', he: 'רק לחצו על הפעלה' },
-    task: { en: 'Nothing to type. Press the green ▶ Run button and read what the computer says in the bottom window.', he: 'אין מה להקליד. לחצו על הכפתור הירוק ▶ הפעלה וקראו מה המחשב אומר בחלון התחתון.' },
-    step: { en: '👉 Press ▶ Run', he: '👉 לחצו על ▶ הפעלה' },
+    title: {"en": "Let’s run the code together", "he": "נפעיל את הקוד יחד"},
+    task: {"en": "The code is ready. Let’s see which message it prints.", "he": "הקוד כבר מוכן. נבדוק איזו הודעה הוא מציג."},
+    steps: {"en": ["Press “Run the code” here in the card.", "Look for the message in the output window below the code."], "he": ["לחצו כאן על הכפתור ״הפעלת הקוד״.", "הסתכלו בחלון התוצאה שמתחת לקוד."]},
+    expected: {"en": "`You passed!` followed by `Next lesson`.", "he": "תופיע ההודעה `You passed!` (עברתם!), ואחריה `Next lesson` (השיעור הבא)."},
     starter: lessonProgram,
     startsSolved: true,
-    hint: { en: 'The green ▶ Run button is right under the code window.', he: 'הכפתור הירוק ▶ הפעלה נמצא ממש מתחת לחלון הקוד.' },
+    hint: { en: 'Press “Run the code” in the task card. You do not need to type yet.', he: 'כפתור ״הפעלת הקוד״ נמצא בכרטיס המשימה. כרגע אין צורך להקליד דבר.' },
     solution: lessonProgram,
     check: (output) => output[0] === 'You passed!' && output[1] === 'Next lesson'
   },
   {
     id: 'change',
-    title: { en: 'Make it say “Keep practicing!”', he: 'גרמו לו להגיד “Keep practicing!”' },
-    task: { en: 'The score is 75, so the computer says “You passed!”. Make the score smaller than 60 and run again.', he: 'הציון הוא 75, ולכן המחשב אומר “You passed!”. הקטינו את הציון מתחת ל־60 והריצו שוב.' },
-    step: { en: '👉 Tap 🔢 Change the number, then ▶ Run', he: '👉 לחצו על 🔢 שנו את המספר, ואז ▶ הפעלה' },
+    title: {"en": "Change one number", "he": "נשנה רק מספר אחד"},
+    task: {"en": "Let’s make the program print the other message. A score below 60 takes the else path.", "he": "נגרום לתוכנית להציג הודעה אחרת. כשמספר הנקודות קטן מ־60, התוכנית בוחרת במסלול האחר."},
+    steps: {"en": ["Press “Change the number” here. Line 1 changes from `score = 75` to `score = 40`.", "Press “Run the code”."], "he": ["לחצו כאן על ״שנו את המספר״. בשורה 1 המספר יתחלף מ־`75` ל־`40`.", "לחצו על ״הפעלת הקוד״."]},
+    expected: {"en": "`Keep practicing!` followed by `Next lesson`.", "he": "תופיע ההודעה `Keep practicing!` (ממשיכים לתרגל), ואחריה `Next lesson`."},
     starter: lessonProgram,
-    hint: { en: 'Line 1 sets the score. Any number below 60 makes the rule False, so the else path runs.', he: 'שורה 1 קובעת את הציון. כל מספר מתחת ל־60 הופך את התנאי ל־False, ולכן מסלול else רץ.' },
+    hint: { en: 'Line 1 sets the score. Any number below 60 makes the rule False, so the else path runs.', he: 'בשורה 1 כתוב `score = 75`. כפתור ״שנו את המספר״ מחליף את 75 ב־40. זה מספר קטן מ־60, ולכן תופיע ההודעה האחרת.' },
     solution: lessonProgram.replace('75', '40'),
     check: (output) => output[0] === 'Keep practicing!' && output[1] === 'Next lesson'
   },
   {
     id: 'fix',
-    title: { en: 'Fix the broken program', he: 'תקנו את התוכנית השבורה' },
-    task: { en: 'Two small mistakes hide in this code. Run it, read the red line, fix that line, run again. Repeat until it says “You passed!”.', he: 'בקוד מסתתרות שתי טעויות קטנות. הריצו, קראו את השורה האדומה, תקנו את השורה, הריצו שוב. חזרו על זה עד שיודפס “You passed!”.' },
-    step: { en: '👉 Press ▶ Run and read the red line', he: '👉 לחצו על ▶ הפעלה וקראו את השורה האדומה' },
+    title: {"en": "Fix two small details", "he": "נתקן שני פרטים קטנים"},
+    task: {"en": "Two details are missing in this example. We’ll fix one at a time.", "he": "בדוגמה הזו חסרים שני פרטים. נתקן אותם בנחת, אחד בכל פעם."},
+    steps: {"en": ["Add `:` at the end of line 2: `if score >= 60:`.", "At the start of line 5, press “Indent” so `print` belongs to `else`.", "Press “Run the code”."], "he": ["הוסיפו נקודתיים בסוף שורה 2: `if score >= 60:`.", "לחצו בתחילת שורה 5, ואז על ״הזחה״ שמתחת לקוד. השורה תזוז מעט ימינה.", "לחצו על ״הפעלת הקוד״."]},
+    expected: {"en": "`You passed!` followed by `Next lesson`, with no error.", "he": "תופיע ההודעה `You passed!` (עברתם!) בלי הודעת שגיאה."},
     starter: `score = 75
 if score >= 60
     print("You passed!")
 else:
 print("Keep practicing!")
 print("Next lesson")`,
-    hint: { en: 'Line 2 needs a colon  :  at the end. Line 5 needs ⇥ Indent so it belongs to else.', he: 'שורה 2 צריכה נקודתיים  :  בסוף. שורה 5 צריכה ⇥ הזחה כדי להשתייך ל־else.' },
+    hint: { en: 'Line 2 needs a colon  :  at the end. Line 5 needs ⇥ Indent so it belongs to else.', he: 'בסוף שורה 2 צריך להופיע הסימן `:`. בתחילת שורה 5 הוסיפו ארבעה רווחים בעזרת כפתור ״הזחה״.' },
     solution: lessonProgram,
     check: (output) => output[0] === 'You passed!' && output[1] === 'Next lesson'
   },
   {
     id: 'write',
-    title: { en: 'Write your own if / else', he: 'כתבו if / else משלכם' },
-    task: { en: 'age is 13. Print “Teen” when age is at least 13, and “Kid” otherwise. Type it under line 1.', he: 'age הוא 13. הדפיסו “Teen” כשהגיל לפחות 13, ו־“Kid” אחרת. הקלידו מתחת לשורה 1.' },
-    step: { en: '👉 Type  if age >= 13:  then Enter. Stuck? Tap 👀 Show me', he: '👉 הקלידו  if age >= 13:  ואז Enter. נתקעתם? לחצו על 👀 הראו לי' },
+    title: {"en": "Write a rule about age", "he": "נכתוב כלל על גיל"},
+    task: {"en": "The variable `age` means age. It is set to 13. Let’s choose a message based on it.", "he": "המשתנה `age` שומר גיל. כרגע הגיל הוא 13. נכתוב כלל שבוחר הודעה לפי הגיל."},
+    steps: {"en": ["Under line 1, type `if age >= 13:` and press Enter.", "On the indented line, type `print(\"Teen\")`.", "Add `else:` at the start of a new line, then an indented `print(\"Kid\")`. Press “Run the code”."], "he": ["מתחת לשורה 1 הקלידו `if age >= 13:` ולחצו על Enter.", "בשורה המוזחת הקלידו `print(\"Teen\")`.", "הוסיפו בשורה חדשה `else:` ומתחתיה, עם הזחה, `print(\"Kid\")`. לחצו על ״הפעלת הקוד״."]},
+    expected: {"en": "`Teen`, because 13 is at least 13.", "he": "תופיע המילה `Teen` (נער/ה), כי הגיל הוא 13."},
     starter: `age = 13
 `,
-    hint: { en: 'Four lines: if age >= 13:  /  print("Teen") pushed in  /  else:  /  print("Kid") pushed in.', he: 'ארבע שורות: if age >= 13:  /  print("Teen") מוזח  /  else:  /  print("Kid") מוזח.' },
+    hint: { en: 'Four lines: if age >= 13:  /  print("Teen") pushed in  /  else:  /  print("Kid") pushed in.', he: 'מתחת לכל שורת תנאי כותבים שורת הדפסה עם ארבעה רווחים בתחילתה. אפשר ללחוץ על ״הראו לי״ כדי לראות דוגמה מוכנה.' },
     solution: `age = 13
 if age >= 13:
     print("Teen")
@@ -326,15 +330,16 @@ else:
   },
   {
     id: 'elif',
-    title: { en: 'Three paths with elif', he: 'שלושה מסלולים עם elif' },
-    task: { en: 'temperature is 30. Print “Hot” at 30 or more, “Nice” at 20 or more, “Cold” otherwise. Add the middle path with elif.', he: 'temperature הוא 30. הדפיסו “Hot” מ־30 ומעלה, “Nice” מ־20 ומעלה, ו־“Cold” אחרת. הוסיפו את המסלול האמצעי עם elif.' },
-    step: { en: '👉 Tap ➕ Add an elif path, then change its number to 20 and its word to Nice', he: '👉 לחצו על ➕ הוסיפו מסלול elif, ואז שנו את המספר ל־20 ואת המילה ל־Nice' },
+    title: {"en": "Add a middle choice", "he": "נוסיף אפשרות באמצע"},
+    task: {"en": "The variable `temperature` is the temperature. Let’s add a message for pleasant weather.", "he": "המשתנה `temperature` שומר את הטמפרטורה. נוסיף הודעה למזג אוויר נעים."},
+    steps: {"en": ["Press “Add an elif path” here.", "In the new `elif` line, replace `40` with `20`; below it replace `Almost!` with `Nice`.", "Press “Run the code”. To try the middle path, change line 1 to `temperature = 25` and run again."], "he": ["לחצו כאן על ״הוסיפו מסלול elif״.", "בשורת `elif` החדשה החליפו את `40` ב־`20`. מתחתיה החליפו את `Almost!` ב־`Nice`.", "לחצו על ״הפעלת הקוד״. כדי לבדוק את האפשרות החדשה, שנו בשורה 1 את `30` ל־`25` והפעילו שוב."]},
+    expected: {"en": "At 30: `Hot`. At 25: `Nice`. Return to 30 and run to complete this mission.", "he": "ב־30 תופיע `Hot` (חם). ב־25 תופיע `Nice` (נעים). לסיום המשימה החזירו ל־30 והפעילו שוב."},
     starter: `temperature = 30
 if temperature >= 30:
     print("Hot")
 else:
     print("Cold")`,
-    hint: { en: 'Between the if block and else: add  elif temperature >= 20:  and under it print("Nice") pushed in.', he: 'בין בלוק ה־if ל־else: הוסיפו  elif temperature >= 20:  ומתחתיו print("Nice") מוזח.' },
+    hint: { en: 'Between the if block and else: add  elif temperature >= 20:  and under it print("Nice") pushed in.', he: 'השורה החדשה צריכה להיות `elif temperature >= 20:`. מתחתיה, עם הזחה, כותבים `print("Nice")`.' },
     solution: `temperature = 30
 if temperature >= 30:
     print("Hot")
@@ -346,9 +351,10 @@ else:
   },
   {
     id: 'free',
-    title: { en: 'Your turn: invent a program', he: 'תורכם: המציאו תוכנית' },
-    task: { en: 'Make up your own if / else. Any variable, any rule, any messages. It counts when it runs and prints at least one line.', he: 'המציאו if / else משלכם. כל משתנה, כל כלל, כל הודעה. זה נחשב כשהתוכנית רצה ומדפיסה לפחות שורה אחת.' },
-    step: { en: '👉 Tap 🧱 Insert a new if / else, then change the words', he: '👉 לחצו על 🧱 הכניסו if / else חדש, ואז שנו את המילים' },
+    title: {"en": "Make the example your own", "he": "נהפוך את הדוגמה לשלכם"},
+    task: {"en": "Start with a ready-made example, then change its messages.", "he": "נתחיל מדוגמה מוכנה, ואז נוסיף לה רעיון שלכם."},
+    steps: {"en": ["Press “Insert a new if / else” here.", "Replace the words `big` and `small` with your own messages, keeping the quotes.", "Press “Run the code”."], "he": ["לחצו כאן על ״הכניסו if / else חדש״.", "החליפו את המילים `big` ו־`small` בהודעות משלכם. השאירו את המירכאות מסביב.", "לחצו על ״הפעלת הקוד״."]},
+    expected: {"en": "One of your messages appears in the output.", "he": "אחת ההודעות שכתבתם תופיע בחלון התוצאה."},
     starter: `# your idea here. For example:
 # pet = "cat"
 # if pet == "cat":
@@ -356,7 +362,7 @@ else:
 # else:
 #     print("Woof")
 `,
-    hint: { en: 'Pick something you like: a pet, a game score, the weather. Set it with =, then if ... : and else: with a print in each.', he: 'בחרו משהו שאתם אוהבים: חיית מחמד, ניקוד במשחק, מזג אוויר. קבעו אותו עם =, ואז if ... : ו־else: עם print בכל אחד.' },
+    hint: { en: 'Pick something you like: a pet, a game score, the weather. Set it with =, then if ... : and else: with a print in each.', he: 'אפשר להתחיל בשינוי ההודעות בלבד. למשל, במקום `big` כתבו ״מספר גדול״ בתוך המירכאות.' },
     solution: `pet = "cat"
 if pet == "cat":
     print("Meow")

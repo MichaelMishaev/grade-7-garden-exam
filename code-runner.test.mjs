@@ -85,7 +85,7 @@ test('missions have solutions that pass their own checks and starters that do no
     const solved = runProgram(mission.solution);
     assert.equal(solved.ok, true, mission.id);
     assert.equal(mission.check(solved.output, mission.solution), true, mission.id);
-    assert.ok(mission.step.en && mission.step.he, mission.id);
+    assert.ok(mission.steps.en.length && mission.steps.he.length && mission.expected.en && mission.expected.he, mission.id);
     const starter = runProgram(mission.starter);
     if (!mission.startsSolved) assert.equal(starter.ok && mission.check(starter.output, mission.starter), false, `${mission.id} starter must not already pass`);
   }

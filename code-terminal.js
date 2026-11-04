@@ -1,9 +1,10 @@
 // The "Write code" stage: an Apple-style editor + terminal where learners type real
 // Python if / else programs, run them with the safe interpreter and follow missions.
-import { runProgram, describeError, missions, indentLine, suggestions } from './code-runner.js';
+import { runProgram, describeError, missions, indentLine, suggestions } from './code-runner.js?v=3';
 
 const copy = {
   en: {
+    mission_help: 'Need a hand?', extra_tools: 'More things to try (optional)', output_title: 'Program result', expected: 'What you should see', run_task: '▶ Run the code',
     mission: 'MISSION', of: 'of', hint: '💡 Hint', hide_hint: '💡 Hide hint', show: '👀 Show me', reset: '↺ Reset code',
     run: '▶ Run', indent: '⇥ Indent', ideas: '💡 Try a change:', back: '← Back', next: 'Next mission →', finish: 'Finish ✓',
     todo: 'Not done yet', done: '✓ Mission done!', done_step: '🎉 Done! Tap Next mission →', auto_hint: '💡 Here is a hint:', waiting: 'Nothing yet. Press ▶ Run and the computer will answer here.',
@@ -13,12 +14,13 @@ const copy = {
     all_done: 'You wrote real Python with if / else. Next: the quick check.', run_label: 'Run the program', editor_label: 'Python code editor'
   },
   he: {
+    mission_help: 'רוצים עזרה?', extra_tools: 'עוד דברים שאפשר לנסות (לא חובה)', output_title: 'תוצאת ההרצה', expected: 'מה אמור להופיע?', run_task: '▶ הפעלת הקוד',
     mission: 'משימה', of: 'מתוך', hint: '💡 רמז', hide_hint: '💡 הסתרת הרמז', show: '👀 הראו לי', reset: '↺ איפוס הקוד',
     run: '▶ הפעלה', indent: '⇥ הזחה', ideas: '💡 נסו שינוי:', back: '→ חזרה', next: 'למשימה הבאה ←', finish: 'סיום ✓',
-    todo: 'עוד לא הושלם', done: '✓ המשימה הושלמה!', done_step: '🎉 כל הכבוד! לחצו על למשימה הבאה', auto_hint: '💡 הנה רמז:', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
+    todo: 'אפשר לנסות בנחת', done: '✓ המשימה הושלמה!', done_step: '🎉 כל הכבוד! לחצו על למשימה הבאה', auto_hint: '💡 הנה רמז:', waiting: 'עדיין כלום. לחצו על ▶ הפעלה והמחשב יענה כאן.',
     running: '▶ מריץ את הקוד שלכם…', editor_badge: 'הקוד שלכם · לחצו כדי לערוך', output_badge: 'המחשב עונה',
     success: '✓ המשימה הושלמה! המחשב הדפיס בדיוק מה שרצינו.', nothing: '(התוכנית לא הדפיסה כלום)',
-    not_yet: 'הקוד שלכם עובד! אבל המשימה עוד לא הושלמה. הסתכלו בכרטיס הירוק למעלה: מה המחשב צריך להדפיס? שנו את הקוד ולחצו שוב על הפעלה.',
+    not_yet: 'הקוד פועל. ננסה עוד שינוי קטן לפי השלבים שבכרטיס. אפשר לפתוח את העזרה בכל רגע.',
     all_done: 'כתבתם Python אמיתי עם if / else. הלאה: הבדיקה המהירה.', run_label: 'הפעלת התוכנית', editor_label: 'עורך קוד Python'
   }
 };
@@ -37,11 +39,92 @@ export function initTerminal({ getLanguage, onFinish }) {
   let index = 0;
   let hintOpen = false;
   let lastRun = null; // { result, passed } for the current mission
-  let ideaNote = null; // { en, he } after a suggestion was applied
+  let ideaNote = null; // { en, he, before, after } after a suggestion was applied
+  let changeAnimation = null;
+  let editorChange = null;
+  let editorAnimation = null;
   const attempts = missions.map(() => 0); // unsuccessful runs per mission, for the automatic hint
 
   const language = () => (getLanguage() === 'he' ? 'he' : 'en');
   const text = (key) => copy[language()][key];
+
+  function taskText(node, value) {
+    node.replaceChildren(...value.split(/(`[^`]+`)/g).map(part => {
+      if (!part.startsWith('`')) return document.createTextNode(part);
+      const code = document.createElement('bdi');
+      code.dir = 'ltr';
+      code.className = 'task-code';
+      code.textContent = part.slice(1, -1);
+      return code;
+    }));
+  }
+
+  function clearEditorChange() {
+    editorAnimation?.cancel();
+    editorAnimation = null;
+    editorChange?.remove();
+    editorChange = null;
+    editor.classList.remove('showing-code-change');
+  }
+
+  function syncEditorChange() {
+    if (editorChange) editorChange.firstElementChild.style.transform = `translate(${-editor.scrollLeft}px, ${-editor.scrollTop}px)`;
+  }
+
+  function showEditorChange(before, after, animate) {
+    clearEditorChange();
+    let start = 0;
+    let end = 0;
+    while (start < before.length && start < after.length && before[start] === after[start]) start++;
+    while (end < before.length - start && end < after.length - start && before.at(-1 - end) === after.at(-1 - end)) end++;
+    if (start === before.length && start === after.length) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const layer = document.createElement('div');
+    layer.className = 'editor-change-view';
+    layer.setAttribute('aria-hidden', 'true');
+    const code = document.createElement('pre');
+    layer.append(code);
+    editor.parentElement.append(layer);
+    editorChange = layer;
+    editor.classList.add('showing-code-change');
+    const paint = (source, kind) => {
+      const mark = document.createElement('mark');
+      mark.className = `editor-change-${kind}`;
+      mark.textContent = source.slice(start, source.length - end);
+      code.replaceChildren(source.slice(0, start), mark, end ? source.slice(-end) : '', '\n');
+      return mark;
+    };
+    // Reveal the edited line even when a suggestion appends code below the fold.
+    const style = getComputedStyle(editor);
+    const line = after.slice(0, start).split('\n').length - 1;
+    const lineHeight = parseFloat(style.lineHeight);
+    const column = start - (after.lastIndexOf('\n', start - 1) + 1);
+    editor.scrollTop = Math.max(0, line * lineHeight - editor.clientHeight / 3);
+    editor.scrollLeft = Math.max(0, column * parseFloat(style.fontSize) * .6 - editor.clientWidth / 2);
+    gutter.scrollTop = editor.scrollTop;
+    byId('editor-shell').scrollIntoView({ block: 'center', behavior: 'instant' });
+    syncEditorChange();
+    const reveal = () => {
+      if (editorChange !== layer) return;
+      const mark = paint(after, 'after');
+      syncEditorChange();
+      if (animate && !reduced) editorAnimation = mark.animate(
+        [{ opacity: 0 }, { opacity: 1 }],
+        { duration: 600, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
+      );
+    };
+    if (animate && !reduced && before.length > start + end) {
+      const mark = paint(before, 'before');
+      syncEditorChange();
+      // Teaching pace: hold the old token for 1.2s, then fade out/in over 0.6s each.
+      // Only the presentation is delayed: Run and editing always use the new code.
+      editorAnimation = mark.animate(
+        [{ opacity: 1 }, { opacity: 0 }],
+        { delay: 1200, duration: 600, fill: 'forwards', easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
+      );
+      editorAnimation.onfinish = reveal;
+    } else reveal();
+  }
 
   function renderGutter() {
     const count = Math.max(1, editor.value.split('\n').length);
@@ -102,6 +185,10 @@ export function initTerminal({ getLanguage, onFinish }) {
     const lang = language();
     const hebrew = lang === 'he';
     const finished = index === missions.length;
+    for (const id of ['mission-card', 'idea-row']) {
+      byId(id).dir = hebrew ? 'rtl' : 'ltr';
+      byId(id).lang = lang;
+    }
     byId('mission-card').hidden = finished;
     byId('terminal-complete').hidden = !finished;
     byId('editor-shell').hidden = finished;
@@ -118,9 +205,39 @@ export function initTerminal({ getLanguage, onFinish }) {
     byId('terminal-complete-text').dir = hebrew ? 'rtl' : 'ltr';
     if (finished) return;
     byId('mission-label').textContent = `${text('mission')} ${index + 1} ${text('of')} ${missions.length}`;
-    byId('mission-title').textContent = mission.title[lang];
-    byId('mission-task').textContent = mission.task[lang];
-    byId('mission-step').textContent = completed.has(index) ? text('done_step') : mission.step[lang];
+    document.querySelector('.lesson-nav').dir = hebrew ? 'rtl' : 'ltr';
+    taskText(byId('mission-title'), mission.title[lang]);
+    taskText(byId('mission-task'), mission.task[lang]);
+    const steps = byId('mission-step');
+    steps.replaceChildren();
+    if (completed.has(index)) steps.textContent = text('done_step');
+    else {
+      const list = document.createElement('ol');
+      for (const step of mission.steps[lang]) {
+        const item = document.createElement('li');
+        taskText(item, step);
+        list.append(item);
+      }
+      steps.append(list);
+    }
+    const expected = byId('mission-expected');
+    const label = document.createElement('strong');
+    label.textContent = text('expected');
+    const result = document.createElement('span');
+    taskText(result, mission.expected[lang]);
+    expected.replaceChildren(label, result);
+    const actionId = { change: 'number', elif: 'elif', free: 'skeleton' }[mission.id];
+    const action = byId('mission-action');
+    action.hidden = !actionId || completed.has(index);
+    action.dataset.ideaTarget = actionId || '';
+    action.textContent = actionId ? suggestions.find(s => s.id === actionId).label[lang] : '';
+    action.disabled = actionId ? suggestions.find(s => s.id === actionId).apply(editor.value) === null : false;
+    byId('mission-run').textContent = text('run_task');
+    byId('mission-run').hidden = completed.has(index);
+    byId('mission-run').classList.toggle('primary-button', !actionId);
+    byId('mission-continue').textContent = index === missions.length - 1 ? text('finish') : text('next');
+    byId('mission-continue').hidden = !completed.has(index);
+    if (hintOpen) document.querySelector('.mission-support').open = true;
     byId('mission-card').dataset.done = String(completed.has(index));
     for (const id of ['mission-label', 'mission-title', 'mission-task', 'mission-step']) { byId(id).lang = lang; byId(id).dir = hebrew ? 'rtl' : 'ltr'; }
     const status = byId('mission-status');
@@ -131,7 +248,7 @@ export function initTerminal({ getLanguage, onFinish }) {
     hintButton.textContent = hintOpen ? text('hide_hint') : text('hint');
     hintButton.setAttribute('aria-expanded', String(hintOpen));
     hintText.hidden = !hintOpen;
-    hintText.textContent = (attempts[index] >= 2 && !completed.has(index) ? text('auto_hint') + ' ' : '') + mission.hint[lang];
+    taskText(hintText, (attempts[index] >= 2 && !completed.has(index) ? text('auto_hint') + ' ' : '') + mission.hint[lang]);
     hintText.lang = lang;
     hintText.dir = hebrew ? 'rtl' : 'ltr';
     byId('mission-solution').textContent = text('show');
@@ -169,7 +286,47 @@ export function initTerminal({ getLanguage, onFinish }) {
     }
     const note = byId('idea-note');
     note.hidden = !ideaNote;
-    note.textContent = ideaNote ? ideaNote[lang] : '';
+    if (!ideaNote) clearEditorChange();
+    changeAnimation?.cancel();
+    changeAnimation = null;
+    note.replaceChildren();
+    if (ideaNote) {
+      const explanation = document.createElement('span');
+      explanation.textContent = ideaNote[lang];
+      note.append(explanation);
+      const before = ideaNote.before.split('\n');
+      const after = ideaNote.after.split('\n');
+      let start = 0;
+      while (start < before.length && start < after.length && before[start] === after[start]) start++;
+      let endBefore = before.length;
+      let endAfter = after.length;
+      while (endBefore > start && endAfter > start && before[endBefore - 1] === after[endAfter - 1]) { endBefore--; endAfter--; }
+      const oldCode = before.slice(start, endBefore).join('\n');
+      const newCode = after.slice(start, endAfter).join('\n');
+      let prefix = 0;
+      let suffix = 0;
+      while (prefix < oldCode.length && prefix < newCode.length && oldCode[prefix] === newCode[prefix]) prefix++;
+      while (suffix < oldCode.length - prefix && suffix < newCode.length - prefix && oldCode.at(-1 - suffix) === newCode.at(-1 - suffix)) suffix++;
+      for (const [kind, code, label] of [
+        ['before', oldCode, lang === 'he' ? '− לפני השינוי' : '− Before'],
+        ['after', newCode, lang === 'he' ? '+ אחרי השינוי' : '+ After']
+      ]) {
+        const card = document.createElement('span');
+        card.className = `code-change code-change-${kind}`;
+        const heading = document.createElement('strong');
+        heading.textContent = label;
+        const snippet = document.createElement('code');
+        snippet.dir = 'ltr';
+        if (!code) snippet.textContent = lang === 'he' ? '(אין שורות)' : '(no lines)';
+        else {
+          const mark = document.createElement('mark');
+          mark.textContent = code.slice(prefix, code.length - suffix);
+          snippet.append(code.slice(0, prefix), mark, suffix ? code.slice(-suffix) : '');
+        }
+        card.append(heading, snippet);
+        note.append(card);
+      }
+    }
     note.lang = lang;
     note.dir = hebrew ? 'rtl' : 'ltr';
   }
@@ -211,8 +368,11 @@ export function initTerminal({ getLanguage, onFinish }) {
   }
 
   editor.addEventListener('input', () => { if (lastRun && !lastRun.result.ok) lastRun = null; ideaNote = null; renderGutter(); renderIdeas(); });
-  editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; });
+  editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; syncEditorChange(); });
+  editor.addEventListener('pointerdown', clearEditorChange);
+  editor.addEventListener('focus', clearEditorChange);
   editor.addEventListener('keydown', (event) => {
+    clearEditorChange();
     if (event.key === 'Tab' && !event.shiftKey) {
       event.preventDefault();
       const { value, caret } = indentLine(editor.value, editor.selectionStart);
@@ -238,19 +398,37 @@ export function initTerminal({ getLanguage, onFinish }) {
     editor.focus({ preventScroll: true });
   });
   byId('run').addEventListener('click', () => { ideaNote = null; run(); });
+  byId('mission-run').addEventListener('click', () => { ideaNote = null; run(); byId('terminal-shell').scrollIntoView({ block: 'nearest', behavior: 'instant' }); });
+  byId('mission-continue').addEventListener('click', () => nextButton.click());
+  byId('mission-action').addEventListener('click', (event) => {
+    const button = ideaButtons.find(button => button.dataset.idea === byId('mission-action').dataset.ideaTarget);
+    if (button && !button.disabled) button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: event.detail }));
+  });
   const ideaRow = byId('idea-buttons');
   const ideaButtons = suggestions.map((suggestion) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.idea = suggestion.id;
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (event) => {
+      const before = editor.value;
       const change = suggestion.apply(editor.value);
       if (!change) return;
       editor.value = change.source;
-      ideaNote = change.note;
+      ideaNote = { ...change.note, before, after: change.source };
       lastRun = null;
       render();
-      editor.focus({ preventScroll: true });
+      const note = byId('idea-note');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (event.detail > 0) {
+        // Keep the old lines readable, then reveal the replacement. The comparison
+        // remains visible afterwards; reading it never depends on animation speed.
+        const replacement = note.querySelector('.code-change-after');
+        changeAnimation = replacement.animate(
+          reduced ? [{ opacity: .5 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }],
+          { duration: reduced ? 120 : 240, delay: reduced ? 0 : 250, fill: 'backwards', easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
+        );
+      }
+      showEditorChange(before, change.source, event.detail > 0);
     });
     ideaRow.append(button);
     return button;

@@ -1,0 +1,41 @@
+/* A persistent comparison: motion draws attention, text explains the change. */
+.code-change { display: block; margin-top: 10px; padding: 10px 12px; border: 1px solid; border-radius: 8px; }
+.code-change strong { display: block; margin-bottom: 6px; font-size: 13px; }
+.code-change code { display: block; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.code-change-before { background: #fff4f0; border-color: #e6b6a6; color: #773321; }
+.code-change-after { background: #effbe7; border-color: #b6d99b; color: #244b13; }
+.code-change mark { padding: 1px 0; border-radius: 2px; color: inherit; font-weight: 800; }
+.code-change-before mark { background: #f9d4c8; text-decoration: line-through; }
+.code-change-after mark { background: #c9eeae; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Mirror the textarea exactly so the changing token animates in its own line.
+   The textarea remains the only editable/accessibility surface. */
+#editor-shell .editor-body { position: relative; }
+#editor-shell .editor-input.showing-code-change { color: transparent; }
+.editor-change-view { position: absolute; inset: 0 0 0 42px; overflow: hidden; pointer-events: none; text-align: left; direction: ltr; background: #1e1f24; }
+.editor-change-view pre { margin: 0; padding: 14px 12px; border: 0; color: #f2f3f5; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre; tab-size: 4; }
+.editor-change-view mark { color: inherit; border-radius: 2px; padding: 0; }
+.editor-change-view .editor-change-before { background: #773321; color: #ffe5dc; text-decoration: line-through; }
+.editor-change-view .editor-change-after { background: #365b20; color: #e0ffbf; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 650px) { .editor-change-view pre { font-size: 16px; } }
+/* One calm task, one next action; the entire task owns its language direction. */
+#mission-card { text-align: start; }
+#mission-card .mission-head { direction: inherit; }
+#mission-card .mission-step { border: 0; background: transparent; padding: 0; font-weight: 400; }
+#mission-card .mission-step ol { margin: 14px 0; padding-inline-start: 26px; }
+#mission-card .mission-step li { padding-inline-start: 4px; margin: 8px 0; line-height: 1.65; }
+#mission-card .mission-step li::marker { color: #327b1c; font-weight: 800; }
+#mission-card .mission-expected { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: white; }
+.mission-expected strong, .mission-expected > span { display: block; }
+.mission-expected strong { margin-bottom: 4px; font-size: 13px; color: #48633e; }
+.task-code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .95em; unicode-bidi: isolate; }
+.mission-primary-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+#mission-card .mission-primary-actions button { min-height: 48px; padding: 10px 18px; font-size: 16px; }
+.mission-support { margin-top: 14px; }
+.mission-support summary, .extra-code-tools summary { cursor: pointer; min-height: 44px; padding-block: 12px; color: #526474; font-size: 14px; }
+#mission-card .mission-actions button { min-height: 44px; }
+#mission-card[data-done="true"] .mission-step { background: transparent; color: #244b13; }
+#terminal .terminal-help { margin-bottom: 12px; }
+#terminal .mission-dots { justify-content: flex-start; }
+#terminal:has(#mission-card[dir="rtl"]) .mission-dots { direction: rtl; }
+#mission-card[dir="rtl"] .mission-label { letter-spacing: 0; }

@@ -16,3 +16,5 @@ Partial catalog of maze features. Every feature must include a written specifica
 | AB-CITY | [Festival City](afterbell-festival-city.md) | Local implementation | Playtesting | Game |
 
 | ENG-001 | [English exam](../docs/features/english-exam.md) | approved | 328 regression checks and 10 full-stack checks passed; release authorized | Release |
+
+| CODE-TERMINAL | [Coding terminal hub](code-terminal.md) | Requested | Implemented; focused mobile QA passed; unrelated regression failures recorded | Local |

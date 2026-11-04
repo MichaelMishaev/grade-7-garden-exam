@@ -1,4 +1,4 @@
-import { initTerminal } from './code-terminal.js';
+import { initTerminal } from './code-terminal.js?v=6';
 
 const comparisons = {
   '>=': { test: (a, b) => a >= b, words: 'at least' },
@@ -58,15 +58,16 @@ function initLesson() {
   const hebrewInstructions = byId('hebrew-instructions');
   const scoreSlider = byId('score-slider');
   const hebrewCopy = {
+    skip_lesson: 'לתרגול', back_explanations: 'לכל ההסברים ←', back_cs: 'לחזרה למדעי המחשב ←', lesson_footer: 'לומדים בנחת, צעד אחר צעד.',
     task: 'שנו את הציון ולחצו על הפעלה.', score: 'ציון', rule: 'שינוי התנאי',
     comparison: 'השוואה', threshold: 'סף', help: 'איך זה עובד?',
     input_help: 'מספרים שלמים: 0–100.', preset75: '75', preset40: '40', preset60: '60',
     view_code: 'קוד Python', view_path: 'לוח הבחירה', code_heading: 'PYTHON', output_heading: 'המחשב אומר',
     step_input: 'ערך', step_check: 'בדיקה', step_branch: 'בחירה', step_continue: 'המשך',
     learn_label: 'לומדים', playground_label: 'מתנסים', write_label: 'כותבים קוד', check_label: 'בודקים',
-    terminal_title: 'עכשיו אתם כותבים את הקוד.', terminal_body: 'Python אמיתי, משימה קטנה אחת בכל פעם. בראשונות לא צריך להקליד בכלל.',
+    terminal_title: 'מתרגלים קוד, צעד אחר צעד', terminal_body: 'מתחילים בלחיצה אחת. בכל משימה ננסה דבר קטן ונראה מה קורה.',
     terminal_step1: 'קראו את הכרטיס הירוק. השורה עם 👉 אומרת על מה ללחוץ.', terminal_step2: 'שנו את הקוד: לחצו על הצעה 💡, או לחצו על שורה והקלידו.', terminal_step3: 'לחצו על ▶ הפעלה וקראו את התשובה של המחשב בחלון התחתון.',
-    terminal_what: 'מה שני החלונות הכהים האלה?', terminal_what_body: 'העליון הוא הקוד שלכם: ההוראות שאתם נותנים למחשב, שורה אחרי שורה. התחתון הוא התשובה של המחשב: כשלוחצים על הפעלה הוא קורא את הקוד מלמעלה למטה ומדפיס שם. טקסט אדום אומר שהוא לא הבין שורה אחת, והוא אומר איזו.',
+    terminal_what: 'פעם ראשונה כאן? כך זה עובד', terminal_what_body: 'בכרטיס הירוק כתוב מה לנסות. מתחתיו נמצא הקוד. לחיצה על הפעלת הקוד מציגה את התוצאה בחלון שמתחת לקוד. אפשר לנסות שוב כמה שרוצים.',
     terminal_to_questions: 'לבדיקה המהירה ←',
     flow_start: 'הציון שלכם', flow_end: 'אחרי כל אחד מהמסלולים', rule_question: 'האם התנאי מתקיים?', yes_path: 'כן · TRUE', no_path: 'לא · FALSE', ready: 'עכשיו כותבים את הקוד ←', question_hint: 'בחרו תשובה וגלו למה.',
     basics_title: 'תנאי אחד. ענף אחד.', basics_body: 'אם התנאי מתקיים (True), מבצעים if. אחרת, מבצעים else.',
