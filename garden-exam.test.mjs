@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import './test-fixtures/use-fake-rubrics.mjs';
 import { createApp } from './server.mjs';
 
 const html = readFileSync(new URL('./garden-exam.html', import.meta.url), 'utf8');
@@ -34,7 +35,7 @@ test('there is no separate send-all button and the privacy line matches the libr
   assert.ok(!html.includes('שליחת כל התשובות'));
   assert.ok(!/id="send"[^>]*>שליחת/.test(html));
   assert.ok(html.includes('בסיום המבחן השם והתשובות נשלחים למורה אוטומטית'));
-  assert.ok(!/בינה מלאכותית|AI/.test(html.replace(/Resend/g, '')), 'garden has no AI check');
+  assert.match(html, /התשובות הפתוחות נבדקות בשירות בינה מלאכותית/);
 });
 
 test('the 20 question texts are unchanged and thanks.html still understands the garden keys', () => {
@@ -49,8 +50,15 @@ try { ({ chromium } = await import('/opt/homebrew/lib/node_modules/playwright/in
 test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draft, reload does not resend', { skip: !chromium && 'Playwright is not installed', timeout: 90000 }, async () => {
   const calls = [];
   let failNext = false;
-  const env = { APP_ORIGIN: 'http://127.0.0.1:0', RESEND_API_KEY: 'x', RESEND_FROM_EMAIL: 'PrepX <e@x>' };
-  const server = createApp({ env, db: null, sleep: async () => {}, sendFetch: async (url, config) => {
+  const env = { APP_ORIGIN: 'http://127.0.0.1:0', OPENAI_API_KEY: 'mock-ai', RESEND_API_KEY: 'x', RESEND_FROM_EMAIL: 'PrepX <e@x>' };
+  let failAi = true; const aiRequests = [];
+  const server = createApp({ env, db: null, sleep: async () => {}, aiFetch: async (_url, init) => {
+    const body = JSON.parse(init.body);
+    const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
+    aiRequests.push(document);
+    if (failAi) return Response.json({}, { status: 500 });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+  }, sendFetch: async (url, config) => {
     calls.push(JSON.parse(config.body));
     return failNext ? new Response('{}', { status: 500 }) : new Response(JSON.stringify({ id: 'mock' }), { status: 200 });
   } });
@@ -103,12 +111,19 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     assert.ok(mail.subject.includes('HEB-001'), mail.subject);
     assert.ok(mail.subject.includes('HEB-001 · ניסיון 1'), 'attempt number in the subject');
     assert.equal((mail.text.match(/^\d+\. /gm) || []).length, 20);
+    assert.match(await page.textContent('#score'), /עדיין לא נבדקו/);
+    failAi = false;
+    await page.click('#regrade');
+    await page.waitForFunction(() => document.getElementById('score').textContent.includes('100 מתוך 100'));
+    assert.equal(aiRequests.at(-1).questions.length, 20);
+    assert.equal(calls.length, 5, 'AI retry does not resend email');
     // reload: the locked summary is back, nothing is sent
     await page.reload();
     await page.waitForSelector('#results.active');
     await page.waitForTimeout(500);
     assert.equal(calls.length, 5, 'a reload does not resend');
     assert.equal(await page.isHidden('#done-banner'), false);
+    assert.match(await page.textContent('#score'), /100 מתוך 100/);
     assert.equal(await page.locator('#explanations article').count(), 20);
   } finally {
     await browser.close();

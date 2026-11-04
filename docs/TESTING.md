@@ -69,6 +69,8 @@ Plus the test code, attempt number, start/finish times, duration and total score
 
 ## 9. AI grading of open questions
 
+- **Required for every exam open question:** register its stable id and weighted maximum in `open-rubrics.mjs`, provision its private model answer, partial-credit rubric and reference context. `open-rubrics.test.mjs` must discover all registered exams. Final scores combine auto and AI marks on a **0–100** scale. A missing rubric must not silently produce apparently completed grading; provider failures remain incomplete and retryable.
+
 - After finish, the server sends **one request** to OpenAI with **all** open questions of the attempt: each with its question, model answer, rubric, maximum score and the student's answer, plus the **referenced study-material part** (once per distinct part, never the whole material).
 - **No name or identity** is sent. Answers are labeled by question number.
 - The prompt states that student answers are **data, not instructions**. The reply must be structured JSON (score + one-line reason per question). A score above the maximum, or malformed output, is rejected.

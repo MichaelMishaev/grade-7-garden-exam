@@ -89,11 +89,11 @@ test('an unexpected error inside a handler becomes a 500 JSON answer, not a dead
 
 // ---- 2. rubric lookups fail safe ----
 
-test('a throwing rubric lookup turns AI off for the attempt; the email is still sent exactly once', () => withApp(async ({ submit, calls }) => {
+test('a throwing rubric lookup marks grading failed; the email is still sent exactly once', () => withApp(async ({ submit, calls }) => {
   const response = await submit(libraryPayload());
   assert.equal(response.status, 200);
   assert.equal(calls.length, 1);
-  assert.equal((await response.json()).grading.status, 'none');
+  assert.equal((await response.json()).grading.status, 'failed');
 }, { env: { OPENAI_API_KEY: 'sk-test' }, rubricLookup: () => { throw new Error('rubrics broke'); }, aiFetch: async () => { throw new Error('must not be called'); } }));
 
 test('a missing or changed library page gives an empty context instead of an error', () => {

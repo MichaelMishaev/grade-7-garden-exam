@@ -20,7 +20,7 @@ Read first, never from memory: `CLAUDE.md`, `README.md` (Database section), `QUE
 | Reference | PDF / URL / pasted text. Several is fine. Must be study material students may open. |
 | Exam date | Shown on the subject page (`date` in the `subjects` data). |
 | Subject + version title | e.g. `physics`, "גרסה 1 · משימת הערכה". New subject = add it to the `subjects` object. |
-| Format | Number of questions (15–25, `QUESTION-RULES.md`), types, graded vs teacher-graded, teacher-graded parts. Default: 20. Every exam is emailed to the teacher (hard rule above). |
+| Format | Number of questions (15–25, `QUESTION-RULES.md`), types, and difficulty. Every open question is AI-graded; final score is 0–100. Default: 20. Every exam is emailed to the teacher (hard rule above). |
 | Attribution | Name of whoever wrote the reference (shown on the page). Confirm the user may reuse third-party material. |
 
 If the reference is not in the repo, copy it to `assets/materials/<slug>.pdf` (file types served: `.html .css .js .svg .png .pdf`, see `server.mjs` `types`). Never commit secrets or unrelated files; read the whole reference (use the Read tool with `pages` for PDFs) before writing a question.
@@ -38,7 +38,7 @@ List the reference's parts (pages / paragraphs / sections). Map each to a topic 
 - Follow `QUESTION-RULES.md`: ≥3 types, ~40% easy / 40% medium / 20% hard, topic tag, Hebrew explanation on every graded question, one correct answer, shuffle-friendly choices (no "all of the above", no position clues).
 - Each question carries `ref: { id, part }`, for example `part: 'עמוד 3'` or `'פסקה 2'`. The explanation should cite the same part. If the reference states no answer, the question is out.
 - Numbers must be computed, not guessed: run them (`node -e`) and re-check against the reference. For numeric answers define the accepted value, tolerance and unit.
-- Open (written) questions get a model answer and a short self-check list.
+- Every open (written) question must go through the server AI API. Supply a private model answer, partial-credit rubric, weighted maximum and referenced study-material context; a self-check list alone is insufficient.
 - Stable ids: `<exam>-NN`; never renumber an existing exam (drafts are keyed by id or index).
 - Optional second opinion: run the finished set past Codex (`codex:rescue`) or the `glm` skill with the reference, asking only "which answers/explanations contradict the reference?". Never send student data.
 
@@ -50,6 +50,10 @@ List the reference's parts (pages / paragraphs / sections). Map each to a topic 
 4. `db/extract.mjs` (+ its tests): include the new exam, references and question refs. Expected counts in `db/extract.test.mjs` change; update them deliberately.
 5. Bump `?v=` on every changed script/stylesheet link (CLAUDE.md).
 6. Email to the teacher (always): add the exam to the server `exams` table with the **next free permanent test code** (`HEB-`/`PHY-`/new subject prefix + running number; never reuse or change one; keep `db/extract.mjs` in step), send `exam: '<exam id>'`, `attempt`, and per answer `questionId`, the prompt as plain text (`plainText`), `options`, `correctAnswer`, `reference`, `correct` on auto-graded answers and the partial `score`; every open question needs a model answer, rubric and maximum in `open-rubrics.mjs` (server-side only, for the AI check); make sure `db/submissions.mjs` `matchExam` recognises it (unit + integration test). The exam page must follow `docs/TESTING.md` (single source of truth: question types incl. checkbox, instant feedback, locked answers, always-shuffled questions and options, visible timer, finish sends and shows a read-only summary). The legacy no-`exam` payloads stay byte-identical for old tabs only (`server.exams.test.mjs` snapshots).
+
+## Mandatory AI grading gate
+
+Follow the discoverable `prepx-create-tests` skill at `~/.codex/skills/prepx-create-tests/SKILL.md`. Every exam open question must be registered in `open-rubrics.mjs` and have valid private rubric content provisioned on the server. Keep `open-rubrics.test.mjs` covering all registered exams dynamically. Verify one mocked AI request includes every open question, stored retry persistence without a second email, and zero/partial/full marks. Final scores combine auto and weighted AI points on a **0–100** scale. Missing rubrics or provider failure mean incomplete grading, never a final score. Before claiming deployed integration works, verify production rubric coverage and a real AI request with synthetic answers; never write synthetic student submissions to production.
 
 ## 4. Verify (all of it, show the output)
 

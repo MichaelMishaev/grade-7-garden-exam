@@ -403,3 +403,47 @@ test('hardening: an oversized or non-JSON reply fails, and a refusal fails', asy
 test('the AI reason never reaches the browser from /api/grade-open or /api/submit-exam', () => withServer(async ({ submit, grade }) => {
   for (const response of [await submit(libraryPayload()), await grade(gradeBody())]) assert.doesNotMatch(await response.text(), /תשובה טובה|reason/);
 }));
+
+for (const examId of ['english-v1-practice', 'hebrew-v1-garden']) {
+  for (const fraction of [0, 0.5, 1]) {
+    test(`${examId}: every open answer reaches AI in one call and final score stays in 0–100 (${fraction})`, () => {
+      const questions = rows.filter(q => q.exam_id === examId);
+      const open = questions.filter(q => q.type === 'open');
+      const ai = mockOpenAi({ grade: q => ({ score: Math.round(q.maxScore * fraction * 100) / 100, reason: 'בדיקת תרגול' }) });
+      return withServer(async ({ submit, emails }) => {
+        const response = await submit({ exam: examId, name: STUDENT, attempt: 1, answers: [...questions].reverse().map(q => ({
+          questionId: 'untrusted-id', question: plainText(q.prompt), answer: q.type === 'open' ? 'Synthetic written answer' : q.choices[q.correct]
+        })) });
+        assert.equal(response.status, 200);
+        const body = await response.json();
+        assert.equal(body.grading.status, 'ok');
+        assert.deepEqual(Object.keys(body.grading.scores).sort(), open.map(q => q.id).sort());
+        assert.equal(ai.requests.length, 1);
+        const request = ai.requests[0].body.messages[1].content;
+        assert.ok(!request.includes(STUDENT), 'student identity is never sent');
+        const mail = emails[0].body;
+        assert.doesNotMatch(mail.html, /ממתינה לבדיקת המורה/);
+        const earned = /ציון כולל \(כולל בדיקת AI\): (\d+) מתוך 100/.exec(mail.text);
+        assert.ok(earned, 'email has a final score out of 100');
+        assert.ok(Number(earned[1]) >= 0 && Number(earned[1]) <= 100);
+        const auto = globalThis.QuizCore.scoreQuiz(questions, Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, 1]))).earned;
+        const aiPoints = Object.values(body.grading.scores).reduce((sum, q) => sum + q.score, 0);
+        assert.equal(Number(earned[1]), Math.min(100, auto + Math.round(aiPoints)));
+        if (fraction === 1) assert.equal(Number(earned[1]), 100);
+        if (fraction === 0 && examId === 'hebrew-v1-garden') assert.equal(Number(earned[1]), 0);
+      }, { ai });
+    });
+  }
+}
+
+test('configured AI with a missing rubric reports failure instead of silently skipping written answers', () => {
+  const server = createApp({ env, db: null, rubricLookup: () => undefined, aiFetch: () => { throw new Error('must not call without rubrics'); }, sendFetch: async () => Response.json({ id: 'mock' }) });
+  return (async () => {
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}/api/submit-exam`, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(libraryPayload()) });
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).grading.status, 'failed');
+    } finally { await new Promise(resolve => server.close(resolve)); }
+  })();
+});

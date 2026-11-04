@@ -122,7 +122,7 @@ const aiConfigured = env => typeof env.OPENAI_API_KEY === 'string' && env.OPENAI
 
 const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max }]) => [id, { score, max }]));
 
-export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 12000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers } = {}) {
+export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 20000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers } = {}) {
   const openRubricFor = safeRubric(rubricLookup);
   // Resend is paced and retried (resend-send.mjs); `sleep` and `now` can be replaced by tests.
   const resendSend = createResendSender({ fetchImpl: sendFetch, rps: intFrom(env.RESEND_RPS, 2), now, ...(sleep ? { sleep } : {}) });
@@ -268,7 +268,8 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
           ? [{ index: i, questionId, question: answers[i].question, answer: answers[i].answer }] : [];
       });
     } catch (error) { console.error('grading items unavailable', error?.code ?? error?.name); }
-    const grading = gradingItems.length && aiConfigured(env) && aiCalls.available()
+    const missingRubrics = truth?.answers.some(item => item.matched && item.correct === undefined && !openRubricFor(examId, item.questionId));
+    const grading = missingRubrics && aiConfigured(env) ? { status: 'failed' } : gradingItems.length && aiConfigured(env) && aiCalls.available()
       ? await gradeOpenAnswers({ examId, items: gradingItems, env, fetchImpl: countedAiFetch, timeoutMs: aiTimeoutMs }).catch(() => ({ status: 'failed' }))
       : { status: 'none' };
     // The score is the server's for table exams (the browser's claim is ignored); legacy payloads keep the browser's.

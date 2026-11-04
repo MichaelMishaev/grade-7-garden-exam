@@ -35,7 +35,7 @@ const symbol = (verdict) => verdict === true ? '✓' : verdict === false ? '✕'
 
 // answers: [{ question, answer, correct? }] as the browser sent them (trimmed). Returns
 // { answers: [{ matched, correct, options?, correctAnswer?, reference?, flags: [string] }], score, notes: [string] }
-// in the same order. `score` is { earned, pending } or undefined for an exam with nothing auto-gradable (garden).
+// in the same order. `score` is { earned, pending } or undefined when no question keys exist. All-open exams have earned 0 and pending 100.
 export function judgeAnswers(examId, answers) {
   const { questions, lookup } = indexFor(examId);
   const used = new Set();
@@ -60,10 +60,9 @@ export function judgeAnswers(examId, answers) {
     }
     return { matched: true, questionId: q.id, correct: verdict, ...(q.choices ? { options: q.choices } : {}), correctAnswer: keyText(q), reference: referenceText(q), flags };
   });
-  const gradable = questions.some((q) => q.type !== 'open');
   const { earned, pending } = globalThis.QuizCore.scoreQuiz(questions.map(({ id, type, difficulty }) => ({ id, type, difficulty })), results);
   const notes = [];
   if (mismatches) notes.push(`⚠ ב־${mismatches} תשובות הדפדפן דיווח תוצאה שונה מחישוב השרת (הציון והסימונים כאן חושבו בשרת)`);
   if (unmatched) notes.push(`⚠ ${unmatched} תשובות לא זוהו מול השאלות (לא זוהתה שאלה), ולכן הציון עשוי להיות נמוך מהאמיתי`);
-  return { answers: judged, score: gradable ? { earned, pending } : undefined, notes };
+  return { answers: judged, score: questions.length ? { earned, pending } : undefined, notes };
 }

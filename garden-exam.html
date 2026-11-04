@@ -164,9 +164,9 @@
       <h1 class="review-title" id="results-title" tabindex="-1">סיימתם את המבחן!</h1>
       <p class="intro" id="score"></p>
       <div id="explanations"></div>
-      <div class="actions"><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
+      <div class="actions"><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button><button class="button primary" id="regrade" type="button" hidden>בדיקה חוזרת של התשובות הפתוחות</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
       <p class="privacy" id="send-status" role="status"></p>
-      <p class="privacy">עם הסיום, השם וכל 20 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה. אלה שאלות פתוחות, והמורה בודקת אותן.</p>
+      <p class="privacy">עם הסיום, השם וכל 20 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה. התשובות הפתוחות נבדקות בשירות בינה מלאכותית.</p>
     </section>
 
     <footer class="footer">בהצלחה!</footer>
@@ -227,6 +227,8 @@
     let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
     let sent = validOrder && saved.sent === true;
     let sending = false;
+    let grading = saved.grading || { status: 'none' };
+    let submissionRef = saved.submissionRef;
     const firstOpen = answers.findIndex((a, i) => i >= total || !(a || '').trim());
     let current = validOrder && Number.isInteger(saved.current) ? Math.max(0, Math.min(total - 1, saved.current)) : legacyDraft ? Math.max(0, Math.min(total - 1, firstOpen === -1 ? answers.length < total ? answers.length : total - 1 : firstOpen)) : 0;
     let advanceTimer = 0;
@@ -236,7 +238,7 @@
     const answerText = i => answered(i) ? answers[i].trim() : 'לא נכתבה תשובה';
     const answeredCount = () => questions.filter((_, i) => answered(i)).length;
     function persist() {
-      try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, order, answers, flags: [...flags], locked: [...locked], current, finished, sent, startedAt, finishedAt })); } catch (_) {}
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ name: byId('student-name').value, order, answers, flags: [...flags], locked: [...locked], current, finished, sent, startedAt, finishedAt, grading, submissionRef })); } catch (_) {}
     }
     function show(id, focusId) {
       document.querySelectorAll('.stage').forEach(stage => stage.classList.toggle('active', stage.id === id));
@@ -294,7 +296,9 @@
     function results() {
       byId('done-banner').hidden = !sent; byId('retry').hidden = !sent;
       if (sent) byId('send-status').textContent = '';
-      let text = 'אלה שאלות פתוחות, ולכן הציון יינתן לאחר בדיקת המורה.';
+      byId('regrade').hidden = !(sent && grading.status !== 'ok');
+      const complete = grading.status === 'ok' && Object.keys(grading.scores || {}).length === total;
+      let text = complete ? `ציון: ${Math.min(100, Math.max(0, Math.round(Object.values(grading.scores).reduce((sum, item) => sum + item.score, 0))))} מתוך 100.` : 'התשובות הפתוחות עדיין לא נבדקו. הציון יוצג לאחר השלמת בדיקת הבינה המלאכותית.';
       if (startedAt && finishedAt) {
         const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
         text += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
@@ -361,6 +365,8 @@
         });
         const data = await response.json();
         if (!response.ok || (data.success !== 'true' && data.success !== true)) throw new Error('Submission failed');
+        grading = data.grading || { status: 'none' };
+        submissionRef = data.submissionRef;
         countAttempt();
         // The answers are with the teacher: the draft stays only as a locked, read-only summary (a reload shows it again).
         sent = true;
@@ -371,6 +377,19 @@
         byId('send').hidden = false;
       } finally { sending = false; byId('retry').disabled = false; }
     }
+    byId('regrade').addEventListener('click', async () => {
+      byId('regrade').disabled = true;
+      try {
+        const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/grade-open' : '/api/grade-open', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ exam: examId, submissionRef, answers: order.map(index => ({ questionId: `garden-${String(index + 1).padStart(2, '0')}`, question: questions[index], answer: answerText(index) })) }), signal: AbortSignal.timeout(30000)
+        });
+        const data = await response.json();
+        if (!response.ok || data.grading?.status !== 'ok') throw new Error('Grading failed');
+        grading = data.grading; persist(); results();
+      } catch (_) { byId('send-status').textContent = 'הבדיקה לא הושלמה. אפשר לנסות שוב.'; }
+      finally { byId('regrade').disabled = false; }
+    });
     if (finished && questions.every((_, i) => answered(i))) { results(); if (!sent) sendExam(); }
     });
   </script>
