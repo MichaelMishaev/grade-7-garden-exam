@@ -10,13 +10,14 @@ import { join } from 'node:path';
 import './quiz-core.js';
 import './test-fixtures/use-fake-rubrics.mjs';
 import { fakeRubrics } from './test-fixtures/fake-rubrics.mjs';
+import { exams } from './server.mjs';
 import { extractContent } from './db/extract.mjs';
 import { openRubricsFor, openRubricFor, openQuestionStructure } from './open-rubrics.mjs';
 
 const rows = extractContent().questions;
 const { WEIGHT } = globalThis.QuizCore;
 
-for (const examId of ['hebrew-v2-library', 'physics-v1-assessment']) {
+for (const examId of Object.keys(exams)) {
   const questions = rows.filter(q => q.exam_id === examId);
   const open = questions.filter(q => q.type === 'open');
   const rubrics = openRubricsFor(examId);
@@ -105,7 +106,7 @@ test('load order: OPEN_RUBRICS_JSON (plain or base64:), then OPEN_RUBRICS_FILE, 
 test('no private content: no question is gradable (undefined, never an empty rubric)', async () => {
   // Skip the local private file if one exists by pointing OPEN_RUBRICS_JSON at an object with no exam content.
   await withEnv({ json: '{}' }, () => {
-    for (const examId of ['hebrew-v2-library', 'physics-v1-assessment']) {
+    for (const examId of Object.keys(exams)) {
       assert.deepEqual(openRubricsFor(examId), {});
       for (const id of Object.keys(openQuestionStructure(examId))) assert.equal(openRubricFor(examId, id), undefined, id);
     }
@@ -138,10 +139,10 @@ test('a record may bring its own context; otherwise it comes from the page (libr
 const privatePath = new URL('./open-rubrics.private.json', import.meta.url);
 const hasPrivate = existsSync(privatePath);
 
-test('open-rubrics.private.json (local only) covers exactly the open questions of library and physics', { skip: !hasPrivate && 'no local open-rubrics.private.json' }, async () => {
+test('open-rubrics.private.json (local only) covers exactly the open questions of every registered exam', { skip: !hasPrivate && 'no local open-rubrics.private.json' }, async () => {
   const data = JSON.parse(readFileSync(privatePath, 'utf8'));
   await withEnv({ json: JSON.stringify(data) }, () => {
-    for (const examId of ['hebrew-v2-library', 'physics-v1-assessment']) {
+    for (const examId of Object.keys(exams)) {
       const open = rows.filter(q => q.exam_id === examId && q.type === 'open').map(q => q.id).sort();
       assert.deepEqual(Object.keys(data[examId] ?? {}).sort(), open, examId);
       assert.deepEqual(Object.keys(openRubricsFor(examId)).sort(), open, `${examId}: every record is usable`);

@@ -9,7 +9,8 @@
 //   2. env OPEN_RUBRICS_FILE  - path to a JSON file
 //   3. open-rubrics.private.json next to this module (gitignored, local only)
 // The shape is described in open-rubrics.schema.md. A question with no private content has no rubric here
-// (openRubricFor returns undefined), so it is not graded by AI: the exam behaves as if AI grading were off for it.
+// (openRubricFor returns undefined). With a configured AI key the submission reports failed grading, preserves
+// the answers and allows retry; missing content must never masquerade as completed AI grading.
 //
 // `max` is the points the question is worth in QuizCore.scoreQuiz (quiz-core.js): every question has a weight
 // (easy 1, medium 1.5, hard 2; a question without difficulty counts as medium) and is worth weight / sum of weights * 100.
@@ -56,7 +57,12 @@ const libraryStructure = {
 };
 const physicsStructure = Object.fromEntries(['06', '11', '20', '22', '23', '25', '26'].map(n => [`physics-exam-${n}`, { max: 3.7 }]));
 
+const englishStructure = { 'english-05': { max: 3.57 }, 'english-19': { max: 7.14 }, 'english-20': { max: 7.14 } };
+const gardenStructure = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`garden-${String(i + 1).padStart(2, '0')}`, { max: 5 }]));
+
 const structures = {
+  'english-v1-practice': { structure: englishStructure, contextOf: (_part, rest) => rest.context ?? '' },
+  'hebrew-v1-garden': { structure: gardenStructure, contextOf: (_part, rest) => rest.context ?? '' },
   'hebrew-v2-library': { structure: libraryStructure, contextOf: (part, rest) => rest.context ?? libraryText(part) },
   'physics-v1-assessment': { structure: physicsStructure, contextOf: (_part, rest) => rest.context ?? `תשובה לדוגמה של המורה: ${rest.modelAnswer}` }
 };

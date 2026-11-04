@@ -17,6 +17,8 @@ Skills live in `.claude/skills/<name>/SKILL.md`. Read the file and follow it ste
 - `.claude/skills/prepx-review-exam/SKILL.md`: **"review an exam"**: the user pastes a submission email (questions + a student's answers) and a test code; you grade it and say what was right and wrong. Read-only.
 - `.claude/skills/prepx-scores/SKILL.md`: how scoring, stars and best-score badges work.
 
+- `~/.codex/skills/prepx-create-tests/SKILL.md`: mandatory AI grading and 0–100 final-score gates when creating or extending exams.
+
 ## Hard rules
 
 - Production is live: students use https://hitech.agnon.online/ and pushing to `main` auto-deploys it. Never push to `main` or change Railway settings without the user's explicit OK, and never ship exam-page changes the day before an exam without it.
@@ -27,3 +29,5 @@ Skills live in `.claude/skills/<name>/SKILL.md`. Read the file and follow it ste
 - All user-facing copy is Hebrew (RTL). Questions must be consistent with their reference.
 - Run the checks from the `prepx-new-exam` skill (section 4) before claiming anything works.
 - Every exam (new ones too) follows the library exam's flow and ends by emailing the student's name and answers to the teacher through `/api/submit-exam` with the same Resend credentials, with its own entry in the server `exams` table, tests and the `thanks.html` flow; self-graded-only exams are not allowed.
+
+- Every exam open question must go through the server AI API with a valid rubric and reference context. Final scores combine auto and weighted AI points on a 0–100 scale; incomplete grading must stay explicitly incomplete.

@@ -581,7 +581,7 @@
     // Final score once the open answers were checked (auto points + the checker's points); otherwise a partial score.
     const checked = grading.status === 'ok';
     const aiPoints = checked ? Object.values(grading.scores).reduce((sum, item) => sum + (Number(item.score) || 0), 0) : 0;
-    $('score').textContent = checked ? `ציון: ${Math.round((score.earned + aiPoints) * 10) / 10} מתוך 100.`
+    $('score').textContent = checked ? `ציון: ${Math.min(100, Math.max(0, score.earned + Math.round(aiPoints)))} מתוך 100.`
       : `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות מהשאלות הפתוחות עדיין לא נבדקו.`;
     $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
     if (sent) $('send-status').textContent = '';

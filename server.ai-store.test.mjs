@@ -177,3 +177,26 @@ test('grade-open: an invalid submissionRef is a 400; a failed grading is 502 and
     assert.ok(!db.calls.some(c => c[0] === 'updateAiScores'));
   }, { db, ai: openAi({ fail: true }) });
 });
+
+test('English retry grades all stored written answers, saves marks and reuses them without another AI call', async () => {
+  const questions = extractContent().questions.filter(q => q.exam_id === 'english-v1-practice' && q.type === 'open');
+  const row = { id: 91, examId: 'english-v1-practice', aiStatus: 'none', answers: questions.map(q => ({ questionId: q.id, question: q.prompt, answer: `Stored synthetic answer ${q.id}` })) };
+  const db = fakeDb({ getSubmissionForGrading: async () => row });
+  const ai = openAi();
+  await withServer(async ({ grade }) => {
+    const payload = { exam: row.examId, submissionRef: 'c'.repeat(64), answers: questions.map(q => ({ questionId: q.id, question: q.prompt, answer: 'Changed browser text' })) };
+    const response = await grade(payload);
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    await settle();
+    assert.equal(result.grading.status, 'ok');
+    assert.deepEqual(ai.seen[0], row.answers.map(q => [q.questionId, q.answer]));
+    const update = db.calls.find(c => c[0] === 'updateAiScores')[1];
+    assert.equal(update.id, 91);
+    assert.equal(update.total, 17.85);
+    assert.equal(db.calls.filter(c => c[0] === 'storeSubmission' || c[0] === 'markEmail').length, 0);
+    row.aiStatus = 'ok'; row.aiScores = update.scores;
+    assert.equal((await grade(payload)).status, 200);
+    assert.equal(ai.seen.length, 1);
+  }, { db, ai });
+});

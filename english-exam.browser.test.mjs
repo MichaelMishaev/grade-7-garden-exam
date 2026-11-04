@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import './test-fixtures/use-fake-rubrics.mjs';
 import { createApp } from './server.mjs';
 let chromium;
 try { ({ chromium } = await import('/opt/homebrew/lib/node_modules/playwright/index.mjs')); } catch {}
@@ -10,8 +11,14 @@ const questions = JSON.parse(JSON.stringify(runInNewContext(source.slice(source.
 
 test('English mobile: local entry, required name, locks, reload, review, failed send, retry and read-only completion', { skip: !chromium && 'global Playwright not available' }, async () => {
   let tries = 0; const emails = [];
-  const env = { RESEND_RPS: '1000', RESEND_API_KEY: 'mock', RESEND_FROM_EMAIL: 'qa@example.invalid' };
-  const server = createApp({ env, db: null, sendFetch: async (url, init) => {
+  const env = { OPENAI_API_KEY: 'mock-ai', RESEND_RPS: '1000', RESEND_API_KEY: 'mock', RESEND_FROM_EMAIL: 'qa@example.invalid' };
+  const aiRequests = [];
+  const server = createApp({ env, db: null, aiFetch: async (_url, init) => {
+    const body = JSON.parse(init.body);
+    const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
+    aiRequests.push(document);
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+  }, sendFetch: async (url, init) => {
     if (++tries === 1) return Response.json({}, { status: 422 });
     emails.push(JSON.parse(init.body)); return Response.json({ id: 'mock-english' });
   }});
@@ -69,6 +76,11 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
     assert.equal(emails.length, 1);
     assert.match(emails[0].subject, /ENG-001/);
     assert.match(emails[0].text, /20\./);
+    assert.match(emails[0].text, /ציון כולל \(כולל בדיקת AI\): \d+ מתוך 100/);
+    assert.doesNotMatch(emails[0].html, /ממתינה לבדיקת המורה/);
+    assert.equal(aiRequests.length, 2, 'each submit attempt grades all open questions');
+    assert.deepEqual(aiRequests[0].questions.map(q => q.questionId).sort(), ['english-05', 'english-19', 'english-20']);
+    assert.match(await page.locator('#score').innerText(), /מתוך 100/);
     await page.reload(); await page.locator('#done-banner:visible').waitFor();
     assert.equal(tries, 2, 'reload never resends');
     assert.equal(await page.locator('#question-stage').isVisible(), false);
