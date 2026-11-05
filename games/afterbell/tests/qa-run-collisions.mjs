@@ -1,0 +1,72 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {readFile,mkdir} from 'node:fs/promises';
+import {makeRound} from '../src/core.js';
+import {headingDelta,vansTouch} from '../src/city-traffic.js';
+const q=JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
+const base=process.env.CITY_QA_URL||'http://127.0.0.1:5191/';
+const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1'}),errors=[];let checks=0;
+const ok=(v,s)=>{assert.ok(v,s);checks++;};
+const state=p=>p.evaluate(()=>JSON.parse(render_game_to_text()));
+async function setup(driving,cars,x=0,z=-180){
+ const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});p.on('pageerror',e=>errors.push(e.message));
+ const round=makeRound(q);round.participantName='QA';
+ await p.addInitScript(d=>sessionStorage.setItem('prepx-festival-city-v1',JSON.stringify(d)),{round,city:{role:'courier',edition:0,stage:0,phase:'pickup',x,z,driving,discoveryRevision:1,fleet:{active:driving?'parked-0':null,cars}}});
+ await p.route('**/api/afterbell/quizzes/*',r=>r.fulfill({json:q}));await p.route('**/api/afterbell/attempts',()=>{throw Error('Unexpected submission');});
+ await p.goto(base+'?quiz=facts');await p.click('#resume');await p.evaluate(()=>advanceTime(0));return p;
+}
+const overlap=(a,c)=>vansTouch(a.x,a.z,a.heading,c.x,c.z,c.heading);
+function overlaps(s){const pairs=new Set();for(let i=0;i<s.vehicles.length;i++)for(let j=i+1;j<s.vehicles.length;j++)if(overlap(s.vehicles[i],s.vehicles[j]))pairs.add(s.vehicles[i].id+'/'+s.vehicles[j].id);return pairs;}
+await mkdir('output/run-collisions',{recursive:true});
+try{
+ let p=await setup(false,[]);
+ await p.keyboard.down('ArrowUp');await p.keyboard.down('ArrowRight');await p.evaluate(()=>advanceTime(150));const first=await state(p);await p.screenshot({path:'output/run-collisions/stride-a.png'});
+ await p.evaluate(()=>advanceTime(200));const second=await state(p);await p.screenshot({path:'output/run-collisions/stride-b.png'});
+ const limbs=second.player.gait.limbs;
+ ok(limbs[0].leg*limbs[1].leg<0,'legs swing in opposite directions');ok(limbs[0].arm*limbs[1].arm<0,'arms counter-swing');ok(limbs[0].arm*limbs[0].leg<0,'arm opposes same-side leg');
+ ok(limbs.some(l=>Math.abs(l.shin-l.leg)>.1&&Math.abs(l.forearm-l.arm)>.1),'knees and elbows bend');ok(Math.abs(first.player.gait.limbs[0].leg-limbs[0].leg)>.1,'actual mesh angles change across frames');
+ await p.keyboard.up('ArrowUp');await p.keyboard.up('ArrowRight');await p.evaluate(()=>advanceTime(1000));ok((await state(p)).player.gait.amount<.001,'idle settles to rest');await p.close();
+ p=await setup(true,[{id:'parked-0',x:0,z:-180,heading:0},{id:'parked-1',x:0,z:-153,heading:0}]);
+ const r=await p.locator('#joystick').boundingBox();await p.mouse.move(r.x+r.width/2-.58*35,r.y+r.height/2+.815*35);await p.mouse.down();await p.keyboard.down('Shift');
+ await p.evaluate(()=>advanceTime(250));const launch=await state(p);
+ await p.evaluate(()=>advanceTime(650));const accelerating=await state(p);
+ ok(launch.vehicle.speed>0&&accelerating.vehicle.speed>launch.vehicle.speed,'throttle builds speed across multiple frames');
+ await p.mouse.up();await p.keyboard.up('Shift');
+ await p.evaluate(()=>advanceTime(150));const released=await state(p);
+ ok(released.vehicle.speed>0&&released.vehicle.speed<accelerating.vehicle.speed,'release coasts toward the obstacle');
+ await p.evaluate(()=>advanceTime(3000));let s=await state(p),a=s.vehicles.find(v=>v.id==='parked-0'),c=s.vehicles.find(v=>v.id==='parked-1');
+ ok(!overlap(a,c)&&s.vehicle.speed===0,'coasting car stops outside parked car');
+ ok(s.player.z>released.player.z&&s.player.z<=-159,'coasting closes the gap without crossing the bumper');
+ ok(s.life.impacts>0,'coasting stopped by contact');
+ await p.mouse.down();await p.keyboard.down('Shift');
+ await p.evaluate(()=>advanceTime(2000));s=await state(p);a=s.vehicles.find(v=>v.id==='parked-0');
+ const z=s.player.z,stoppedRoll=s.vehicle.wheelRoll;
+ ok(Math.abs(stoppedRoll)>.01,'wheels roll during approach');
+ await p.evaluate(()=>advanceTime(3000));s=await state(p);ok(Math.abs(s.player.z-z)<.01&&s.vehicle.speed===0,'continued throttle cannot push through');
+ ok(s.vehicle.wheelRoll===stoppedRoll,'blocked tires stop rolling');
+ ok(s.vehicle.boost===0&&!s.vehicle.boosting,'holding boost after depletion does not restart it');
+ await p.mouse.up();await p.keyboard.up('Shift');await p.mouse.move(r.x+r.width/2+.58*35,r.y+r.height/2-.815*35);await p.mouse.down();await p.evaluate(()=>advanceTime(750));await p.mouse.up();const backing=await state(p);
+ ok(Math.hypot(backing.player.x-a.x,backing.player.z-a.z)>2,'driver can back away');
+ ok(Math.abs(headingDelta(a.heading,backing.vehicle.vehicle.heading))<.01,'backing away retains the car heading');
+ const signedDistance=(backing.player.x-a.x)*Math.sin(headingDelta(a.heading,backing.vehicle.vehicle.heading)/2+a.heading)+(backing.player.z-a.z)*Math.cos(headingDelta(a.heading,backing.vehicle.vehicle.heading)/2+a.heading);
+ ok(signedDistance<0&&backing.vehicle.wheelRoll!==stoppedRoll,'reverse travel rolls the tires');
+ await p.screenshot({path:'output/run-collisions/steering.png'});
+ await p.evaluate(()=>advanceTime(150));const coasting=await state(p);
+ ok(coasting.vehicle.speed>0&&coasting.vehicle.speed<backing.vehicle.speed,'gas release preserves movement and reduces speed');
+ ok(coasting.vehicle.wheelRoll!==backing.vehicle.wheelRoll,'wheels roll during coast');
+ const brakeButton=await p.locator('#brake').boundingBox();
+ await p.mouse.move(brakeButton.x+brakeButton.width/2,brakeButton.y+brakeButton.height/2);await p.mouse.down();
+ await p.evaluate(()=>advanceTime(100));const braking=await state(p);
+ ok(braking.vehicle.speed>0&&braking.vehicle.speed<coasting.vehicle.speed,'brake slows the car progressively without throttle');
+ ok((coasting.vehicle.speed-braking.vehicle.speed)/100>(backing.vehicle.speed-coasting.vehicle.speed)/150,'braking slows faster than coasting');
+ await p.evaluate(()=>advanceTime(1000));await p.mouse.up();const idle=await state(p);
+ await p.evaluate(()=>advanceTime(500));
+ ok(idle.vehicle.speed===0&&idle.vehicle.frontSteer===0&&(await state(p)).vehicle.wheelRoll===idle.vehicle.wheelRoll,'wheels recenter and stop rolling at rest');
+ await p.screenshot({path:'output/run-collisions/parked-contact.png'});await p.close();
+ p=await setup(false,[{id:'parked-1',x:-96,z:-110,heading:Math.PI/2}],-100,-120);
+ const baseline=overlaps(await state(p));
+ for(let i=0;i<20;i++){await p.evaluate(()=>advanceTime(1000));s=await state(p);for(const pair of overlaps(s))ok(baseline.has(pair),'no new fleet overlap: '+pair);}
+ a=s.vehicles.find(v=>v.id==='traffic-0');c=s.vehicles.find(v=>v.id==='parked-1');ok(!overlap(a,c)&&a.x< -102,'ambient traffic stops at parked vehicle');
+ await p.screenshot({path:'output/run-collisions/traffic-contact.png'});await p.close();assert.deepEqual(errors,[]);
+ console.log('PASS '+checks+' checks: articulated running, acceleration, coasting and braking, bumper contact, reverse travel and no new fleet overlaps across 20 simulated seconds');
+}finally{await b.close();}

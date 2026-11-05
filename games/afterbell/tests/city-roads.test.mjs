@@ -22,3 +22,11 @@ test('a trip from a doorstep to another doorstep uses the street between them',(
  assert.deepEqual(route[0],{x:0,z:14});assert.deepEqual(route.at(-1),goal);
  for(let i=1;i<route.length-1;i++)assert.ok(clearSegment(route[i-1],route[i],(x,z)=>!onRoad(x,z)));
 });
+
+test('a parked-car clearance circle gets a road detour rather than a route through the car',()=>{
+ const start={x:0,z:10},goal={x:0,z:48},blocked=(x,z)=>x*x+(z-28)**2<49;
+ const route=drivingRoute(start,goal,blocked);assert.ok(route?.length);
+ let previous=start;
+ for(const p of route){assert.ok(clearSegment(previous,p,blocked));previous=p;}
+ assert.deepEqual(route.at(-1),goal);
+});
