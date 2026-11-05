@@ -213,3 +213,8 @@ Verification includes all four incident types in mobile Chromium and WebKit, all
 ## Car-relative keyboard controls — November 5
 - Keyboard up/W and down/S now drive along the car's heading, while left/A and right/D steer. The touch joystick still follows screen directions. Both inputs retain coasting and braking.
 - The regression failed on the previous build when Arrow Left applied throttle. The rebuilt game passed at opposite starting headings and after a turn, along with three mobile layouts, 24 movement and collision checks, and all eight car performance checks. Game and main-server tests passed with one optional PostgreSQL skip.
+
+## Screen-relative driving controls — 2026-11-05
+- Keyboard and joystick now share the same screen-relative movement mapping, including after the car turns. Existing braking, boost, camera-relative axes and collision checks remain in use.
+- Claude read-only architecture review identified the earlier split between car-relative keyboard steering and screen-relative touch; the incident camera can change the screen axes. Follow-up: owner playtest should evaluate the existing instant direction changes on touch and keyboard.
+- Game unit tests: 108 passed, 1 skipped. Production bundle built; older assets retained for cached pages. Browser direction and touch checks did not finish in this environment and were interrupted; the game client rendered the start screen only. Re-run the control suite and inspect gameplay before release.

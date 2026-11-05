@@ -9,7 +9,7 @@ import {vansTouch,safeSpeed,sweptVehicleContact,headingDelta,manualDrive} from '
 import {drivingRoute} from './city-roads.js';
 import {findRoute,clearSegment} from './navigation.js';
 import {CAR_SPEED,CAR_TASKS,carAvailable,districtOpen} from './city-discovery.js';
-import {MAX_STEER,buildCar,trafficBrand,CAR_BRANDS,configureCarReflections,stepCarWheels,poseCarWheels} from './city-cars.js';
+import {buildCar,trafficBrand,CAR_BRANDS,configureCarReflections,stepCarWheels,poseCarWheels} from './city-cars.js';
 
 export function cityWorld(host,onMove,onImpact){
  const scene=new T.Scene();scene.background=new T.Color('#a8dce2');scene.fog=new T.Fog('#b8e1df',225,430);
@@ -211,7 +211,7 @@ export function cityWorld(host,onMove,onImpact){
  // All street actors use box parts. Batch their transforms into one draw call on phones.
  const fleet=[...parked,...traffic];
  let occupied=null,desiredCar=null,boost=false,boostEnergy=1,velocity=0,driveSpeed=0,boostActive=false;
- let driveAngle=0,keyboardDriving=false;
+ let driveAngle=0;
  const initialFleet=fleet.map(g=>({id:g.userData.id,x:g.position.x,z:g.position.z,heading:g.rotation.y}));
  function nearbyCar(){const wanted=fleet.find(g=>g.userData.id===desiredCar&&Math.hypot(g.position.x-px,g.position.z-pz)<=6);if(wanted)return wanted;return fleet.filter(g=>g!==occupied).map(g=>({g,d:Math.hypot(g.position.x-px,g.position.z-pz)})).filter(v=>v.d<=6).sort((a,b)=>a.d-b.d)[0]?.g||null;}
  function vehicleInfo(g){return g?{id:g.userData.id,brand:g.userData.brand,name:CAR_BRANDS[g.userData.brand].name,x:g.position.x,z:g.position.z,heading:g.rotation.y,available:carAvailable(career,g.userData.brand),parked:parked.includes(g)||g.userData.parked===true}:null;}
@@ -419,21 +419,12 @@ export function cityWorld(host,onMove,onImpact){
      if(path.length){dx=path[0].x-px;dz=path[0].z-pz;}
      const len=Math.hypot(dx,dz),guided=path.length>0;
      const manualCar=driving&&!guided;
-     if(manualCar&&keyboardDirection&&!keyboardDriving){
-       keyboardDriving=true;
-       if(Math.cos(driveAngle-heading)<0)driveSpeed=-driveSpeed;
-     }else if(manualCar&&useStick){
-       keyboardDriving=false;
-       driveSpeed=Math.abs(driveSpeed);
-     }
-     const keyboardCar=manualCar&&keyboardDriving;
-     const throttle=keyboardCar?keyY!==0:len>.0001;
-     if(keyboardCar)wheelSteering=-keyX*MAX_STEER;
+     const throttle=len>.0001;
      manualBrake=manualCar&&keys.has('Space');
      const boostRequested=manualCar&&throttle&&!manualBrake&&(boost||keys.has('ShiftLeft')||keys.has('ShiftRight'));
      boostActive=boostRequested&&boostEnergy>0;
      if(throttle||(manualCar&&driveSpeed!==0)){
-       const angle=keyboardCar?heading:throttle?Math.atan2(dx,dz):driveAngle;
+       const angle=throttle?Math.atan2(dx,dz):driveAngle;
        let vehicleAngle=driving&&Math.cos(angle-heading)<-.35?heading:angle;
        let speed=driving?(CAR_SPEED[car.userData.brand]||31):16;
        momentum=reduced?1:Math.min(1,momentum+dt/.4);
@@ -458,10 +449,9 @@ export function cityWorld(host,onMove,onImpact){
        }else yieldTime=0;
        let nx=px,nz=pz;
        if(manualCar){
-         const travel=manualDrive({heading:angle,throttle:keyboardCar?keyY:Math.min(1,len),steering:wheelSteering??0,speed:driveSpeed,limit:speed*(boostActive?1.65:1),brake:manualBrake,boost:boostActive,dt});
+         const travel=manualDrive({heading:angle,throttle:Math.min(1,len),steering:wheelSteering??0,speed:driveSpeed,limit:speed*(boostActive?1.65:1),brake:manualBrake,boost:boostActive,dt});
          nx+=travel.dx;nz+=travel.dz;driveSpeed=travel.speed;
-         if(keyboardCar)vehicleAngle=travel.heading;
-         else driveAngle=angle;
+         driveAngle=angle;
        }else{
          const step=Math.min(guided?len:Infinity,speed*dt);
          nx+=dx/len*step;nz+=dz/len*step;

@@ -2,7 +2,6 @@ import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { makeRound } from '../src/core.js';
-import { headingDelta } from '../src/city-traffic.js';
 
 const quiz = JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
 const base = process.env.CITY_QA_URL || 'http://127.0.0.1:4359/games/afterbell/play/index.html';
@@ -37,48 +36,19 @@ try {
   await hold('Space',500);
   assert.equal((await read()).vehicle.speed,0,'Space brakes to a stop');
  };
- for(const [initial,forward,reverse,left,right] of [
-  [0,'ArrowUp','ArrowDown','ArrowLeft','ArrowRight'],
-  [Math.PI,'KeyW','KeyS','KeyA','KeyD'],
- ]){
-  await desktop.goto(base+'?quiz=facts&qa-heading='+initial);
-  await desktop.locator('#resume').click();
-  await tick(0);
-  for(const [key,sign] of [[left,1],[right,-1]]){
+ for(const initial of [0,Math.PI/2,Math.PI,-Math.PI/2]){
+  for(const [key,axis] of [['ArrowRight',[.815,-.58]],['KeyA',[-.815,.58]],['KeyW',[-.58,-.815]],['ArrowDown',[.58,.815]]]){
+   await desktop.goto(base+'?quiz=facts&qa-heading='+initial);
+   await desktop.locator('#resume').click();
+   await tick(0);
    const before=await read();
-   await hold(key,200);
-   const after=await read();
-   assert.equal(after.vehicle.speed,0,key+' steers without applying gas');
-   assert.ok(after.vehicle.frontSteer*sign>.3,key+' turns the front wheels');
-   assert.equal(after.player.x,before.player.x);
-   assert.equal(after.player.z,before.player.z);
-  }
-  for(const [key,sign] of [[forward,1],[reverse,-1]]){
-   const before=await read(),angle=heading(before);
    await hold(key,450);
    const after=await read();
    const dx=after.player.x-before.player.x,dz=after.player.z-before.player.z;
-   assert.ok((dx*Math.sin(angle)+dz*Math.cos(angle))*sign>1,key+' follows the car heading');
-   assert.ok(Math.abs(dx*Math.cos(angle)-dz*Math.sin(angle))<.03,key+' has no sideways travel');
-   assert.ok(Math.abs(headingDelta(angle,heading(after)))<.01,key+' does not spin the car');
-   await tick(100);
-   const coast=await read();
-   assert.ok(coast.vehicle.speed>0&&coast.vehicle.speed<after.vehicle.speed,key+' release coasts');
-   assert.ok((coast.player.x-after.player.x)*dx+(coast.player.z-after.player.z)*dz>0,key+' coasts in the same direction');
+   assert.ok(dx*axis[0]+dz*axis[1]>1,key+' moves in its screen direction at heading '+initial);
+   assert.ok(Math.abs(dx*axis[1]-dz*axis[0])<.1,key+' stays on its screen axis');
    await brakeDesktop();
   }
-  const beforeTurn=await read();
-  await desktop.keyboard.down(forward);
-  await hold(right,450);
-  const afterTurn=await read();
-  assert.ok(headingDelta(heading(beforeTurn),heading(afterTurn))<-.15,'right steers relative to the car at either starting heading');
-  await tick(300);
-  await desktop.keyboard.up(forward);
-  const straight=await read();
-  const dx=straight.player.x-afterTurn.player.x,dz=straight.player.z-afterTurn.player.z;
-  assert.ok(dx*Math.sin(heading(afterTurn))+dz*Math.cos(heading(afterTurn))>1,'up follows the new heading after a turn');
-  assert.ok(Math.abs(dx*Math.cos(heading(afterTurn))-dz*Math.sin(heading(afterTurn)))<.03);
-  await brakeDesktop();
  }
  await desktop.keyboard.press('KeyM');
  assert.equal((await read()).mode,'map');
@@ -92,7 +62,7 @@ try {
  assert.equal((await read()).driving,true);
  await desktop.screenshot({path:output+'/desktop.png'});
  assert.deepEqual(desktopErrors,[]);
- console.log('PASS desktop car-relative arrows and WASD, steering and forward after turning, coasting, brake and shortcuts');
+ console.log('PASS desktop screen-relative arrows and WASD at four headings, brake and shortcuts');
  await desktop.close();
  for(const viewport of [{width:320,height:568},{width:568,height:320},{width:844,height:390}]){
   const page = await browser.newPage({viewport,isMobile:true,hasTouch:true});
