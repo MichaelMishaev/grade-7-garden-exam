@@ -50,12 +50,14 @@ export const autoCorrect = (question, answer, clientCorrect) => {
 
 // Stores (or re-counts) a submission before the email is sent. Returns the submission id. `examCode` and `attempt` are
 // what the email showed (null for payloads without `exam`); the attempt is part of the dedupe key, so a retake is a new row.
-export async function storeSubmission(sql, { key, name, answers, startedAt, finishedAt, examId: namedExam, examCode, attempt }) {
+export async function storeSubmission(sql, { key, name, answers, startedAt, finishedAt, examId: namedExam, examCode, attempt, queueFinalMail = false }) {
   const { examId, matched } = matchExam(await loadExamQuestions(sql), answers, namedExam);
+  if (queueFinalMail && (!examId || examId !== namedExam)) throw new Error('Submission question keys unavailable');
   return sql.begin(async (tx) => {
     const [row] = await tx`
-      INSERT INTO submissions (exam_id, dedupe_key, student_name, started_at, finished_at, exam_code, attempt)
-      VALUES (${examId}, ${key}, ${name}, ${startedAt ?? null}, ${finishedAt ?? null}, ${examCode ?? null}, ${attempt ?? null})
+      INSERT INTO submissions (exam_id, dedupe_key, student_name, started_at, finished_at, exam_code, attempt
+        ${queueFinalMail ? tx`, final_mail_due_at` : tx``})
+      VALUES (${examId}, ${key}, ${name}, ${startedAt ?? null}, ${finishedAt ?? null}, ${examCode ?? null}, ${attempt ?? null}${queueFinalMail ? tx`, now()` : tx``})
       ON CONFLICT (dedupe_key) DO UPDATE SET attempt_count = submissions.attempt_count + 1, last_attempt_at = now()
       RETURNING id, (xmax = 0) AS created`;
     if (row.created) {
@@ -89,7 +91,7 @@ export async function updateAiScores(sql, { id, key, status, scores, total }) {
 // For the retry of the AI grading: the stored row for a dedupe key with the answers as saved (not as the browser
 // claims now). Question ids are the matched ones (null when an answer could not be matched to a question).
 export async function getSubmissionForGrading(sql, key) {
-  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores FROM submissions WHERE dedupe_key = ${key}`;
+  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores FROM submissions WHERE dedupe_key = ${key} AND (final_mail_due_at IS NULL OR email_status = 'accepted')`;
   if (!row) return null;
   const answers = await sql`SELECT position, question_id, question_text, answer_text FROM submission_answers WHERE submission_id = ${row.id} ORDER BY position`;
   return {
@@ -116,4 +118,45 @@ export async function getSubmissionDetail(sql, id) {
   const answers = await sql`
     SELECT position, question_id, question_text, answer_text, auto_correct FROM submission_answers WHERE submission_id = ${id} ORDER BY position`;
   return { ...row, answers };
+}
+
+// Claim one new job atomically across requests, worker processes and replicas. The lease is
+// longer than the maximum grading and send time. After a restart expired leases become eligible.
+export async function claimFinalMail(sql, id = null) {
+  const [row] = await sql`
+    WITH next AS (
+      SELECT id FROM submissions
+      WHERE final_mail_due_at <= now() AND email_status <> 'accepted'
+        ${id === null ? sql`` : sql`AND id = ${id}`}
+      ORDER BY final_mail_due_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+    )
+    UPDATE submissions AS s
+    SET final_mail_due_at = now() + interval '2 minutes', final_mail_attempts = final_mail_attempts + 1
+    FROM next WHERE s.id = next.id
+    RETURNING s.*`;
+  if (!row) return null;
+  const answers = await sql`SELECT question_text, answer_text, auto_correct FROM submission_answers
+    WHERE submission_id = ${row.id} ORDER BY position`;
+  return { ...row, answers: answers.map(a => ({ question: a.question_text, answer: a.answer_text, correct: a.auto_correct ?? undefined })) };
+}
+
+export async function deferFinalMail(sql, { id, attempt, seconds }) {
+  await sql`UPDATE submissions
+    SET final_mail_due_at = CASE WHEN ${seconds}::integer IS NULL THEN NULL ELSE now() + make_interval(secs => ${seconds}) END,
+        email_status = CASE WHEN ${seconds}::integer IS NULL THEN 'failed' ELSE email_status END
+    WHERE id = ${id} AND final_mail_attempts = ${attempt} AND email_status <> 'accepted'`;
+}
+
+// The email provider keeps idempotency keys for 24 hours. Retain the first send time
+// across retries so an ambiguous send can never be replayed outside that window.
+export async function startFinalMailSend(sql, id) {
+  const [row] = await sql`UPDATE submissions
+    SET final_mail_send_started_at = COALESCE(final_mail_send_started_at, now())
+    WHERE id = ${id} RETURNING final_mail_send_started_at`;
+  return row?.final_mail_send_started_at;
+}
+
+export async function finalMailStatus(sql, id) {
+  const [row] = await sql`SELECT email_status, ai_status, ai_scores, final_mail_due_at FROM submissions WHERE id = ${id}`;
+  return row;
 }

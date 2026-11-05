@@ -12,6 +12,7 @@ import { openRubricFor as lookupRubric } from './open-rubrics.mjs';
 import { createResendSender, isAlreadyAccepted } from './resend-send.mjs';
 import { createDb } from './db/runtime.mjs';
 import { createHistoryHandler } from './history-api.mjs';
+import { createFinalExamMailer } from './final-exam-mail.mjs';
 import './quiz-core.js';
 import './practice-history.js';
 
@@ -122,7 +123,7 @@ const aiConfigured = env => typeof env.OPENAI_API_KEY === 'string' && env.OPENAI
 
 const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max }]) => [id, { score, max }]));
 
-export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 20000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers } = {}) {
+export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 20000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers, finalExamMail = false, mailPollMs = 5000 } = {}) {
   const openRubricFor = safeRubric(rubricLookup);
   // Resend is paced and retried (resend-send.mjs); `sleep` and `now` can be replaced by tests.
   const resendSend = createResendSender({ fetchImpl: sendFetch, rps: intFrom(env.RESEND_RPS, 2), now, ...(sleep ? { sleep } : {}) });
@@ -141,6 +142,15 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
   const healthy = db ? cachedFor(15000, async () => (await db.health() ? 'up' : 'down')) : null;
   const contentVersion = db?.flags.read ? cachedFor(15000, () => db.contentVersion()) : null;
   const teacherHistory = createHistoryHandler({ env, db });
+  const finalMailer = finalExamMail && db?.flags.write && db.claimFinalMail
+    ? createFinalExamMailer({
+      db, env, exams, judge, send: resendSend, teacherAddress, now,
+      grade: (examId, items) => aiConfigured(env) && aiCalls.available() && items.every(item => openRubricFor(examId, item.questionId))
+        ? gradeOpenAnswers({ examId, items, env, fetchImpl: countedAiFetch, timeoutMs: aiTimeoutMs })
+        : { status: 'failed' }
+    })
+    : null;
+
   // Nothing a client sends may take the process down: the whole handler runs inside one catch (only the error name is logged).
   let gameService;
   const app = http.createServer((request, response) => {
@@ -153,7 +163,21 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     });
   });
 
-  app.on('close', () => { gameService?.then(game => game.emit('close')).catch(() => {}); });
+  let mailTimer;
+  let processingMail = false;
+  if (finalMailer) app.on('listening', () => {
+    mailTimer = setInterval(async () => {
+      if (processingMail) return;
+      processingMail = true;
+      try { await finalMailer.process(); }
+      catch (error) { console.error('Final submission email queue unavailable', error?.code ?? error?.name); }
+      finally { processingMail = false; }
+    }, mailPollMs).unref();
+  });
+  app.on('close', () => {
+    clearInterval(mailTimer);
+    gameService?.then(game => game.emit('close')).catch(() => {});
+  });
   return app;
 
   async function handle(request, response) {
@@ -225,7 +249,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const points = value => Number.isInteger(value) && value >= 0 && value <= 100;
     const claimedScore = points(payload.score?.earned) && points(payload.score?.pending) && payload.score.earned + payload.score.pending <= 100
       ? { earned: payload.score.earned, pending: payload.score.pending } : undefined;
-    if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) return json(503, { error: 'Email service unavailable' });
+    if (!finalExamMail && (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL)) return json(503, { error: 'Email service unavailable' });
     // Only a valid request uses up a slot; one the email provider could not take gives it back below.
     const slot = takeSlot(submitLimit, request, response, json);
     if (!slot) return;
@@ -235,6 +259,45 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     // The attempt number is part of the key, so a retaken exam with identical answers is still emailed (docs/TESTING.md §6);
     // sending the same attempt twice stays deduplicated. Legacy payloads (no `exam`) keep the original key byte for byte.
     const key = createHash('sha256').update(JSON.stringify(examId === undefined ? { name, answers: answers.map(({ question, answer, correct }) => ({ question, answer, correct })) } : { exam: examId, name, answers, ...(attempt === undefined ? {} : { attempt }) })).digest('hex');
+    if (finalExamMail) {
+      if (!finalMailer) {
+        slot.release();
+        return json(503, { error: 'Submission storage unavailable' });
+      }
+      let identifiedExam = examId;
+      try {
+        // Old tabs omitted the exam id. Resolve it from the complete question set.
+        if (identifiedExam === undefined) {
+          identifiedExam = ['hebrew-v1-garden', 'hebrew-v2-library'].find(id =>
+            judge(id, answers).answers.every(answer => answer.matched));
+        }
+        const verified = identifiedExam && judge(identifiedExam, answers);
+        if (!verified?.score || verified.answers.some(answer => !answer.matched)) {
+          slot.release();
+          return json(400, { error: 'Submission questions do not match an exam' });
+        }
+        const id = await db.storeSubmission({
+          key, name, answers, ...times, examId: identifiedExam, examCode: exam.code, attempt, queueFinalMail: true
+        });
+        try {
+          await finalMailer.process(id);
+          const status = await db.finalMailStatus(id);
+          if (status?.email_status === 'accepted') {
+            return json(200, { success: true, grading: {
+              status: status.final_mail_due_at ? 'ok' : status.ai_status ?? 'none',
+              scores: exposedScores(status.ai_scores ?? {})
+            } });
+          }
+        } catch (error) {
+          console.error('Final submission email deferred', error?.code ?? error?.name);
+        }
+        return json(202, { success: true, grading: { status: 'pending', scores: {} } });
+      } catch (error) {
+        slot.release();
+        console.error('Final submission could not be confirmed', error?.code ?? error?.name);
+        return json(503, { error: 'Submission storage unavailable' });
+      }
+    }
     // Best effort: a slow or failing database must never block or fail the email.
     // A write that outlives the 2s wait still completes, and the email status is recorded once it does.
     const storing = db?.flags.write ? Promise.resolve().then(() => db.storeSubmission({ key, name, answers, ...times, ...(examId === undefined ? {} : { examId, examCode: exam.code, attempt }) })) : null;
@@ -506,5 +569,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   // Last line of defence of the real server only (not of createApp, so tests see every failure): log the name, keep serving.
   process.on('unhandledRejection', reason => console.error('unhandled rejection', reason?.code ?? reason?.name));
   process.on('uncaughtException', error => console.error('uncaught exception', error?.code ?? error?.name));
-  createApp().listen(Number(process.env.PORT || 3000), '0.0.0.0');
+  createApp({ finalExamMail: process.env.NODE_ENV === 'production' }).listen(Number(process.env.PORT || 3000), '0.0.0.0');
 }

@@ -89,3 +89,36 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
     await browser.close(); await new Promise(resolve => server.close(resolve));
   }
 });
+
+test('English mobile: queued grading is acknowledged as saved and reload does not submit again', { skip: !chromium }, async () => {
+  const server = createApp({ env: {}, db: null });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const order = questions.map(q => q.id);
+    const answers = Object.fromEntries(questions.map(q => [q.id, q.type === 'open' ? 'Synthetic answer' : q.correct]));
+    await page.addInitScript(({ order, answers }) => {
+      if (sessionStorage.getItem('english-exam-draft-v1')) return;
+      sessionStorage.setItem('english-exam-draft-v1', JSON.stringify({
+        name: 'Synthetic QA', order, answers, locked: order, finished: true, sent: false
+      }));
+    }, { order, answers });
+    let posts = 0;
+    await page.route('**/api/submit-exam', async route => {
+      posts++;
+      await route.fulfill({ status: 202, json: { success: true, grading: { status: 'pending', scores: {} } } });
+    });
+    await page.goto(base + '/english-exam.html?source=inline');
+    await page.getByText('סיימתם! התשובות נשמרו.').waitFor();
+    assert.match(await page.locator('#send-status').textContent(), /לאחר השלמת הבדיקה/);
+    assert.equal(await page.locator('#regrade').isVisible(), false);
+    await page.reload();
+    await page.getByText('סיימתם! התשובות נשמרו.').waitFor();
+    assert.equal(posts, 1);
+  } finally {
+    await browser.close();
+    await new Promise(resolve => server.close(resolve));
+  }
+});

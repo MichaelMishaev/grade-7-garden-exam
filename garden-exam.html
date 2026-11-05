@@ -295,8 +295,12 @@
     }
     function results() {
       byId('done-banner').hidden = !sent; byId('retry').hidden = !sent;
-      if (sent) byId('send-status').textContent = '';
-      byId('regrade').hidden = !(sent && grading.status !== 'ok');
+      if (sent) {
+        const queued = grading.status === 'pending';
+        byId('done-banner').querySelector('strong').textContent = queued ? 'סיימתם! התשובות נשמרו.' : 'סיימתם! התשובות נשלחו למורה.';
+        byId('send-status').textContent = queued ? 'התשובות נבדקות. המורה תקבל את הציון הסופי בדוא״ל לאחר השלמת הבדיקה.' : '';
+      }
+      byId('regrade').hidden = !(sent && ['none', 'failed'].includes(grading.status));
       const complete = grading.status === 'ok' && Object.keys(grading.scores || {}).length === total;
       let text = complete ? `ציון: ${Math.min(100, Math.max(0, Math.round(Object.values(grading.scores).reduce((sum, item) => sum + item.score, 0))))} מתוך 100.` : 'התשובות הפתוחות עדיין לא נבדקו. הציון יוצג לאחר השלמת בדיקת הבינה המלאכותית.';
       if (startedAt && finishedAt) {

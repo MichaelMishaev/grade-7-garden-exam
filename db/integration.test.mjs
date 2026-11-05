@@ -16,11 +16,11 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
   const sql = await connect(url);
   try {
     await sql`DROP SCHEMA public CASCADE`; await sql`CREATE SCHEMA public`; // test database only
-    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql']);
+    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql', '007_final_submission_email.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
     assert.equal(first.questions.inserted, 132);
-    assert.equal(first.study_references.inserted, 9);
+    assert.equal(first.study_references.inserted, extractContent().study_references.length);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
     assert.deepEqual(await verify(sql), []);
@@ -110,7 +110,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
       [['physics-v1-assessment', ['physics-pdf', 'physics-site']]]);
     const english = await content.getExam(sql, 'english-v1-practice');
     assert.equal(english.questions.length, 20);
-    assert.equal(english.references.length, 5);
+    assert.equal(english.references.length, source.study_references.filter(ref => ref.exam_id === 'english-v1-practice').length);
     assert.match(english.passage_html, /A guide I admire/);
     const englishAnswers = source.questions.filter(q => q.exam_id === 'english-v1-practice').map(q => ({ question: q.prompt, answer: q.choices ? q.choices[q.correct] : 'QA written response' }));
     const englishSubmission = await storeSubmission(sql, { key: 'e'.repeat(64), name: 'QA English', answers: englishAnswers, examId: 'english-v1-practice' });

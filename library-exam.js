@@ -198,7 +198,11 @@
     $('score').textContent = checked ? `ציון: ${Math.round((score.earned + aiPoints) * 10) / 10} מתוך 100.`
       : `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות מהשאלות הפתוחות עדיין לא נבדקו.`;
     $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
-    if (sent) $('send-status').textContent = '';
+    if (sent) {
+      const queued = grading.status === 'pending';
+      $('done-banner').querySelector('strong').textContent = queued ? 'סיימתם! התשובות נשמרו.' : 'סיימתם! התשובות נשלחו למורה.';
+      $('send-status').textContent = queued ? 'התשובות נבדקות. המורה תקבל את הציון הסופי בדוא״ל לאחר השלמת הבדיקה.' : '';
+    }
     if (startedAt && finishedAt) {
       const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
       $('score').textContent += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;

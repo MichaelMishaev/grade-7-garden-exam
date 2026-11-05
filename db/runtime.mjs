@@ -29,6 +29,10 @@ export function createDb(env = process.env, { connector = connect, now = Date.no
       } catch { return false; }
     },
     storeSubmission: run(submissions.storeSubmission),
+    claimFinalMail: run(submissions.claimFinalMail),
+    deferFinalMail: run(submissions.deferFinalMail),
+    startFinalMailSend: run(submissions.startFinalMailSend),
+    finalMailStatus: run(submissions.finalMailStatus),
     markEmail: run(submissions.markEmail),
     updateAiScores: run(submissions.updateAiScores),
     getSubmissionForGrading: run(submissions.getSubmissionForGrading),
