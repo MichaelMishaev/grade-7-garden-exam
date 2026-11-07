@@ -80,9 +80,9 @@ export async function markEmail(sql, id, { status, resendId = null, httpStatus =
 // AI grading result of a submission (docs/TESTING.md §9), found by id or by dedupe key. `scores` keeps the reasons
 // ({ [questionId]: { score, max, reason } }); the browser never sees them. A grading that is already 'ok' is never
 // overwritten, so a duplicate send or a late retry cannot change it. Returns true when a row was updated.
-export async function updateAiScores(sql, { id, key, status, scores, total }) {
+export async function updateAiScores(sql, { id, key, status, scores, total, conclusion }) {
   const rows = await sql`
-    UPDATE submissions SET ai_status = ${status}, ai_scores = ${scores ? sql.json(scores) : null}, ai_total = ${total ?? null}, ai_updated_at = now()
+    UPDATE submissions SET ai_status = ${status}, ai_scores = ${scores ? sql.json(scores) : null}, ai_total = ${total ?? null}, ai_conclusion = ${conclusion ?? null}, ai_updated_at = now()
     WHERE (id = ${id ?? null} OR dedupe_key = ${key ?? null}) AND ai_status IS DISTINCT FROM 'ok'
     RETURNING id`;
   return rows.length > 0;
@@ -91,11 +91,11 @@ export async function updateAiScores(sql, { id, key, status, scores, total }) {
 // For the retry of the AI grading: the stored row for a dedupe key with the answers as saved (not as the browser
 // claims now). Question ids are the matched ones (null when an answer could not be matched to a question).
 export async function getSubmissionForGrading(sql, key) {
-  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores FROM submissions WHERE dedupe_key = ${key} AND (final_mail_due_at IS NULL OR email_status = 'accepted')`;
+  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores, ai_conclusion FROM submissions WHERE dedupe_key = ${key} AND (final_mail_due_at IS NULL OR email_status = 'accepted')`;
   if (!row) return null;
   const answers = await sql`SELECT position, question_id, question_text, answer_text FROM submission_answers WHERE submission_id = ${row.id} ORDER BY position`;
   return {
-    id: row.id, examId: row.exam_id, aiStatus: row.ai_status, aiScores: row.ai_scores,
+    id: row.id, examId: row.exam_id, aiStatus: row.ai_status, aiScores: row.ai_scores, conclusion: row.ai_conclusion,
     answers: answers.map((a) => ({ questionId: a.question_id, question: a.question_text, answer: a.answer_text }))
   };
 }
@@ -158,7 +158,7 @@ export async function startFinalMailSend(sql, id) {
 
 // Read a single result by its private receipt hash. Pending grades need no answer lookup.
 export async function getExamResult(sql, key) {
-  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores, email_status FROM submissions WHERE dedupe_key = ${key}`;
+  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores, ai_conclusion, email_status FROM submissions WHERE dedupe_key = ${key}`;
   if (!row || (row.ai_status !== 'ok' && row.email_status !== 'accepted')) return row;
   const answers = await sql`SELECT question_text, answer_text, auto_correct FROM submission_answers
     WHERE submission_id = ${row.id} ORDER BY position`;

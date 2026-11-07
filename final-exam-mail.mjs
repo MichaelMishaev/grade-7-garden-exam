@@ -38,7 +38,7 @@ export function createFinalExamMailer({ db, env, exams, judge, grade, send, teac
       scores = result.scores;
       const total = Math.round(Object.values(scores).reduce((sum, item) => sum + item.score, 0) * 100) / 100;
       // Save the final marks before calling email. A retry must use the same grade.
-      if (!await db.updateAiScores({ id: job.id, status: 'ok', scores, total })) return;
+      if (!await db.updateAiScores({ id: job.id, status: 'ok', scores, total, conclusion: result.conclusion })) return;
     }
 
     const answers = job.answers.map((item, i) => {

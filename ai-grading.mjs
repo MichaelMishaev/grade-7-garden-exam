@@ -8,6 +8,7 @@ const maxItems = 40;
 const maxAnswerChars = 3000;
 const maxQuestionChars = 1000;
 const maxReasonChars = 300;
+const maxConclusionChars = 400;
 const maxReplyChars = 100000;
 
 // Control characters (except newline and tab) have no place in a prompt or in a teacher's email; text is also length-capped.
@@ -24,7 +25,11 @@ Rules:
   an answer that is empty, off topic or only repeats the question gets 0.
 - "score" is a number from 0 to maxScore of that question (steps of 0.5).
 - "reason" is ONE short line in Hebrew for the teacher (at most 300 characters). Do not repeat the student's text at length.
-- Reply with JSON only, exactly {"results":[{"questionId":"...","score":0,"reason":"..."}]} with every questionId exactly once.`;
+- "conclusion" is up to two short sentences in Hebrew addressed to the student (at most 400 characters). Summarize how
+  they did on the written answers and give one concrete next step. Ground it in the marks and feedback you just gave.
+  Do not invent a strength, estimate the overall exam grade, quote the student, or reveal model answers or private rubrics.
+- Reply with JSON only, exactly {"results":[{"questionId":"...","score":0,"reason":"..."}],"conclusion":"..."}
+  with every questionId exactly once.`;
 
 const schema = {
   name: 'open_answer_grades',
@@ -32,6 +37,7 @@ const schema = {
   schema: {
     type: 'object',
     properties: {
+      conclusion: { type: 'string' },
       results: {
         type: 'array',
         items: {
@@ -42,7 +48,7 @@ const schema = {
         }
       }
     },
-    required: ['results'],
+    required: ['results', 'conclusion'],
     additionalProperties: false
   }
 };
@@ -53,7 +59,10 @@ const roundScore = (score, max) => (score >= max - 0.25 ? max : Math.round(score
 function validate(content, requested) {
   let parsed;
   try { parsed = JSON.parse(content); } catch { return null; }
-  const results = parsed?.results;
+  if (typeof parsed?.conclusion !== 'string' || parsed.conclusion.length > maxConclusionChars) return null;
+  const conclusion = clean(parsed.conclusion, maxConclusionChars).replace(/\s+/g, ' ');
+  if (!/[א-ת]/.test(conclusion)) return null;
+  const results = parsed.results;
   if (!Array.isArray(results) || results.length !== requested.count) return null;
   const scores = {};
   for (const item of results) {
@@ -63,7 +72,7 @@ function validate(content, requested) {
     if (typeof item.reason !== 'string' || item.reason.length > maxReasonChars) return null;
     scores[item.questionId] = { score: roundScore(item.score, max), max, reason: clean(item.reason, maxReasonChars) };
   }
-  return scores;
+  return { scores, conclusion };
 }
 
 export async function gradeOpenAnswers({ examId, items, env = process.env, fetchImpl = fetch, timeoutMs = 20000 }) {
@@ -123,12 +132,12 @@ export async function gradeOpenAnswers({ examId, items, env = process.env, fetch
     }
     let data;
     try { data = JSON.parse(text); } catch { data = null; }
-    const scores = validate(data?.choices?.[0]?.message?.content, requested);
-    if (!scores) {
+    const grade = validate(data?.choices?.[0]?.message?.content, requested);
+    if (!grade) {
       console.error('AI grading reply invalid');
       return { status: 'failed' };
     }
-    return { status: 'ok', scores };
+    return { status: 'ok', ...grade };
   } catch (error) {
     console.error('AI grading unavailable', error?.name);
     return { status: 'failed' };

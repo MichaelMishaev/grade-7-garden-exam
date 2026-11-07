@@ -17,7 +17,7 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
     const body = JSON.parse(init.body);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     aiRequests.push(document);
-    return Response.json({ choices: [{ message: { content: JSON.stringify({ results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
   }, sendFetch: async (url, init) => {
     if (++tries === 1) return Response.json({}, { status: 422 });
     emails.push(JSON.parse(init.body)); return Response.json({ id: 'mock-english' });
@@ -81,6 +81,7 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
     assert.equal(aiRequests.length, 2, 'each submit attempt grades all open questions');
     assert.deepEqual(aiRequests[0].questions.map(q => q.questionId).sort(), ['english-05', 'english-19', 'english-20']);
     assert.match(await page.locator('#score').innerText(), /מתוך 100/);
+    assert.match(await page.locator('#ai-conclusion').innerText(), /הוסיפו דוגמה מהטקסט/);
     await page.reload(); await page.locator('#done-banner:visible').waitFor();
     assert.equal(tries, 2, 'reload never resends');
     assert.equal(await page.locator('#question-stage').isVisible(), false);
@@ -116,7 +117,7 @@ test('English mobile: a queued result appears automatically after reload, with n
       lookups++;
       assert.deepEqual(route.request().postDataJSON(), { resultToken: token });
       if (lookups === 1) return route.abort('internetdisconnected');
-      await route.fulfill({ status: 200, json: { grading: { status: 'ok', finalScore: 0, scores: {}, emailSent: false } } });
+      await route.fulfill({ status: 200, json: { grading: { status: 'ok', finalScore: 0, conclusion: 'כדאי להוסיף דוגמה מתוך הטקסט.', scores: {}, emailSent: false } } });
     });
     await page.clock.install();
     await page.goto(base + '/english-exam.html?source=inline');
@@ -127,6 +128,7 @@ test('English mobile: a queued result appears automatically after reload, with n
     assert.match(await page.locator('#score').textContent(), /לאחר השלמת הבדיקה/);
     assert.equal(await page.locator('#regrade').isVisible(), false);
     assert.doesNotMatch(await page.locator('#score').textContent(), /מתוך 100/);
+    assert.equal(await page.locator('#ai-conclusion').isVisible(), false);
     await page.reload();
     await page.getByText('סיימתם! התשובות נשמרו.').waitFor();
     const firstLookup = page.waitForEvent('requestfailed', request => request.url().endsWith('/api/exam-result'));
@@ -136,10 +138,12 @@ test('English mobile: a queued result appears automatically after reload, with n
     await page.clock.runFor(10100);
     await retry;
     await page.getByText('ציון סופי: 0 מתוך 100.').waitFor();
+    await page.getByText('סיכום בדיקת הבינה המלאכותית: כדאי להוסיף דוגמה מתוך הטקסט.').waitFor();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.equal(await page.locator('#finish').isVisible(), false);
     await page.reload();
     await page.getByText('ציון סופי: 0 מתוך 100.').waitFor();
+    await page.getByText('סיכום בדיקת הבינה המלאכותית: כדאי להוסיף דוגמה מתוך הטקסט.').waitFor();
     await page.clock.fastForward(65000);
     assert.equal(posts, 1);
     assert.equal(lookups, 2);

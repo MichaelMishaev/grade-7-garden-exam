@@ -579,6 +579,7 @@
   function results() {
     const fractions = Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, isCorrect(q) ? 1 : 0]));
     const score = lastScore = QuizCore.scoreQuiz(questions, fractions);
+    ExamResult.renderConclusion($('ai-conclusion'), grading);
     $('score').textContent = ExamResult.scoreText(grading, score.earned, questions.filter(q => q.type === 'open').map(q => q.id));
     $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
     if (sent) {
@@ -663,7 +664,7 @@
       });
       const data = await response.json();
       if (!response.ok || data.grading?.status !== 'ok') throw new Error('Grading failed');
-      grading = { status: 'ok', scores: data.grading.scores || {}, submissionRef: grading.submissionRef }; persist(); results();
+      grading = { ...data.grading, scores: data.grading.scores || {}, submissionRef: grading.submissionRef }; persist(); results();
     } catch (_) { $('send-status').textContent = 'הבדיקה לא הצליחה. אפשר לנסות שוב.'; }
     finally { $('regrade').disabled = false; }
   });

@@ -16,7 +16,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
   const sql = await connect(url);
   try {
     await sql`DROP SCHEMA public CASCADE`; await sql`CREATE SCHEMA public`; // test database only
-    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql', '007_final_submission_email.sql']);
+    assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql', '007_final_submission_email.sql', '008_ai_conclusion.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
     assert.equal(first.questions.inserted, 132);

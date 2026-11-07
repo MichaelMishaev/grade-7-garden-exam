@@ -57,7 +57,7 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     aiRequests.push(document);
     if (failAi) return Response.json({}, { status: 500 });
-    return Response.json({ choices: [{ message: { content: JSON.stringify({ results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
   }, sendFetch: async (url, config) => {
     calls.push(JSON.parse(config.body));
     return failNext ? new Response('{}', { status: 500 }) : new Response(JSON.stringify({ id: 'mock' }), { status: 200 });
@@ -124,6 +124,7 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     assert.equal(calls.length, 5, 'a reload does not resend');
     assert.equal(await page.isHidden('#done-banner'), false);
     assert.match(await page.textContent('#score'), /100 מתוך 100/);
+    assert.match(await page.locator('#ai-conclusion').innerText(), /הוסיפו דוגמה מהטקסט/);
     assert.equal(await page.locator('#explanations article').count(), 20);
   } finally {
     await browser.close();

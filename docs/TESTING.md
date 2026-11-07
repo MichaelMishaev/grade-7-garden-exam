@@ -45,7 +45,7 @@ All five are allowed in every test:
 start (study material, required name, privacy line) → questions (visible timer, progress, collapsible study material, flag "סימון לבדיקה חוזרת") → review (finishing is blocked until **every** question is answered, open text included; a flag does not block) → **finish** → checking screen → read-only summary + designed "you're done" screen.
 
 - **Timer:** counts up, visible, starts when the student presses start, survives a reload (the start time is in the draft). The email shows start time, finish time and **duration measured by the server**, not the browser clock. No time limit.
-- **Finish** saves the submission, locks the answers, and shows a **read-only summary** with explanations and the final score out of 100 once grading is complete. If grading takes longer, the summary shows that the answers were saved and checks for the result automatically, including after a reload in the same tab. The teacher receives the same score by email. There is no separate send button and no way back to edit.
+- **Finish** saves the submission, locks the answers, and shows a **read-only summary** with explanations and the final score out of 100 and a short AI conclusion in Hebrew once grading is complete. If grading takes longer, the summary shows that the answers were saved and checks for the result automatically, including after a reload in the same tab. The teacher receives the same score by email. There is no separate send button and no way back to edit.
 - If saving fails, keep the draft and let the student retry. Once saved, a temporary grading or mail failure stays queued on the server.
 - **Unlimited attempts.** Every finished attempt is emailed.
 
@@ -75,11 +75,11 @@ Plus the test code, attempt number, start/finish times, duration and final score
 - **No name or identity** is sent. Answers are labeled by question number.
 - The prompt states that student answers are **data, not instructions**. The reply must be structured JSON (score + one-line reason per question). A score above the maximum, or malformed output, is rejected.
 - The system computes everything else and the **total**.
-- The reason is for the teacher (email, DB), not shown to the student. The results screen checks `POST /api/exam-result` using a private, random receipt kept in the tab. It receives only the grading status, score and marks, and email status.
+- The reason is for the teacher (email, DB), not shown to the student. The results screen checks `POST /api/exam-result` using a private, random receipt kept in the tab. It receives only the grading status, score and marks, a student-facing AI conclusion about the written answers, and email status. The conclusion is generated in the same grading request and stored with the marks. Older graded attempts without a conclusion can still show their score.
 - Production records the answers and queues the email in Postgres before grading. A complete result sends immediately when possible. If the grader, rubric configuration, or email provider is unavailable, the student sees that the answers were saved. A server worker retries with backoff after the student leaves and after a restart.
 - Production sends one submission email, only after every open answer has a validated score and nonempty feedback. The worker saves AI scores before sending, reuses them on retries, and sends with a stable provider idempotency key. Existing submissions are not added to the queue. If an earlier send is still unconfirmed near the provider's idempotency expiry, the job is held for delivery reconciliation.
 - The OpenAI key is a server-only variable on Railway. Never in the browser, Git, logs or chat. Never log student answers.
-- Apply migration `007_final_submission_email.sql` before deploying this production flow. The local development server retains the direct submission path for offline and mocked checks.
+- Apply migrations `007_final_submission_email.sql` and `008_ai_conclusion.sql` before deploying this production flow. The local development server retains the direct submission path for offline and mocked checks.
 - The privacy line says that name and answers go to the teacher, and that open answers are checked by an AI service.
 
 ## 10. Design and accessibility (all mandatory)

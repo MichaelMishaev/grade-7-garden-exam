@@ -163,6 +163,7 @@
       <div id="done-banner" class="done-banner" role="status" hidden><span class="done-mark" aria-hidden="true">✓</span><div><strong>סיימתם! התשובות נשלחו למורה.</strong><span>אי אפשר לשנות תשובות אחרי הסיום. כל הכבוד על המאמץ!</span></div></div>
       <h1 class="review-title" id="results-title" tabindex="-1">סיימתם את המבחן!</h1>
       <p class="intro" id="score" aria-live="polite" aria-atomic="true"></p>
+      <p id="ai-conclusion" class="intro" style="overflow-wrap:anywhere" aria-live="polite" hidden></p>
       <div id="explanations"></div>
       <div class="actions"><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button><button class="button primary" id="regrade" type="button" hidden>בדיקה חוזרת של התשובות הפתוחות</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
       <p class="privacy" id="send-status" role="status"></p>
@@ -173,7 +174,7 @@
   </main>
   <script src="quiz-core.js?v=3"></script>
   <script src="content-api.js?v=3"></script>
-  <script src="exam-result.js?v=1"></script>
+  <script src="exam-result.js?v=2"></script>
   <script>
     const questions = [
       'מהו הנושא המרכזי של הטקסט?',
@@ -296,6 +297,7 @@
       show('review', 'review-title');
     }
     function results() {
+      ExamResult.renderConclusion(byId('ai-conclusion'), grading);
       byId('done-banner').hidden = !sent; byId('retry').hidden = !sent;
       if (sent) {
         const queued = grading.status === 'pending';

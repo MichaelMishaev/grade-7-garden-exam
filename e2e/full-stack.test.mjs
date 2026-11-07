@@ -192,7 +192,7 @@ test('library attempt: code and attempt are stored, a failed AI grading is retri
     const document = JSON.parse(JSON.parse(init.body).messages[1].content.split('\n').slice(1).join('\n'));
     seen.push(document.questions.map((q) => q.studentAnswer));
     const results = document.questions.map((q) => ({ questionId: q.questionId, score: q.maxScore, reason: 'טוב' }));
-    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results }) } }] }), { status: 200 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results }) } }] }), { status: 200 });
   };
   const env = { DATABASE_URL: url, DB_WRITE_SUBMISSIONS: '1', NODE_ENV: 'development', RESEND_API_KEY: 're_fake', RESEND_FROM_EMAIL: 'x <x@example.invalid>', OPENAI_API_KEY: 'sk-fake' };
   const app = await listen(createApp({ env, sendFetch: fakeSend, aiFetch, db: createDb(env) }));

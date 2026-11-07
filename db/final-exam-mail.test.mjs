@@ -9,6 +9,7 @@ import { extractContent } from './extract.mjs';
 import { createDb } from './runtime.mjs';
 import { createApp } from '../server.mjs';
 
+const conclusion = 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.';
 const url = process.env.FINAL_MAIL_TEST_DATABASE_URL;
 if (url && !/^\/prepx_final_mail_test$/.test(new URL(url).pathname)) {
   throw new Error('Use an isolated prepx_final_mail_test database');
@@ -33,7 +34,7 @@ test('production submission survives grading failure and restart, then emails a 
         calls.push(questions.map(q => q.questionId).sort());
         if (!gradingAvailable) return Response.json({}, { status: 503 });
         const results = questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול מלאה' }));
-        return Response.json({ choices: [{ message: { content: JSON.stringify({ results }) } }] });
+        return Response.json({ choices: [{ message: { content: JSON.stringify({ results, conclusion }) } }] });
       },
       sendFetch: async (_url, init) => {
         const email = { body: JSON.parse(init.body), key: init.headers['Idempotency-Key'] };
@@ -90,7 +91,7 @@ test('production submission survives grading failure and restart, then emails a 
     assert.equal(result.status, 200);
     const { grading } = await result.json();
     assert.deepEqual(grading, {
-      status: 'ok', finalScore: 100, emailSent: false,
+      status: 'ok', finalScore: 100, conclusion, emailSent: false,
       scores: Object.fromEntries(calls[1].map(id => [id, { score: grading.scores[id].max, max: grading.scores[id].max }]))
     });
     assert.equal(calls.length, 2, 'reading a score never triggers AI grading');
@@ -106,7 +107,9 @@ test('production submission survives grading failure and restart, then emails a 
     const duplicates = await Promise.all([post(), post()]);
     for (const duplicate of duplicates) {
       assert.equal(duplicate.status, 200);
-      assert.equal((await duplicate.json()).grading.finalScore, 100);
+      const { grading } = await duplicate.json();
+      assert.equal(grading.finalScore, 100);
+      assert.equal(grading.conclusion, conclusion);
     }
     assert.equal(emails.length, 1);
     assert.equal(calls.length, 2);

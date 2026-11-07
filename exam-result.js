@@ -15,6 +15,12 @@
     return 'התשובות עדיין לא נבדקו במלואן. הציון הסופי יוצג כאן לאחר השלמת הבדיקה.';
   }
 
+  function renderConclusion(element, grade) {
+    const conclusion = grade.status === 'ok' && typeof grade.conclusion === 'string' ? grade.conclusion : '';
+    element.textContent = conclusion ? `סיכום בדיקת הבינה המלאכותית: ${conclusion}` : '';
+    element.hidden = !conclusion;
+  }
+
   function watch(grade, token, onReady) {
     if (grade.status !== 'pending' || !token) return;
     const endpoint = location.hostname === 'michaelmishaev.github.io'
@@ -35,5 +41,5 @@
     setTimeout(check, delay);
   }
 
-  root.ExamResult = { newToken, scoreText, watch };
+  root.ExamResult = { newToken, scoreText, renderConclusion, watch };
 })(globalThis);

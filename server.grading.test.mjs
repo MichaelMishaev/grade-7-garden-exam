@@ -29,6 +29,8 @@ const libraryPayload = (overrides = {}, answerText = (q) => `תשובה של ה�
   ...overrides
 });
 
+const conclusion = 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.';
+
 // A mocked OpenAI: grades every requested question with `grade(question)`; records each request.
 function mockOpenAi({ grade = q => ({ score: q.maxScore, reason: 'תשובה טובה' }), respond } = {}) {
   const requests = [];
@@ -38,7 +40,7 @@ function mockOpenAi({ grade = q => ({ score: q.maxScore, reason: 'תשובה ט�
     if (respond) return respond(body, config);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     const results = document.questions.map(q => ({ questionId: q.questionId, ...grade(q) }));
-    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results }) } }] }), { status: 200 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results, conclusion }) } }] }), { status: 200 });
   };
   return { fetchImpl, requests };
 }
@@ -108,13 +110,13 @@ test('failure: OpenAI 500, bad JSON, score above max, missing id, duplicate id a
   const variants = {
     'http 500': () => new Response('upstream secret details', { status: 500 }),
     'not json': () => wrap('this is not json'),
-    'score above max': body => wrap(JSON.stringify({ results: good(body).map(q => ({ questionId: q.questionId, score: q.maxScore + 1, reason: 'x' })) })),
-    'negative score': body => wrap(JSON.stringify({ results: good(body).map(q => ({ questionId: q.questionId, score: -1, reason: 'x' })) })),
-    'score as string': body => wrap(JSON.stringify({ results: good(body).map(q => ({ questionId: q.questionId, score: '3', reason: 'x' })) })),
-    'missing id': body => wrap(JSON.stringify({ results: good(body).slice(1).map(q => ({ questionId: q.questionId, score: 1, reason: 'x' })) })),
-    'duplicate id': body => wrap(JSON.stringify({ results: good(body).map((q, i) => ({ questionId: good(body)[i === 1 ? 0 : i].questionId, score: 1, reason: 'x' })) })),
-    'unknown id': body => wrap(JSON.stringify({ results: good(body).map((q, i) => ({ questionId: i === 0 ? 'library-01' : q.questionId, score: 1, reason: 'x' })) })),
-    'reason too long': body => wrap(JSON.stringify({ results: good(body).map(q => ({ questionId: q.questionId, score: 1, reason: 'ש'.repeat(301) })) })),
+    'score above max': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: q.maxScore + 1, reason: 'x' })) })),
+    'negative score': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: -1, reason: 'x' })) })),
+    'score as string': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: '3', reason: 'x' })) })),
+    'missing id': body => wrap(JSON.stringify({ conclusion, results: good(body).slice(1).map(q => ({ questionId: q.questionId, score: 1, reason: 'x' })) })),
+    'duplicate id': body => wrap(JSON.stringify({ conclusion, results: good(body).map((q, i) => ({ questionId: good(body)[i === 1 ? 0 : i].questionId, score: 1, reason: 'x' })) })),
+    'unknown id': body => wrap(JSON.stringify({ conclusion, results: good(body).map((q, i) => ({ questionId: i === 0 ? 'library-01' : q.questionId, score: 1, reason: 'x' })) })),
+    'reason too long': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: 1, reason: 'ש'.repeat(301) })) })),
     'no choices': () => new Response('{}', { status: 200 }),
     'network error': () => { throw new TypeError('connect failed'); }
   };
@@ -298,7 +300,7 @@ test('invalid questionId is rejected with 400 and nothing is sent', () => withSe
 test('/api/grade-open: success returns scores without reasons and sends no email', () => withServer(async ({ grade, emails, ai }) => {
   const response = await grade(gradeBody());
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { grading: { status: 'ok', scores: { 'library-15': { score: 5.36, max: 5.36 }, 'library-16': { score: 5.36, max: 5.36 } } } });
+  assert.deepEqual(await response.json(), { grading: { status: 'ok', conclusion, scores: { 'library-15': { score: 5.36, max: 5.36 }, 'library-16': { score: 5.36, max: 5.36 } } } });
   assert.equal(ai.requests.length, 1);
   assert.equal(emails.length, 0);
 }));
@@ -345,7 +347,7 @@ test('gradeOpenAnswers: none without open items, failed on unknown ids, none wit
   const item = { questionId: 'physics-exam-06', question: 'q', answer: 'a' };
   assert.deepEqual(await gradeOpenAnswers({ examId: 'physics-v1-assessment', items: [item], env: {}, fetchImpl: mockOpenAi().fetchImpl }), { status: 'none' });
   const result = await gradeOpenAnswers({ examId: 'physics-v1-assessment', items: [item], env, fetchImpl: mockOpenAi({ grade: () => ({ score: 1.8, reason: 'ok' }) }).fetchImpl });
-  assert.deepEqual(result, { status: 'ok', scores: { 'physics-exam-06': { score: 2, max: 3.7, reason: 'ok' } } });
+  assert.deepEqual(result, { status: 'ok', conclusion, scores: { 'physics-exam-06': { score: 2, max: 3.7, reason: 'ok' } } });
 });
 
 test('the OpenAI key never appears in a response or in console output', () => withServer(async ({ submit, grade, logs }) => {
@@ -376,8 +378,8 @@ test('hardening: control characters and long text are cleaned in the request, in
 
 test('hardening: strict output validation (ids, range, types, duplicates, extra ids) and reason cleaning', async () => {
   const item = { questionId: 'library-15', question: 'q', answer: 'a' };
-  const run = results => gradeOpenAnswers({ examId: 'hebrew-v2-library', items: [item], env,
-    fetchImpl: async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results }) } }] }), { status: 200 }) });
+  const run = (results, review = conclusion) => gradeOpenAnswers({ examId: 'hebrew-v2-library', items: [item], env,
+    fetchImpl: async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results, conclusion: review }) } }] }), { status: 200 }) });
   const good = { questionId: 'library-15', score: 1, reason: 'ok' };
   for (const bad of [[{ ...good, score: -1 }], [{ ...good, score: 99 }], [{ ...good, score: '1' }], [{ ...good, score: null }], [{ ...good, reason: 5 }], [{ ...good, reason: 'ש'.repeat(301) }],
     [{ ...good, questionId: 'library-16' }], [good, good], [], [good, { ...good, questionId: 'library-16' }]]) {
@@ -386,6 +388,10 @@ test('hardening: strict output validation (ids, range, types, duplicates, extra 
   const ok = await run([{ ...good, reason: '\u0000\u202eסבר' }]);
   assert.equal(ok.status, 'ok');
   assert.equal(ok.scores['library-15'].reason, 'סבר');
+  for (const bad of [null, ' ', 'English only', 'א'.repeat(401)]) {
+    assert.deepEqual(await run([good], bad), { status: 'failed' });
+  }
+  assert.equal((await run([good], '\u202eעברית\nתקינה')).conclusion, 'עברית תקינה');
   // Duplicate ids and ids outside the rubric table are refused before any request.
   const ai = mockOpenAi();
   assert.deepEqual(await gradeOpenAnswers({ examId: 'hebrew-v2-library', items: [item, item], env, fetchImpl: ai.fetchImpl }), { status: 'failed' });

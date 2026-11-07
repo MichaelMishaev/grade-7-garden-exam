@@ -108,7 +108,7 @@ async function storedGrading(db, examId, ref, openRubricFor) {
   try {
     const row = await Promise.race([db.getSubmissionForGrading(ref), new Promise(resolve => { timer = setTimeout(() => resolve(null), 2000); })]);
     if (!row || row.examId !== examId) return null;
-    if (row.aiStatus === 'ok' && row.aiScores && typeof row.aiScores === 'object') return { id: row.id, done: row.aiScores };
+    if (row.aiStatus === 'ok' && row.aiScores && typeof row.aiScores === 'object') return { id: row.id, done: row.aiScores, conclusion: row.conclusion };
     const items = row.answers.filter(a => a.questionId && openRubricFor(examId, a.questionId))
       .map(a => ({ questionId: a.questionId, question: a.question, answer: a.answer }));
     return items.length ? { id: row.id, items } : null;
@@ -194,7 +194,8 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     if (!exam || row.answers?.length !== exam.count) return pendingGrade;
     const finalScore = finalExamScore(judge(row.exam_id, row.answers), row.ai_scores);
     return finalScore === null ? pendingGrade : {
-      status: 'ok', finalScore, scores: exposedScores(row.ai_scores ?? {}), emailSent: row.email_status === 'accepted'
+      status: 'ok', finalScore, scores: exposedScores(row.ai_scores ?? {}),
+      ...(row.ai_conclusion ? { conclusion: row.ai_conclusion } : {}), emailSent: row.email_status === 'accepted'
     };
   }
 
@@ -379,7 +380,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     // Keep the grading (with the reasons) on the stored row so a retry or the teacher can find it later. Best effort:
     // runs once the row exists, never delays or fails the email, and a failure is logged by code only.
     if (examId !== undefined && typeof db?.updateAiScores === 'function') {
-      storing?.then(id => db.updateAiScores({ id, status: grading.status, ...(grading.status === 'ok' ? { scores: aiScores, total: totalScore(aiScores) } : {}) }))
+      storing?.then(id => db.updateAiScores({ id, status: grading.status, ...(grading.status === 'ok' ? { scores: aiScores, total: totalScore(aiScores), conclusion: grading.conclusion } : {}) }))
         .catch(error => console.error('ai score store failed', error?.code ?? error?.name));
     }
     // Table exams: what the email shows is the server's verdict and key details (browser values only for answers that
@@ -404,7 +405,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const emailScore = grading.status === 'ok' && score
       ? { earned: Math.min(100, score.earned + Math.round(Object.values(aiScores).reduce((sum, { score: points }) => sum + points, 0))), pending: 0, final: true } : score;
     const finalScore = resultToken ? finalExamScore(truth, aiScores) : null;
-    const responseGrading = { status: grading.status, scores: exposedScores(aiScores), ...(finalScore == null ? {} : { status: 'ok', finalScore, emailSent: true }) };
+    const responseGrading = { status: grading.status, scores: exposedScores(aiScores), ...(finalScore == null ? {} : { status: 'ok', finalScore, conclusion: grading.conclusion, emailSent: true }) };
     const aiNote = grading.status === 'failed' ? 'בדיקת AI נכשלה' : undefined;
     const notes = truth?.notes ?? (truthFailed ? ['⚠ אימות השרת לא זמין: הציון וסימוני ה־✓/✕ אינם מוצגים כי לא ניתן היה לאמת אותם. הבדיקה צריכה להיעשות ידנית.'] : []);
     try {
@@ -449,7 +450,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
 
   // Stateless retry of the AI grading (docs/TESTING.md §9) for the browser when the grading inside /api/submit-exam failed.
   // Same origin, content type, size and rate-limit rules; no name, no email. 200 { grading: { status: 'ok', scores } } or
-  // 502 { grading: { status: 'failed' } }; scores carry no reasons.
+  // 502 { grading: { status: 'failed' } }; scores carry no private reasons. A student-facing conclusion accompanies new grades.
   if (request.url === '/api/grade-open') {
     const received = await readExamPost(request, response, json, allowedOrigins, { maxBytes: 250000, tooLarge: 'Request too large' });
     if (!received) return;
@@ -471,7 +472,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     if (!aiConfigured(env) || !aiCalls.available()) return json(503, { grading: { status: 'off' } });
     if (!takeSlot(gradeLimit, request, response, json)) return;
     const stored = ref && db?.flags.write && typeof db.getSubmissionForGrading === 'function' ? await storedGrading(db, examId, ref, openRubricFor) : null;
-    if (stored?.done) return json(200, { grading: { status: 'ok', scores: exposedScores(stored.done) } });
+    if (stored?.done) return json(200, { grading: { status: 'ok', scores: exposedScores(stored.done), conclusion: stored.conclusion || undefined } });
     const grading = await gradeOpenAnswers({
       examId, env, fetchImpl: countedAiFetch, timeoutMs: aiTimeoutMs,
       items: stored?.items ?? items.map(item => ({ questionId: item.questionId, question: item.question.trim(), answer: item.answer.trim() }))
@@ -480,10 +481,10 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     // Best effort, never blocks or fails the response. Only a grading of the stored answers is saved: the browser's own
     // text is not trusted enough to become the record. The email is never re-sent from here.
     if (stored?.items) {
-      Promise.resolve().then(() => db.updateAiScores({ id: stored.id, status: 'ok', scores: grading.scores, total: totalScore(grading.scores) }))
+      Promise.resolve().then(() => db.updateAiScores({ id: stored.id, status: 'ok', scores: grading.scores, total: totalScore(grading.scores), conclusion: grading.conclusion }))
         .catch(error => console.error('ai score update failed', error?.code ?? error?.name));
     }
-    return json(200, { grading: { status: 'ok', scores: exposedScores(grading.scores) } });
+    return json(200, { grading: { status: 'ok', scores: exposedScores(grading.scores), conclusion: grading.conclusion } });
   }
 
   // Practice history (docs/TESTING.md §7): validates and, when the database writes are on, stores one finished practice
