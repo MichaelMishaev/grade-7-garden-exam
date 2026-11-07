@@ -110,6 +110,7 @@
   // Locking (docs/TESTING.md §3): a picked choice locks at once; open and numeric answers lock on "אישור".
   const locked = new Set(Array.isArray(saved.locked) ? saved.locked.filter(id => ids.has(id)) : []);
   let sent = saved.sent === true;
+  let resultToken = finished ? saved.resultToken : undefined;
   let grading = saved.grading && typeof saved.grading === 'object' ? saved.grading : { status: 'none', scores: {} };
   let advanceTimer = 0;
   if (!$('student-name').value) $('student-name').value = typeof saved.name === 'string' ? saved.name.slice(0, 100) : '';
@@ -141,7 +142,7 @@
   };
   const isLocked = q => q.type === 'mcq' ? answered(q) : q.type === 'checkbox' ? locked.has(q.id) && answered(q) : locked.has(q.id);
   function persist() {
-    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, order, choiceOrders, answers, work, flags: [...flags], locked: [...locked], current, finished, sent, grading, startedAt, finishedAt })); } catch (_) {}
+    try { sessionStorage.setItem(storageKey, JSON.stringify({ name: $('student-name').value, order, choiceOrders, answers, work, flags: [...flags], locked: [...locked], current, finished, sent, grading, startedAt, finishedAt, resultToken })); } catch (_) {}
   }
   // Visible timer (docs/TESTING.md §6): counts up from the stored start time, so a reload keeps it running.
   const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
@@ -276,17 +277,12 @@
     const graded = questions.filter(q => q.type !== 'open');
     const fractions = Object.fromEntries(graded.map(q => [q.id, isCorrect(q) ? 1 : 0]));
     const score = lastScore = QuizCore.scoreQuiz(questions, fractions);
-    const openCount = questions.length - graded.length;
-    // Final score once the open answers were checked (auto points + the checker's points); otherwise a partial score.
-    const checked = grading.status === 'ok';
-    const aiPoints = checked ? Object.values(grading.scores).reduce((sum, item) => sum + (Number(item.score) || 0), 0) : 0;
-    $('score').textContent = checked ? `ציון: ${Math.round((score.earned + aiPoints) * 10) / 10} מתוך 100.`
-      : `ציון חלקי: ${score.earned} מתוך ${100 - score.pending} נקודות · ${score.pending} נקודות מהשאלות הפתוחות (${openCount} שאלות) עדיין לא נבדקו.`;
+    $('score').textContent = ExamResult.scoreText(grading, score.earned, questions.filter(q => q.type === 'open').map(q => q.id));
     $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
     if (sent) {
       const queued = grading.status === 'pending';
-      $('done-banner').querySelector('strong').textContent = queued ? 'סיימתם! התשובות נשמרו.' : 'סיימתם! התשובות נשלחו למורה.';
-      $('send-status').textContent = queued ? 'התשובות נבדקות. המורה תקבל את הציון הסופי בדוא״ל לאחר השלמת הבדיקה.' : '';
+      $('done-banner').querySelector('strong').textContent = queued || grading.emailSent === false ? 'סיימתם! התשובות נשמרו.' : 'סיימתם! התשובות נשלחו למורה.';
+      $('send-status').textContent = '';
     }
     if (startedAt && finishedAt) {
       const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
@@ -325,7 +321,7 @@
       }
       $('explanations').append(card);
     });
-    show('results', 'results-title');
+    if (!$('results').classList.contains('active')) show('results', 'results-title');
   }
   $('student-name').addEventListener('input', persist);
   $('begin').addEventListener('click', () => {
@@ -346,6 +342,7 @@
     if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
     // Finishing sends at once and locks everything (docs/TESTING.md §6): there is no way back to edit.
     ordered.forEach(q => locked.add(q.id));
+    resultToken = ExamResult.newToken();
     finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); results(); sendExam();
   });
   $('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
@@ -359,16 +356,16 @@
     try {
       const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ exam: examId, name: $('student-name').value.trim(), attempt: attemptNumber(examId, $('student-name').value.trim()), answers: ordered.map(q => ({ questionId: q.id, question: plainText(q.prompt), answer: answerText(q), ...answerDetails(q), ...(q.type === 'open' ? {} : { correct: isCorrect(q) }) })), score: { earned: lastScore.earned, pending: lastScore.pending }, ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(45000)
+        body: JSON.stringify({ exam: examId, name: $('student-name').value.trim(), resultToken, attempt: attemptNumber(examId, $('student-name').value.trim()), answers: ordered.map(q => ({ questionId: q.id, question: plainText(q.prompt), answer: answerText(q), ...answerDetails(q), ...(q.type === 'open' ? {} : { correct: isCorrect(q) }) })), score: { earned: lastScore.earned, pending: lastScore.pending }, ...(startedAt && finishedAt ? { startedAt, finishedAt } : {}) }), signal: AbortSignal.timeout(45000)
       });
       const data = await response.json();
       if (!response.ok || data.success !== true) throw new Error('Submission failed');
       countAttempt(examId, $('student-name').value.trim());
-      // The answers are with the teacher: the draft stays only as a locked, read-only summary (a reload shows it again).
+      // Keep the saved attempt as a locked summary, including its private result receipt.
       sent = true;
-      grading = data.grading && typeof data.grading === 'object' ? { status: data.grading.status, scores: data.grading.scores || {}, submissionRef: typeof data.submissionRef === 'string' ? data.submissionRef : '' } : { status: 'none', scores: {} };
+      grading = data.grading && typeof data.grading === 'object' ? { ...data.grading, scores: data.grading.scores || {}, submissionRef: typeof data.submissionRef === 'string' ? data.submissionRef : '' } : { status: 'none', scores: {} };
       try { sessionStorage.setItem('physics-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total, score: { earned: lastScore.earned, pending: lastScore.pending } })); } catch (_) {}
-      persist(); results();
+      persist(); results(); watchResult();
     } catch (_) {
       $('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
       $('send').hidden = false;
@@ -388,6 +385,9 @@
     } catch (_) { $('send-status').textContent = 'הבדיקה לא הצליחה. אפשר לנסות שוב.'; }
     finally { $('regrade').disabled = false; }
   });
-  if (finished && ordered.every(answered) && $('student-name').value.trim()) { results(); if (!sent) sendExam(); }
+  function watchResult() {
+    ExamResult.watch(grading, resultToken, result => { grading = result; persist(); results(); });
+  }
+  if (finished && ordered.every(answered) && $('student-name').value.trim()) { results(); if (sent) watchResult(); else sendExam(); }
   });
 })();

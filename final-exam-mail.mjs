@@ -4,6 +4,19 @@ import { isAlreadyAccepted } from './resend-send.mjs';
 const retrySeconds = attempt => Math.min(900, 5 * 2 ** Math.min(attempt - 1, 8));
 const sendWindow = 23 * 60 * 60 * 1000;
 
+// Use the same complete, bounded result for the teacher and the student.
+export function finalExamScore(truth, scores) {
+  if (!truth?.score || truth.answers.some(answer => !answer.matched)) return null;
+  const ids = truth.answers.filter(answer => answer.correct === undefined).map(answer => answer.questionId);
+  const marks = scores ?? {};
+  if (Object.keys(marks).length !== ids.length || !ids.every(id => {
+    const mark = marks[id];
+    return mark && Number.isFinite(mark.score) && Number.isFinite(mark.max) &&
+      mark.score >= 0 && mark.score <= mark.max && typeof mark.reason === 'string' && mark.reason.trim();
+  })) return null;
+  return Math.min(100, Math.max(0, truth.score.earned + Math.round(ids.reduce((sum, id) => sum + marks[id].score, 0))));
+}
+
 export function createFinalExamMailer({ db, env, exams, judge, grade, send, teacherAddress, now }) {
   async function deliver(job) {
     const exam = exams[job.exam_id];
@@ -15,12 +28,10 @@ export function createFinalExamMailer({ db, env, exams, judge, grade, send, teac
     const open = truth.answers.flatMap((answer, i) => answer.correct === undefined
       ? [{ questionId: answer.questionId, question: job.answers[i].question, answer: job.answers[i].answer }]
       : []);
-    const complete = scores => scores && Object.keys(scores).length === open.length && open.every(({ questionId }) =>
-      typeof scores[questionId]?.reason === 'string' && scores[questionId].reason.trim());
     let scores = job.ai_status === 'ok' ? job.ai_scores : null;
-    if (open.length && !complete(scores)) {
+    if (open.length && finalExamScore(truth, scores) === null) {
       const result = await grade(job.exam_id, open);
-      if (result.status !== 'ok' || !complete(result.scores)) {
+      if (result.status !== 'ok' || finalExamScore(truth, result.scores) === null) {
         await db.updateAiScores({ id: job.id, status: 'failed' });
         return;
       }
@@ -34,7 +45,8 @@ export function createFinalExamMailer({ db, env, exams, judge, grade, send, teac
       const known = truth.answers[i];
       return { ...known, question: cleanText(item.question), answer: cleanText(item.answer), ai: scores?.[known.questionId] };
     });
-    const earned = Math.min(100, truth.score.earned + Math.round(Object.values(scores ?? {}).reduce((sum, item) => sum + item.score, 0)));
+    const earned = finalExamScore(truth, scores);
+    if (earned === null) return;
     const message = {
       name: cleanLine(job.student_name), code: exam.code, attempt: job.attempt, answers,
       score: { earned, pending: 0, final: true }, notes: truth.notes

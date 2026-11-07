@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import '../test-fixtures/use-fake-rubrics.mjs';
 import { connect } from './client.mjs';
 import { migrate } from './migrate.mjs';
@@ -52,16 +52,26 @@ test('production submission survives grading failure and restart, then emails a 
     await seed(sql);
     const exam = 'english-v1-practice';
     const questions = extractContent().questions.filter(q => q.exam_id === exam);
-    const payload = { exam, attempt: 1, name: `Synthetic QA ${randomUUID()}`, answers: questions.map(q => ({
+    const payload = { exam, resultToken: randomBytes(16).toString('hex'), attempt: 1, name: `Synthetic QA ${randomUUID()}`, answers: questions.map(q => ({
       question: q.prompt, answer: q.type === 'open' ? 'Synthetic written answer' : q.choices[q.correct]
     })) };
     const post = (submission = payload) => fetch(base + '/api/submit-exam', { method: 'POST', headers: {
       Origin: 'https://hitech.agnon.online', 'Content-Type': 'application/json'
     }, body: JSON.stringify(submission) });
+    const lookup = (resultToken = payload.resultToken, origin = 'https://hitech.agnon.online') => fetch(base + '/api/exam-result', {
+      method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ resultToken })
+    });
     await start(60_000);
     const pending = await post();
     assert.equal(pending.status, 202);
     assert.equal((await pending.json()).grading.status, 'pending');
+    const waiting = await lookup();
+    assert.equal(waiting.status, 202);
+    assert.equal(waiting.headers.get('cache-control'), 'no-store');
+    assert.deepEqual(await waiting.json(), { grading: { status: 'pending', scores: {} } });
+    assert.equal((await lookup(randomBytes(16).toString('hex'))).status, 404);
+    assert.equal((await lookup(payload.resultToken, 'https://unrelated.example')).status, 403);
+    assert.equal((await lookup('guess')).status, 400);
     assert.equal(emails.length, 0);
     const [saved] = await sql`SELECT id, ai_status, email_status FROM submissions WHERE exam_code = 'ENG-001' AND student_name = ${payload.name}`;
     assert.deepEqual([saved.ai_status, saved.email_status], ['failed', 'pending']);
@@ -76,6 +86,14 @@ test('production submission survives grading failure and restart, then emails a 
       return emailAttempts.length === 1 && status.ai_status === 'ok' && status.deferred;
     });
     assert.equal(emails.length, 0);
+    const result = await lookup();
+    assert.equal(result.status, 200);
+    const { grading } = await result.json();
+    assert.deepEqual(grading, {
+      status: 'ok', finalScore: 100, emailSent: false,
+      scores: Object.fromEntries(calls[1].map(id => [id, { score: grading.scores[id].max, max: grading.scores[id].max }]))
+    });
+    assert.equal(calls.length, 2, 'reading a score never triggers AI grading');
     await sql`UPDATE submissions SET final_mail_due_at = now() WHERE id = ${saved.id}`;
     await assertEventually(async () => (await db.finalMailStatus(saved.id)).email_status === 'accepted');
     assert.equal(emails.length, 1);
@@ -88,7 +106,7 @@ test('production submission survives grading failure and restart, then emails a 
     const duplicates = await Promise.all([post(), post()]);
     for (const duplicate of duplicates) {
       assert.equal(duplicate.status, 200);
-      assert.equal((await duplicate.json()).grading.status, 'ok');
+      assert.equal((await duplicate.json()).grading.finalScore, 100);
     }
     assert.equal(emails.length, 1);
     assert.equal(calls.length, 2);
@@ -101,8 +119,9 @@ test('production submission survives grading failure and restart, then emails a 
       ['physics-v1-assessment', 'PHY-001', 7]
     ]) {
       const rows = extractContent().questions.filter(q => q.exam_id === id);
+      const token = randomBytes(16).toString('hex');
       const result = await post({
-        ...(code === 'HEB-001' ? {} : { exam: id, attempt: 1 }),
+        ...(code === 'HEB-001' ? {} : { exam: id, attempt: 1, resultToken: token }),
         name: `Synthetic QA ${randomUUID()}`,
         answers: rows.map(q => ({
           question: q.prompt,
@@ -111,6 +130,11 @@ test('production submission survives grading failure and restart, then emails a 
       });
       assert.ok([200, 202].includes(result.status), code);
       await assertEventually(() => emails.some(email => email.body.subject.includes(code)));
+      if (code !== 'HEB-001') {
+        const result = await lookup(token);
+        assert.equal(result.status, 200);
+        assert.equal((await result.json()).grading.finalScore, 100, code);
+      }
       const { body } = emails.find(email => email.body.subject.includes(code));
       assert.match(body.text, /ציון כולל \(כולל בדיקת AI\): 100 מתוך 100/);
       assert.equal((body.text.match(/^AI: /gm) ?? []).length, openCount, code);

@@ -32,6 +32,7 @@ export function createDb(env = process.env, { connector = connect, now = Date.no
     claimFinalMail: run(submissions.claimFinalMail),
     deferFinalMail: run(submissions.deferFinalMail),
     startFinalMailSend: run(submissions.startFinalMailSend),
+    getExamResult: run(submissions.getExamResult),
     finalMailStatus: run(submissions.finalMailStatus),
     markEmail: run(submissions.markEmail),
     updateAiScores: run(submissions.updateAiScores),

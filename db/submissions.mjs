@@ -156,6 +156,15 @@ export async function startFinalMailSend(sql, id) {
   return row?.final_mail_send_started_at;
 }
 
+// Read a single result by its private receipt hash. Pending grades need no answer lookup.
+export async function getExamResult(sql, key) {
+  const [row] = await sql`SELECT id, exam_id, ai_status, ai_scores, email_status FROM submissions WHERE dedupe_key = ${key}`;
+  if (!row || (row.ai_status !== 'ok' && row.email_status !== 'accepted')) return row;
+  const answers = await sql`SELECT question_text, answer_text, auto_correct FROM submission_answers
+    WHERE submission_id = ${row.id} ORDER BY position`;
+  return { ...row, answers: answers.map(a => ({ question: a.question_text, answer: a.answer_text, correct: a.auto_correct ?? undefined })) };
+}
+
 export async function finalMailStatus(sql, id) {
   const [row] = await sql`SELECT email_status, ai_status, ai_scores, final_mail_due_at FROM submissions WHERE id = ${id}`;
   return row;

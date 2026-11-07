@@ -12,7 +12,7 @@ import { openRubricFor as lookupRubric } from './open-rubrics.mjs';
 import { createResendSender, isAlreadyAccepted } from './resend-send.mjs';
 import { createDb } from './db/runtime.mjs';
 import { createHistoryHandler } from './history-api.mjs';
-import { createFinalExamMailer } from './final-exam-mail.mjs';
+import { createFinalExamMailer, finalExamScore } from './final-exam-mail.mjs';
 import './quiz-core.js';
 import './practice-history.js';
 
@@ -123,12 +123,19 @@ const aiConfigured = env => typeof env.OPENAI_API_KEY === 'string' && env.OPENAI
 
 const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max }]) => [id, { score, max }]));
 
+// The browser keeps a random receipt in the locked draft. Store only its hash, in a
+// separate namespace from legacy payload hashes and the legacy grading-retry endpoint.
+const validResultToken = token => typeof token === 'string' && /^[0-9a-f]{32}$/.test(token);
+const resultKey = token => `result:${createHash('sha256').update(token).digest('hex')}`;
+const pendingGrade = { status: 'pending', scores: {} };
+
 export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetch, aiTimeoutMs = 20000, db = createDb(env), sleep, now = Date.now, rubricLookup = lookupRubric, judge = judgeAnswers, finalExamMail = false, mailPollMs = 5000 } = {}) {
   const openRubricFor = safeRubric(rubricLookup);
   // Resend is paced and retried (resend-send.mjs); `sleep` and `now` can be replaced by tests.
   const resendSend = createResendSender({ fetchImpl: sendFetch, rps: intFrom(env.RESEND_RPS, 2), now, ...(sleep ? { sleep } : {}) });
   // Every limit is per client AND global, in memory. Requests that fail validation never reach them.
   const submitLimit = createLimiter({ perClient: intFrom(env.SUBMIT_LIMIT_PER_CLIENT, 150), global: intFrom(env.SUBMIT_LIMIT_GLOBAL, 600) });
+  const resultLimit = createLimiter({ perClient: 900, global: 12000, windowMs: 60000 });
   const gradeLimit = createLimiter({ perClient: 40, global: 200 });
   const practiceLimit = createLimiter({ perClient: 400, global: 2000 });
   const readLimit = createLimiter({ perClient: 240, global: 20000, windowMs: 60000 });
@@ -180,6 +187,17 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
   });
   return app;
 
+  async function queuedExamResult(key) {
+    const row = await db.getExamResult(key);
+    if (!row) return null;
+    const exam = exams[row.exam_id];
+    if (!exam || row.answers?.length !== exam.count) return pendingGrade;
+    const finalScore = finalExamScore(judge(row.exam_id, row.answers), row.ai_scores);
+    return finalScore === null ? pendingGrade : {
+      status: 'ok', finalScore, scores: exposedScores(row.ai_scores ?? {}), emailSent: row.email_status === 'accepted'
+    };
+  }
+
   async function handle(request, response) {
   const requestStart = now();
   const allowedOrigins = new Set([
@@ -212,6 +230,18 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     return;
   }
 
+  if (request.url === '/api/exam-result') {
+    const received = await readExamPost(request, response, json, allowedOrigins, { maxBytes: 256, tooLarge: 'Request too large' });
+    if (!received) return;
+    const { resultToken } = received.payload ?? {};
+    if (!validResultToken(resultToken)) return json(400, { error: 'Invalid exam receipt' });
+    if (!finalMailer) return json(404, { error: 'Result not found' });
+    if (!takeSlot(resultLimit, request, response, json, 60)) return;
+    const result = await queuedExamResult(resultKey(resultToken));
+    if (!result) return json(404, { error: 'Result not found' });
+    return json(result.status === 'ok' ? 200 : 202, { grading: result });
+  }
+
   if (request.url === '/api/submit-exam') {
     const received = await readExamPost(request, response, json, allowedOrigins, { maxBytes: 250000, tooLarge: 'Submission too large' });
     if (!received) return;
@@ -220,6 +250,10 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const examId = payload?.exam;
     if (examId !== undefined && !(typeof examId === 'string' && Object.hasOwn(exams, examId))) return json(400, { error: 'Unknown exam' });
     const exam = examId === undefined ? legacyExam : exams[examId];
+    const { resultToken } = payload ?? {};
+    if (resultToken !== undefined && (examId === undefined || !validResultToken(resultToken))) {
+      return json(400, { error: 'Invalid exam receipt' });
+    }
     if (!payload || !validText(payload.name, 120) || !Array.isArray(payload.answers) || payload.answers.length !== exam.count ||
         !payload.answers.every(item => item && validText(item.question, 1000) && validText(item.answer, 3000))) {
       return json(400, { error: `Name and all ${exam.count} answers are required` });
@@ -256,9 +290,9 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const name = payload.name.trim();
     const answers = payload.answers.map(item => ({ question: item.question.trim(), answer: item.answer.trim(), correct: typeof item.correct === 'boolean' ? item.correct : undefined,
       ...(examId === undefined ? {} : { options: item.options?.map(option => option.trim()), correctAnswer: item.correctAnswer?.trim(), reference: item.reference?.trim() }) }));
-    // The attempt number is part of the key, so a retaken exam with identical answers is still emailed (docs/TESTING.md §6);
-    // sending the same attempt twice stays deduplicated. Legacy payloads (no `exam`) keep the original key byte for byte.
-    const key = createHash('sha256').update(JSON.stringify(examId === undefined ? { name, answers: answers.map(({ question, answer, correct }) => ({ question, answer, correct })) } : { exam: examId, name, answers, ...(attempt === undefined ? {} : { attempt }) })).digest('hex');
+    // Each new browser attempt gets a different receipt, and a retry reuses it. Older clients keep the
+    // payload-based key (including the attempt number for clients that send it) byte for byte.
+    const key = finalExamMail && resultToken ? resultKey(resultToken) : createHash('sha256').update(JSON.stringify(examId === undefined ? { name, answers: answers.map(({ question, answer, correct }) => ({ question, answer, correct })) } : { exam: examId, name, answers, ...(attempt === undefined ? {} : { attempt }) })).digest('hex');
     if (finalExamMail) {
       if (!finalMailer) {
         slot.release();
@@ -281,6 +315,10 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
         });
         try {
           await finalMailer.process(id);
+          if (resultToken) {
+            const result = await queuedExamResult(key) ?? pendingGrade;
+            return json(result.status === 'ok' ? 200 : 202, { success: true, grading: result });
+          }
           const status = await db.finalMailStatus(id);
           if (status?.email_status === 'accepted') {
             return json(200, { success: true, grading: {
@@ -291,7 +329,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
         } catch (error) {
           console.error('Final submission email deferred', error?.code ?? error?.name);
         }
-        return json(202, { success: true, grading: { status: 'pending', scores: {} } });
+        return json(202, { success: true, grading: pendingGrade });
       } catch (error) {
         slot.release();
         console.error('Final submission could not be confirmed', error?.code ?? error?.name);
@@ -365,6 +403,8 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
     const displayName = examId === undefined ? name : cleanLine(name);
     const emailScore = grading.status === 'ok' && score
       ? { earned: Math.min(100, score.earned + Math.round(Object.values(aiScores).reduce((sum, { score: points }) => sum + points, 0))), pending: 0, final: true } : score;
+    const finalScore = resultToken ? finalExamScore(truth, aiScores) : null;
+    const responseGrading = { status: grading.status, scores: exposedScores(aiScores), ...(finalScore == null ? {} : { status: 'ok', finalScore, emailSent: true }) };
     const aiNote = grading.status === 'failed' ? 'בדיקת AI נכשלה' : undefined;
     const notes = truth?.notes ?? (truthFailed ? ['⚠ אימות השרת לא זמין: הציון וסימוני ה־✓/✕ אינם מוצגים כי לא ניתן היה לאמת אותם. הבדיקה צריכה להיעשות ידנית.'] : []);
     try {
@@ -387,7 +427,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
       // No row is marked again; the earlier attempt's status stands.
       if (isAlreadyAccepted(result.status, data)) {
         console.info('Exam email already accepted by Resend', result.status);
-        return json(200, examId === undefined ? { success: true } : { success: true, grading: { status: grading.status, scores: exposedScores(aiScores) }, ...(db?.flags.write ? { submissionRef: key } : {}) });
+        return json(200, examId === undefined ? { success: true } : { success: true, grading: responseGrading, ...(db?.flags.write ? { submissionRef: key } : {}) });
       }
       if (!result.ok || typeof data.id !== 'string' || !data.id) {
         console.error('Resend rejected submission', result.status);
@@ -398,7 +438,7 @@ export function createApp({ env = process.env, sendFetch = fetch, aiFetch = fetc
       console.info('Exam email accepted by Resend', data.id);
       markEmail({ status: 'accepted', resendId: data.id, httpStatus: result.status });
       // Table exams also report the grading outcome (scores without the reasons, which are for the teacher only).
-      return json(200, examId === undefined ? { success: true } : { success: true, grading: { status: grading.status, scores: exposedScores(aiScores) }, ...(db?.flags.write ? { submissionRef: key } : {}) });
+      return json(200, examId === undefined ? { success: true } : { success: true, grading: responseGrading, ...(db?.flags.write ? { submissionRef: key } : {}) });
     } catch {
       console.error('Resend submission unavailable');
       slot.release();

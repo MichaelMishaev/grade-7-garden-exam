@@ -90,7 +90,7 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
   }
 });
 
-test('English mobile: queued grading is acknowledged as saved and reload does not submit again', { skip: !chromium }, async () => {
+test('English mobile: a queued result appears automatically after reload, with no resubmission', { skip: !chromium }, async () => {
   const server = createApp({ env: {}, db: null });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -102,21 +102,47 @@ test('English mobile: queued grading is acknowledged as saved and reload does no
     await page.addInitScript(({ order, answers }) => {
       if (sessionStorage.getItem('english-exam-draft-v1')) return;
       sessionStorage.setItem('english-exam-draft-v1', JSON.stringify({
-        name: 'Synthetic QA', order, answers, locked: order, finished: true, sent: false
+        name: 'Synthetic QA', order, answers, locked: order, finished: false, sent: false
       }));
     }, { order, answers });
-    let posts = 0;
+    let posts = 0, lookups = 0, token;
     await page.route('**/api/submit-exam', async route => {
       posts++;
+      token = route.request().postDataJSON().resultToken;
+      assert.match(token, /^[0-9a-f]{32}$/);
       await route.fulfill({ status: 202, json: { success: true, grading: { status: 'pending', scores: {} } } });
     });
+    await page.route('**/api/exam-result', async route => {
+      lookups++;
+      assert.deepEqual(route.request().postDataJSON(), { resultToken: token });
+      if (lookups === 1) return route.abort('internetdisconnected');
+      await route.fulfill({ status: 200, json: { grading: { status: 'ok', finalScore: 0, scores: {}, emailSent: false } } });
+    });
+    await page.clock.install();
     await page.goto(base + '/english-exam.html?source=inline');
+    await page.locator('#begin').click();
+    await page.locator('#review-button').click();
+    await page.locator('#finish').click();
     await page.getByText('סיימתם! התשובות נשמרו.').waitFor();
-    assert.match(await page.locator('#send-status').textContent(), /לאחר השלמת הבדיקה/);
+    assert.match(await page.locator('#score').textContent(), /לאחר השלמת הבדיקה/);
     assert.equal(await page.locator('#regrade').isVisible(), false);
+    assert.doesNotMatch(await page.locator('#score').textContent(), /מתוך 100/);
     await page.reload();
     await page.getByText('סיימתם! התשובות נשמרו.').waitFor();
+    const firstLookup = page.waitForEvent('requestfailed', request => request.url().endsWith('/api/exam-result'));
+    await page.clock.fastForward(5001);
+    await firstLookup;
+    const retry = page.waitForResponse(response => response.url().endsWith('/api/exam-result'));
+    await page.clock.runFor(10100);
+    await retry;
+    await page.getByText('ציון סופי: 0 מתוך 100.').waitFor();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    assert.equal(await page.locator('#finish').isVisible(), false);
+    await page.reload();
+    await page.getByText('ציון סופי: 0 מתוך 100.').waitFor();
+    await page.clock.fastForward(65000);
     assert.equal(posts, 1);
+    assert.equal(lookups, 2);
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

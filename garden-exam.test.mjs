@@ -24,7 +24,7 @@ test('shared behaviours are present in the page source', () => {
   assert.match(script, /storageKey = 'garden-exam-draft-v1'/);
   assert.match(script, /'garden-exam-result-v1'/);
   assert.match(script, /if \(sent\) \{[\s\S]*grading.status === 'pending'/);
-  assert.match(script, /if \(finished && questions\.every\(\(_, i\) => answered\(i\)\)\) \{ results\(\); if \(!sent\) sendExam\(\); \}/, 'reload shows the summary, sends only if not sent');
+  assert.match(script, /if \(finished && questions\.every\(\(_, i\) => answered\(i\)\)\) \{ results\(\); if \(sent\) watchResult\(\); else sendExam\(\); \}/, 'reload shows the summary, sends only if not sent');
   assert.match(html, /id="timer"/);
   assert.match(html, /id="done-banner"/);
   assert.match(html, /ניסיון שליחה חוזר/);

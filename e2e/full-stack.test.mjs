@@ -8,6 +8,7 @@ import { seed } from '../db/seed.mjs';
 import { extractContent } from '../db/extract.mjs';
 import { createDb } from '../db/runtime.mjs';
 import { createApp } from '../server.mjs';
+import '../test-fixtures/use-fake-rubrics.mjs';
 
 const url = process.env.E2E_DATABASE_URL;
 const skip = !url && 'E2E_DATABASE_URL not set';
