@@ -286,6 +286,9 @@ export function cityWorld(host,onMove,onImpact){
  const ring=new T.Mesh(new T.RingGeometry(2.8,3.15,36),new T.MeshBasicMaterial({color:'#ffbd43',side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;scene.add(marker,ring);
  const party=new T.Group();for(let i=0;i<45;i++)part(party,box,palette[i%6],Math.sin(i*4.1)*12,2+i%13,Math.cos(i*3.4)*8,.36,.55,.2);
  party.position.set(places.pier.x,0,places.pier.z);scene.add(party);party.visible=false;
+ const trail=new T.InstancedMesh(new T.CircleGeometry(.8,12),new T.MeshBasicMaterial({color:'#ffcf54',side:T.DoubleSide}),240);
+ trail.rotation.x=-Math.PI/2;trail.renderOrder=10;trail.frustumCulled=false;trail.count=0;scene.add(trail);
+ const trailMatrix=new T.Matrix4();let trailAnchor=null,trailGoal=null,trailDriving=null,trailEvents='',trailPlanned=-Infinity;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const incidentScene=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
  let shiftTime=0,events=[],incidentKey='',observing=null;
@@ -355,15 +358,41 @@ export function cityWorld(host,onMove,onImpact){
    // If every approach is temporarily closed, keep the destination and wait at the cordon.
    return drivingRoute(start,goal,base);
  }
- function go(x,z){
-   if(!districtOpen(career,x,z)){path=[];return false;}
+ function planRoute(x,z){
+   if(!districtOpen(career,x,z))return null;
    if(driving){
      const obstruction=fleet.find(g=>g!==occupied&&(parked.includes(g)||g.userData.parked)&&Math.hypot(x-g.position.x,z-g.position.z)<7);
      const goals=obstruction?[[8,0],[-8,0],[0,8],[0,-8]].map(([dx,dz])=>({x:obstruction.position.x+dx,z:obstruction.position.z+dz})).filter(p=>!blocked(p.x,p.z)).sort((a,b)=>Math.hypot(a.x-px,a.z-pz)-Math.hypot(b.x-px,b.z-pz)):[{x,z}];
-     for(const goal of goals){const route=roadPlan(goal.x,goal.z);if(route!==null){path=route;driveSpeed=0;return true;}}
-     path=[];return false;
+     for(const goal of goals){const route=roadPlan(goal.x,goal.z);if(route!==null)return route;}
+     return null;
    }
-   const route=findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});path=route||[];return route!==null;
+   return findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});
+ }
+ function go(x,z){
+   const route=planRoute(x,z);
+   path=route||[];
+   if(driving&&route!==null)driveSpeed=0;
+   return route!==null;
+ }
+ function updateTrail(){
+   if(!active||!destination||Math.hypot(px-destination.x,pz-destination.z)<=4.3){trail.count=0;trailAnchor=null;return;}
+   const eventKey=events.map(e=>e.id+'-'+e.phase).join('|');
+   const changed=trailGoal!==destination||trailDriving!==driving||trailEvents!==eventKey;
+   if(!changed&&trailAnchor&&Math.hypot(px-trailAnchor.x,pz-trailAnchor.z)<4)return;
+   if(!changed&&time-trailPlanned<.5)return;
+   trailAnchor={x:px,z:pz};trailGoal=destination;trailDriving=driving;trailEvents=eventKey;trailPlanned=time;
+   const route=planRoute(destination.x,destination.z);
+   let count=0,previous=trailAnchor,until=3;
+   for(const point of route||[]){
+     const dx=point.x-previous.x,dz=point.z-previous.z,length=Math.hypot(dx,dz);
+     for(;until<=length&&count<240;until+=4){
+       // The mesh is rotated onto the ground, so its local y corresponds to world -z.
+       trailMatrix.makeTranslation(previous.x+dx*until/length,-(previous.z+dz*until/length),.6);
+       trail.setMatrixAt(count++,trailMatrix);
+     }
+     until-=length;previous=point;
+   }
+   trail.count=count;trail.instanceMatrix.needsUpdate=true;
  }
  function advanceEvents(dt){
    shiftTime+=dt;events=cityIncidentsAt(shiftTime);
@@ -511,6 +540,7 @@ export function cityWorld(host,onMove,onImpact){
    const glow=driving&&(manualBrake||braking||impactAge<.3||(!moving&&momentum===0))?2.8:.8;
    if(car.userData.glow!==glow){car.userData.glow=glow;for(const m of car.userData.shell?.children||[])if(m.userData.tail)m.material.emissiveIntensity=glow;}
    parcel.visible=active&&loaded;parcel.position.set(px+(driving?0:Math.sin(heading)),driving?3.9:2.1+jump,pz+(driving?0:Math.cos(heading)));
+   updateTrail();
    marker.visible=ring.visible=active&&!!destination;
    if(destination){marker.position.set(destination.x,6+(reduced?0:Math.sin(time*3)*.5),destination.z);marker.rotation.y=time*.65;ring.position.set(destination.x,.5,destination.z);}
    for(const {gate,sign,x,z} of gateSigns)gate.visible=sign.visible=active&&!districtOpen(career,x===222?225:x,z===-222?-225:z);
@@ -552,7 +582,7 @@ export function cityWorld(host,onMove,onImpact){
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
-     return {shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,brakeTicks,impactVisible:dust.visible,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
+     return {trailDots:trail.count,shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,brakeTicks,impactVisible:dust.visible,car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
    },observe(id){observing=id;},events:incidentReports,yielding:()=>braking,start(x,z,elapsed=0){shiftTime=elapsed;events=cityIncidentsAt(shiftTime);observing=events.find(e=>Math.hypot(e.observer.x-x,e.observer.z-z)<4)?.id||null;viewX=.58;viewZ=.815;viewHeight=108;focusX=focusZ=0;incidentKey='';impactAge=1;impacts=brakeTicks=yieldTime=replanAt=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];velocity=driveSpeed=0;},setPaused(v){paused=v;boost=boostActive=false;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){events=[];shiftTime=0;drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
    getPlayer:()=>({x:px,z:pz,y:jump,gait:{amount:runAmount,phase:runDistance,poses:runningPose(runDistance,runAmount),limbs:limbs.map(r=>({leg:r.leg.rotation.x,shin:r.shin.rotation.x,arm:r.arm.rotation.x,forearm:r.forearm.rotation.x}))}}),project(p){const v=new T.Vector3(p.x,6,p.z).project(camera);return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2,visible:Math.abs(v.x)<.9&&Math.abs(v.y)<.85};},
    advance(ms){manual=true;for(let t=0;t<Math.min(ms,90000);t+=1000/60)update(1/60,false);update(0);},pixelRatio:renderer.getPixelRatio()};

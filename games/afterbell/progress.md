@@ -218,3 +218,9 @@ Verification includes all four incident types in mobile Chromium and WebKit, all
 - Keyboard and joystick now share the same screen-relative movement mapping, including after the car turns. Existing braking, boost, camera-relative axes and collision checks remain in use.
 - Claude read-only architecture review identified the earlier split between car-relative keyboard steering and screen-relative touch; the incident camera can change the screen axes. Follow-up: owner playtest should evaluate the existing instant direction changes on touch and keyboard.
 - Game unit tests: 108 passed, 1 skipped. Production bundle built; older assets retained for cached pages. Browser direction and touch checks did not finish in this environment and were interrupted; the game client rendered the start screen only. Re-run the control suite and inspect gameplay before release.
+
+## City mission trail — 2026-11-08
+- Request: show dots from the player to the selected city mission destination.
+- Added a ground-level route for walking and driving; it updates as the player moves, the objective changes, or incident restrictions change. The trail hides on arrival.
+- Vite build and 18 city unit tests passed. Mobile browser checked delivery selection, walking/driving route changes and guided movement; no page errors. Exam database gates were not run for this game-only visual change.
+- Release integration with current main uses the existing mission planner for both the trail and guided travel. Rebuilt the city entry and retained published assets. The compiled 390×844 browser check verified the trail appears on delivery selection, shortens during guided travel and clears on arrival. Game tests: 108 passed, 1 skipped. Repository and E2E test invocation: 350 passed, 19 skipped.
