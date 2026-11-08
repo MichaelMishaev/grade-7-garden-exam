@@ -289,6 +289,7 @@ export function cityWorld(host,onMove,onImpact){
  const trail=new T.InstancedMesh(new T.CircleGeometry(.8,12),new T.MeshBasicMaterial({color:'#ffcf54',side:T.DoubleSide}),240);
  trail.rotation.x=-Math.PI/2;trail.renderOrder=10;trail.frustumCulled=false;trail.count=0;scene.add(trail);
  const trailMatrix=new T.Matrix4();let trailAnchor=null,trailGoal=null,trailDriving=null,trailEvents='',trailPlanned=-Infinity;
+ let guidedMission=null,trailPath=null,trailWaypoint=null;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const incidentScene=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
  let shiftTime=0,events=[],incidentKey='',observing=null;
@@ -371,17 +372,22 @@ export function cityWorld(host,onMove,onImpact){
  function go(x,z){
    const route=planRoute(x,z);
    path=route||[];
+   guidedMission=destination?.x===x&&destination.z===z?destination:null;
    if(driving&&route!==null)driveSpeed=0;
    return route!==null;
  }
  function updateTrail(){
    if(!active||!destination||Math.hypot(px-destination.x,pz-destination.z)<=4.3){trail.count=0;trailAnchor=null;return;}
+   // Use the remaining waypoints of mission guidance, including any live traffic detour.
+   const guidedPath=driving&&guidedMission===destination&&path.length?path:null;
+   const waypoint=guidedPath?.[0]??null;
    const eventKey=events.map(e=>e.id+'-'+e.phase).join('|');
-   const changed=trailGoal!==destination||trailDriving!==driving||trailEvents!==eventKey;
+   const changed=trailGoal!==destination||trailDriving!==driving||trailEvents!==eventKey||trailPath!==guidedPath||trailWaypoint!==waypoint;
    if(!changed&&trailAnchor&&Math.hypot(px-trailAnchor.x,pz-trailAnchor.z)<4)return;
-   if(!changed&&time-trailPlanned<.5)return;
+   if(!changed&&!guidedPath&&time-trailPlanned<.5)return;
    trailAnchor={x:px,z:pz};trailGoal=destination;trailDriving=driving;trailEvents=eventKey;trailPlanned=time;
-   const route=planRoute(destination.x,destination.z);
+   trailPath=guidedPath;trailWaypoint=waypoint;
+   const route=guidedPath??planRoute(destination.x,destination.z);
    let count=0,previous=trailAnchor,until=3;
    for(const point of route||[]){
      const dx=point.x-previous.x,dz=point.z-previous.z,length=Math.hypot(dx,dz);
