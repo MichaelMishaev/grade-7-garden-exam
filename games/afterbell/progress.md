@@ -153,3 +153,8 @@ Manual van contact checks oriented vehicle bounds, stops inward movement and giv
 The map now connects the original neighborhoods with a northern station, court and firehouse, an eastern shipyard, freight terminal and ferry. The dispatch board reports fights, electrical fires, crashes and roadworks at eight sites. Crews arrive and clear scenes; nearby walkers give them space, and real traffic queues, yields and reroutes. The shift clock restores the current calls on reload. An observation camera keeps on-scene activity visible from the selected shoulder.
 
 Verification includes all four incident types in mobile Chromium and WebKit, all six new destinations, queue formation and release, and returning to the original home landmark. The full-stack library AI grading retry retains the same pre-existing expected-failed/actual-none mismatch.
+
+## City mission trail — 2026-11-08
+- Request: show dots from the player to the selected city mission destination.
+- Added a ground-level route for walking and driving; it updates as the player moves, the objective changes, or incident restrictions change. The trail hides on arrival.
+- Vite build and 18 city unit tests passed. Mobile browser checked delivery selection, walking/driving route changes and guided movement; no page errors. Exam database gates were not run for this game-only visual change.
