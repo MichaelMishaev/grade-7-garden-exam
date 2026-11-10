@@ -53,3 +53,12 @@ test('sustained throttle reaches the model limit without overshooting it', async
   }
  }
 });
+
+test('a crash shoves the other car harder than it bounces the player, and only an off-centre hit spins it',async()=>{
+ const {crashKick}=await import('../src/city-traffic.js');
+ const slow=crashKick(6,0,1,0,-6),fast=crashKick(31,0,1,0,-6),side=crashKick(31,0,1,2,-5),other=crashKick(31,0,1,-2,-5);
+ assert.ok(fast.shove>fast.bounce&&fast.shove>slow.shove&&fast.power>slow.power);
+ assert.ok(Math.abs(fast.spin)<1e-9);
+ assert.ok(side.spin*other.spin<0);
+ assert.ok(crashKick(200,0,1,0,-6).bounce<=8);
+});

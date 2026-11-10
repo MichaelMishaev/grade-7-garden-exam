@@ -67,3 +67,11 @@ export function manualDrive({heading, throttle, steering=0, speed, limit, brake,
  const travelAngle = heading + turn / 2;
  return {dx: Math.sin(travelAngle) * distance, dz: Math.cos(travelAngle) * distance, heading: heading + turn, speed: nextSpeed};
 }
+
+// Splits a crash between two equal vans. (tx,tz) is the unit direction of the player's motion relative to the
+// other car; (rx,rz) points from the other car's centre to the player. Speeds in m/s, spin in rad/s.
+// Below 8 m/s the player's car just stops against the bumper instead of bouncing.
+export function crashKick(closing,tx,tz,rx,rz){
+ const power=Math.min(1,Math.max(.25,closing/31)),reach=Math.hypot(rx,rz)||1;
+ return {power,bounce:closing<8?0:Math.min(8,closing*.28),shove:Math.min(20,closing*.7),spin:3.5*power*(rz*tx-rx*tz)/reach};
+}
