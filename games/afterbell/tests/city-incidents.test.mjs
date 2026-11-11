@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as T from 'three';
+import {createIncidentScene} from '../src/city-incident-scene.js';
 import {cityIncidentsAt,incidentTrafficAt,incidentLaneBlocked} from '../src/city-incidents.js';
 
 const occurrence=(t,type)=>cityIncidentsAt(t).find(e=>e.type===type);
@@ -88,4 +90,45 @@ test('a sidewalk fight never blocks either road lane',()=>{
  const e=occurrence(25,'fight');
  assert.ok(speed(e,-6)>0);assert.equal(incidentLaneBlocked([e],...offset(e,0)),false);
  assert.equal(speed(e,-50),1);
+});
+
+test('dispatch gives short stage, next action and crew copy for every phase',()=>{
+ for(let t=0;t<394;t++)for(const e of cityIncidentsAt(t)){
+   for(const key of ['stageLabel','nextStep','crew']){
+     assert.equal(typeof e[key],'string');
+     assert.match(e[key],/[א-ת]/);assert.ok(e[key].length<55);
+   }
+ }
+ const green=occurrence(163,'jam'),red=occurrence(169,'jam');
+ assert.match(green.stageLabel,/סעו/);assert.match(red.stageLabel,/עצרו/);
+ assert.ok(speed(green,-7)>0);assert.equal(speed(red,-7),0);
+ assert.match(occurrence(68,'fire').stageLabel,/צינור/);
+ assert.match(occurrence(116,'crash').stageLabel,/כבל/);
+});
+
+
+test('all scene phases fit six finite instanced batches, including reduced motion',()=>{
+ for(const reduced of [false,true]){
+   const scene=new T.Scene(),view=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
+   // Boxes and stones, plus the four rounded body shapes of the people.
+   assert.equal(scene.children.length,6);
+   for(let t=0;t<480;t+=.5){
+     view.update(cityIncidentsAt(t),t);
+     for(const mesh of scene.children){
+       assert.ok(mesh.isInstancedMesh);assert.ok(mesh.count<=384);
+       assert.ok([...mesh.instanceMatrix.array.slice(0,mesh.count*16)].every(Number.isFinite));
+     }
+   }
+ }
+});
+test('water flows with animation enabled and remains legible and still under reduced motion',()=>{
+ const events=[occurrence(90,'fire')];
+ for(const reduced of [false,true]){
+   const scene=new T.Scene(),view=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
+   view.update(events,90);
+   const before=scene.children.map(m=>[...m.instanceMatrix.array.slice(0,m.count*16)]);
+   view.update(events,90.2);
+   const after=scene.children.map(m=>[...m.instanceMatrix.array.slice(0,m.count*16)]);
+   if(reduced)assert.deepEqual(after,before);else assert.notDeepEqual(after,before);
+ }
 });

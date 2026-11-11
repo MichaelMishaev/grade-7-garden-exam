@@ -5,7 +5,7 @@ import { makeRound } from '../src/core.js';
 
 const quiz = JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
 const base = process.env.CITY_QA_URL || 'http://127.0.0.1:4359/games/afterbell/play/index.html';
-const browser = await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1'});
+const browser = await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
 const output = 'output/mobile-controls';
 await mkdir(output,{recursive:true});
 

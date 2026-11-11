@@ -170,3 +170,7 @@ body:has(#sheet:not([hidden])) #fx{top:6px;left:50%;right:auto;transform:transla
 .car-stats{display:flex;gap:10px;margin-top:3px}.car-stat{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:400}.car-stat small{color:#52685b}
 .car-stat i{display:block;width:54px;height:6px;border-radius:3px;background:#d7dccb;overflow:hidden}.car-stat b{display:block;height:100%;background:#2f8f5e;border-radius:3px}
 #upgrade-panel .upgrade-car{margin:0 0 6px;font-size:13px}
+/* On-scene guide while watching an incident: what the crew is doing now and what comes next. */
+#scene-guide{position:fixed;z-index:1;bottom:135px;right:16px;width:min(320px,calc(100% - 32px));background:#fff9e9f2;border:1px solid #b6c2ad;border-inline-start:4px solid #bc7045;border-radius:10px;padding:12px;box-shadow:0 4px 22px #25494129}#scene-guide strong{font-size:17px}#scene-guide p{font-size:13px;margin:5px 0 8px}#scene-guide button{font-size:13px;width:100%}
+.city-report .next-step{font-size:13px;color:#53685c}
+@media (pointer:coarse),(max-width:650px){#scene-guide{z-index:0;bottom:auto;top:calc(116px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));left:104px;width:auto;padding:7px 9px}#scene-guide strong{font-size:13px}#scene-guide p{font-size:11px;margin:2px 0 5px}#scene-guide button{min-height:36px;font-size:12px}}

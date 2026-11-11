@@ -57,6 +57,27 @@ const cases={
   'החתול ירד בשלום לידיים של הילדה. הסולם נאסף.'
  ]}
 };
+// Compact dispatch copy mirrors what the staged scene is doing now.
+const guidance={
+ fight:{crew:'שני שוטרים · שני מעורבים',stages:[
+  ['ויכוח על המדרכה','הניידת מגיעה להפריד'],['ניידת מתקרבת','השוטרים ניגשים למעורבים'],
+  ['השוטרים מפרידים ומשוחחים','כל אחד יעזוב לכיוון אחר'],['המעורבים מתרחקים בנפרד','המדרכה חוזרת לשגרה']]},
+ fire:{crew:'שני כבאים · צוות חשמל',stages:[
+  ['אש ועשן מארון חשמל','ניתוק חשמל והגעת כבאית'],['הכבאית מגיעה והצוות ניגש','פריסת צינור וכיבוי'],
+  ['זרם מים מכבה את האש','בדיקת הארון ופינוי הצינור'],['בדיקה אחרונה ואיסוף הציוד','הכבאית עוזבת והנתיב נפתח']]},
+ crash:{crew:'נהג גרר · שני נהגים',stages:[
+  ['שני רכבים עומדים אחרי פגיעה','הגרר בדרך לפנות את הנתיב'],['הגרר עוקף ומתמקם לפני הרכב','חיבור כבל והרמת הרכב'],
+  ['הגרר מרים את הרכב הפגוע','פינוי הרכב ובדיקת הנתיב'],['הגרר יוצא עם הרכב','התנועה חוזרת בהדרגה']]},
+ jam:{crew:'מכוון תנועה · צוות תשתיות',stages:[
+  ['הנתיב צר ותור נוצר','מכוון תנועה מגיע למקום'],['המכוון ניגש לקונוסים','מעבר כלי רכב בתורות'],
+  ['מעבר לסירוגין בנתיב הצר','איסוף קונוסים ופתיחת הכביש'],['הקונוסים נאספים','שני הנתיבים חוזרים לשגרה']]},
+ spill:{crew:'מכוון תנועה · נהג הטנדר',stages:[
+  ['ארגזים פזורים על הכביש','מכוון תנועה מגיע לסגור את הנתיב'],['הנהג מפנה ארגזים למדרכה','סגירת הנתיב בקונוסים'],
+  ['אוספים את הארגזים אחד־אחד','ניקוי הכביש ואיסוף הקונוסים'],['הקונוסים נאספים','הטנדר ממשיך והנתיב נפתח']]},
+ rescue:{crew:'שני כבאים · ילדה מהשכונה',stages:[
+  ['חתול תקוע בצמרת העץ','כבאית עם סולם בדרך'],['הכבאית מגיעה עם הסולם','הכבאי מטפס אל החתול'],
+  ['הכבאי מטפס ומושיט יד לחתול','החתול יורד אל הילדה'],['החתול ירד בשלום','הסולם נאסף והמדרכה מתפנה']]}
+};
 const phases=['reported','responding','working','clearing'];
 const cycle=480;
 // Ten calls per round, at most three at a time; a site hosts two calls only when the first has cleared.
@@ -79,8 +100,13 @@ export function cityIncidentsAt(seconds){
    if(age>=duration)continue;
    let stage=0,local=age;
    while(local>=info.durations[stage])local-=info.durations[stage++];
+   const copy=guidance[type], [stageLabel,nextStep]=copy.stages[stage];
+   let visibleStage=stageLabel;
+   if(type==='jam'&&stage===2)visibleStage=local%10<5?'סעו · המכוון משחרר את התור':'עצרו · ממתינים לתור הבא';
+   if(type==='fire'&&stage===2&&local/info.durations[stage]<.15)visibleStage='הכבאים פורסים צינור';
+   if(type==='crash'&&stage===2&&local/info.durations[stage]<.24)visibleStage='נהג הגרר מחבר כבל';
    active.push({...sites[location],id:occurrence+'-'+location+'-'+type,type,age,duration,phase:phases[stage],
-    phaseProgress:local/info.durations[stage],stageAge:local,workDuration:info.durations[2],title:info.title,detail:info.details[stage],responder:info.responder,mode:info.mode,softStart:Boolean(info.softStart)});
+    phaseProgress:local/info.durations[stage],stageAge:local,workDuration:info.durations[2],title:info.title,detail:info.details[stage],stageLabel:visibleStage,nextStep,crew:copy.crew,responder:info.responder,mode:info.mode,softStart:Boolean(info.softStart)});
  }
  return active;
 }

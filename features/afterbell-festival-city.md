@@ -108,3 +108,20 @@ Manual throttle builds speed progressively. Releasing movement input keeps the c
 |---|---|---|
 | C35 | Keyboard up and down drive forward and reverse relative to the car. Left and right steer. The touch joystick drives in screen directions. | Compiled desktop checks from opposite headings and after a turn, plus mobile touch checks for cardinal and diagonal directions |
 | C36 | The joystick, speed indicator, brake, turbo and mission controls fit on touch screens in both orientations. Brake and turbo work while the joystick is held. Releasing input lets the car coast. | Compiled Chromium touch at 320×568, 568×320 and 844×390 |
+
+C19. A moving player van contacting a walking resident causes one short hop, small knockback and recovery. The landing remains within the city and clear of solid buildings. Sustained overlap does not retrigger the reaction. Auto-drive yields to residents. A stationary van and a walking hero do not cause knockback. Reduced motion keeps the short displacement and recovery without the hop or tumble.
+
+C20. Scene visits offer an urgent guided drive that accelerates on clear streets, passes a slower car only when the road and opposing traffic allow it, and takes an early detour if blocked. Manual input or cancelling directions ends urgent mode. The van slows for pedestrians and arriving at the scene ends the rush.
+C21. Dispatch and on-scene captions name the responding crew, explain the current visible action and say what happens next. Firefighting, towing, police separation and alternating traffic have distinct movement cues matching the phase.
+
+## Field expeditions in the expanded bay
+Students can explore connected western and northern districts from the existing city entry point. A Hebrew RTL field journal offers six optional assignments for the selected subject. A student accepts one, travels or rides the tram, works with the station's materials, retries with feedback, and stamps the journal. Field practice is separate from graded shift answers. The current assignment and stamps use the existing session draft. Old drafts start with an empty journal.
+- EXP-1. Bounds cover at least four times the former area. Six signed stations join the same streets and map. Check geometry and routes.
+- EXP-2. Each subject offers six contextual activities across at least four interaction formats. Check subject switch, errors, retries and completion.
+- EXP-3. Accepting, abandoning and resuming preserve shift progress. A finished activity has one stamp per shift. Check mobile browser, reload and keyboard controls.
+
+## Physical street interactions
+Driving students should see contact rather than clipping. Loose benches, bins, crates and cones are pushed with a short tumble and friction; buildings, trunks, poles and parked vehicles remain solid. Building hits stop the van and shed cosmetic bumper/panel parts. Damage is visual for the current play session, resets on starting or resuming a shift, and never changes rewards or academic results. Reduced motion suppresses tumbling. No structural building destruction is assumed.
+C22. The van footprint cannot cross fixed scenery, including at diagonal angles or maximum speed. Test oriented contact and a browser wall approach.
+C23. Loose street objects move on impact, settle outside fixed walls, and remain collidable at their new position. Test push, blocked push, settling and a browser collision.
+C24. A building contact sheds a visible car part once per contact, with bounded debris and a Hebrew cue. Repeated contact cannot emit unlimited parts. Pause freezes physics; a new shift repairs the van. Verify browser state and screenshot.

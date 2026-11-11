@@ -5,7 +5,7 @@ import {makeRound} from '../src/core.js';
 import {CAR_SPEED,CAR_TASKS} from '../src/city-discovery.js';
 const q=JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
 const base=process.env.CITY_QA_URL||'http://127.0.0.1:5191/';
-const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1'});const p=await b.newPage({viewport:{width:1280,height:844},reducedMotion:'reduce'}),errors=[];
+const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});const p=await b.newPage({viewport:{width:1280,height:844},reducedMotion:'reduce'}),errors=[];
 p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
 await p.addInitScript(()=>{const raw=sessionStorage.getItem('qa-performance-draft');if(raw){const d=JSON.parse(raw);sessionStorage.setItem('prepx-festival-city-v1',raw);localStorage.setItem('prepx-city-discovery-v1:QA',JSON.stringify(d.city.career));}});
 await p.route('**/api/afterbell/quizzes/*',r=>r.fulfill({json:q}));

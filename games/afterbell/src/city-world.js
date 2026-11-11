@@ -2,6 +2,8 @@ import * as T from 'three';
 import {createSurfaces,skyEnvironment,canopyGeometry,bodyShapes} from './city-materials.js';
 import {places,inCity,CITY_EDGE,CITY_BOUNDS,northSouthStreets,eastWestStreets,streetEnds} from './city-data.js';
 import {drawCityGroundAndRoads,drawOuterDistricts,drawDistrictLandmark} from './city-districts.js';
+import {overtakeRoute} from './city-overtake.js';
+import {sceneryTouch,kickObject,stepObject} from './city-objects.js';
 import {cityIncidentsAt,incidentTrafficAt,incidentLaneBlocked} from './city-incidents.js';
 import {createIncidentScene} from './city-incident-scene.js';
 import {runningPose} from './city-motion.js';
@@ -43,7 +45,7 @@ export function cityWorld(host,onMove,onImpact){
  // Windows and lamp heads share one glass material whose glow follows the time of day.
  const glowMaterial=surface('glass',{emissive:'#ffc46b',emissiveIntensity:0});
  const lampSpots=[];
- const batches=new Map(),obstacles=[],parkedSpawns=[{x:-10,z:20,brand:'toyota'},{x:-10,z:30,brand:'vw'},{x:3,z:35,brand:'modelY'},{x:3,z:45,brand:'bmw'},{x:3,z:65,brand:'mercedes'}];
+ const batches=new Map(),obstacles=[],loose=[],parkedSpawns=[{x:-10,z:20,brand:'toyota'},{x:-10,z:30,brand:'vw'},{x:3,z:35,brand:'modelY'},{x:3,z:45,brand:'bmw'},{x:3,z:65,brand:'mercedes'}];
  let career={done:[]};
  // kind picks the surface material (see city-materials.js); one instanced batch per shape and kind.
  function prop(shape,color,x,y,z,w,h,d,ry=0,kind='plain'){
@@ -56,14 +58,39 @@ export function cityWorld(host,onMove,onImpact){
  const block=surfaced('plain');
  for(const kind of ['wall','asphalt','pave','grass','sand','glass'])block[kind]=surfaced(kind);
  const glow=(c,x,y,z,w,h,d)=>{prop(box,c,x,y,z,w,h,d,0,'glow');if(w<2&&h<1)lampSpots.push([x,z]);};
- function solid(x,z,w,d){obstacles.push({x,z,w:w/2+.7,d:d/2+.7});}
- function blocked(x,z){return !inCity(x,z)||!districtOpen(career,x,z)||obstacles.some(o=>Math.abs(x-o.x)<o.w&&Math.abs(z-o.z)<o.d);}
+ // Fixed scenery. Looked up through a coarse grid, because trees, poles and hedges are solid too.
+ const CELL=28,cells=new Map();let indexed=false;
+ function solid(x,z,w,d,kind='building'){obstacles.push({x,z,w:w/2+.7,d:d/2+.7,halfW:w/2,halfD:d/2,kind});indexed=false;}
+ function around(x,z){
+   if(!indexed){
+     cells.clear();indexed=true;
+     for(const o of obstacles)for(let cx=Math.floor((o.x-o.w-4)/CELL);cx<=Math.floor((o.x+o.w+4)/CELL);cx++)for(let cz=Math.floor((o.z-o.d-4)/CELL);cz<=Math.floor((o.z+o.d+4)/CELL);cz++){
+       const key=cx+':'+cz;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(o);
+     }
+   }
+   return cells.get(Math.floor(x/CELL)+':'+Math.floor(z/CELL))||[];
+ }
+ const solidAt=(x,z)=>!inCity(x,z)||around(x,z).some(o=>Math.abs(x-o.x)<o.w&&Math.abs(z-o.z)<o.d);
+ function blocked(x,z){return !districtOpen(career,x,z)||solidAt(x,z);}
+ // The car's whole footprint against fixed scenery, used while the player steers.
+ function fixedTouch(x,z,angle){return around(x,z).find(o=>Math.abs(x-o.x)<o.halfW+3.6&&Math.abs(z-o.z)<o.halfD+3.6&&sceneryTouch(x,z,angle,{x:o.x,z:o.z,w:o.halfW,d:o.halfD}));}
+ const gapTo=(o,x,z)=>Math.hypot(Math.max(0,Math.abs(x-o.x)-o.halfW),Math.max(0,Math.abs(z-o.z)-o.halfD));
+ function objectBlocked(x,z,o){return !inCity(x,z)||around(x,z).some(b=>Math.abs(x-b.x)<b.halfW+o.w&&Math.abs(z-b.z)<b.halfD+o.d);}
+ // Benches, bins, cones and crates stand loose: a car knocks them away and they settle where they land.
+ function streetObject(kind,x,z){
+   const g=new T.Group();let w=.65,d=.65;
+   if(kind==='bench'){w=1.65;d=.7;part(g,box,'#a78160',0,1,0,3.3,.4,1.3);part(g,box,'#a78160',0,1.6,-.5,3.3,.9,.25);for(const dx of [-1.2,1.2])part(g,box,'#465e63',dx,.5,0,.25,1,1);}
+   else if(kind==='cone'){part(g,box,'#465e63',0,.12,0,1.2,.24,1.2);part(g,roof,'#f28b38',0,.85,0,.7,1.5,.7);part(g,box,'#fff0cd',0,.8,0,.65,.22,.65);}
+   else if(kind==='bin'){part(g,box,'#426e67',0,.85,0,1.2,1.7,1.2);part(g,box,'#325650',0,1.75,0,1.4,.18,1.4);}
+   else{part(g,box,'#c39462',0,.7,0,1.4,1.4,1.4);for(const dx of [-.5,.5])part(g,box,'#896443',dx,.7,.72,.12,1.4,.08);w=d=.75;}
+   const o={kind,x,z,w,d,y:0,angle:0,vx:0,vz:0,vy:0,spin:0,moving:false,g,homeX:x,homeZ:z};loose.push(o);g.position.set(x,0,z);
+ }
  const leafTint=new T.Color(),leafHsl={};
  function tree(x,z,c='#6bb789',scale=1){
    // Every tree differs a little in size, turn and green, decided by where it stands.
    const r=Math.abs(Math.sin(x*12.9898+z*78.233)*43758.5453)%1,size=(.86+r*.34)*scale;
    leafTint.set(c).getHSL(leafHsl);leafTint.setHSL(leafHsl.h-.03+r*.05,Math.min(.62,leafHsl.s+.2),leafHsl.l*(.5+r*.12));
-   prop(tube,'#5d4a38',x,2.1*size,z,.36,4.2*size,.36);
+   solid(x,z,.5,.5,'tree');prop(tube,'#5d4a38',x,2.1*size,z,.36,4.2*size,.36);
    prop(canopy,'#'+leafTint.getHexString(),x,5.9*size,z,4*size,4.3*size,4*size,r*6.28,'leaf');
  }
  function label(text,x,y,z,width,bg='#245552'){
@@ -72,7 +99,9 @@ export function cityWorld(host,onMove,onImpact){
    const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;
    const m=new T.Mesh(new T.PlaneGeometry(width,width*96/512),new T.MeshBasicMaterial({map:texture,side:T.DoubleSide}));m.position.set(x,y,z);scene.add(m);return m;
  }
- drawCityGroundAndRoads(block,glow);
+ // Lamp posts are solid: the road painter draws each one as a .26 x 5.8 box.
+ const roadBlock=Object.assign((...args)=>{block(...args);const [,x,,z,w,h,d]=args;if(h===5.8&&w===.26)solid(x,z,w,d,'pole');},block);
+ drawCityGroundAndRoads(roadBlock,glow);
  // The bay surrounds the city: one large sheet of moving water that fades into the haze.
  const sea=new T.Mesh(new T.PlaneGeometry(2600,2600).rotateX(-Math.PI/2),surface('water',{color:'#1b6c8c'}));sea.position.set(56,-.15,-80);sea.receiveShadow=true;scene.add(sea);
  const palette=['#d8b79c','#e2d2b0','#c3ccce','#cfc1b8','#e0c9b6','#b7c6bb'];
@@ -104,8 +133,8 @@ export function cityWorld(host,onMove,onImpact){
    if(x<-80||z<-110){house(x-7,z,palette[id%6]);house(x+10,z-9,palette[(id+2)%6],9,5);}
    else{const h=10+(id%4)*5;block.wall(palette[id%6],x,h/2,z,17,h,13);solid(x,z,17,13);block('#e8e0cc',x,h,z,18,1,14);for(let y=3;y<h;y+=4){windows(x,y,z+6.6,17,4);sideWindows(x+8.6,y,z,13,3);}rooftop(x,h+.5,z,id);block('#3f5560',x,1.6,z+6.6,2.4,3.2,.3);block('#d9d2bf',x,3.5,z+7.3,4.2,.3,1.7);}
    tree(x+15,z+12);
-   block('#e6d9b7',x,.22,z+17,3,.12,14);block.grass('#4f7a45',x-10,.95,z+13,8,1.8,1.8);
-   block('#a78160',x+8,1.05,z+19,3,.38,1);for(const dx of [7,9])block('#465e63',x+dx,.55,z+19,.22,1,.65);
+   block('#e6d9b7',x,.22,z+17,3,.12,14);block.grass('#4f7a45',x-10,.95,z+13,8,1.8,1.8);solid(x-10,z+13,8,1.8,'hedge');
+   streetObject('bench',x+8,z+19);streetObject('bin',x+12,z+19);streetObject(id%2?'crate':'cone',x-13,z+19);
    if(id%3!==0){const vx=ix*56+3,vz=iz*56+21;
      parkedSpawns.push({x:vx,z:vz,brand:trafficBrand(id).id});
    }
@@ -156,6 +185,18 @@ export function cityWorld(host,onMove,onImpact){
  for(const {shape,kind,instances} of batches.values()){
    const batch=new T.InstancedMesh(shape,kind==='glow'?glowMaterial:surface(kind),instances.length);
    instances.forEach(([matrix,c],i)=>{batch.setMatrixAt(i,matrix);batch.setColorAt(i,new T.Color(c));});batch.castShadow=batch.receiveShadow=true;scene.add(batch);
+ }
+ const objectBatches=[];
+ for(const shape of [box,roof]){
+   const entries=loose.flatMap(o=>o.g.children.filter(m=>m.geometry===shape).map(m=>({o,m})));
+   if(!entries.length)continue;
+   const mesh=new T.InstancedMesh(shape,material,entries.length);mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;mesh.castShadow=mesh.receiveShadow=true;
+   entries.forEach(({m},i)=>{m.updateMatrix();mesh.setColorAt(i,m.material.color);m.material.dispose();});scene.add(mesh);objectBatches.push({mesh,entries});
+ }
+ const objectMatrix=new T.Matrix4();
+ function renderObjects(){
+   for(const o of loose){o.g.position.set(o.x,o.y,o.z);o.g.rotation.z=reduced?0:Math.sin(o.angle)*.7;o.g.updateMatrix();}
+   for(const {mesh,entries} of objectBatches){entries.forEach(({o,m},i)=>mesh.setMatrixAt(i,objectMatrix.multiplyMatrices(o.g.matrix,m.matrix)));mesh.instanceMatrix.needsUpdate=true;}
  }
  function part(g,shape,c,x,y,z,w,h,d){
    const m=new T.Mesh(shape,new T.MeshStandardMaterial({color:c,roughness:.72}));m.position.set(x,y,z);m.scale.set(w,h,d);m.castShadow=true;g.add(m);return m;
@@ -323,7 +364,9 @@ export function cityWorld(host,onMove,onImpact){
    Object.assign(g.userData,{id:'traffic-'+(traffic.length-1),clock:0,vx:0,vz:0,kx:0,kz:0,kyaw:0,kvx:0,kvz:0,kw:0,stun:0,hitAge:1,hitPower:0});g.userData.move(0);
  }
  function addResident(x,z,i){
-   const g=person(palette[i%6]);walkers.push(g);routes.push(circuit(g,x+5,z+5,46,1.6+i%3*.25,i*7,2+i%3));
+   const g=person(palette[i%6]);walkers.push(g);const walk=circuit(g,x+5,z+5,46,1.6+i%3*.25,i*7,2+i%3);
+   // sideX/sideZ: how far this resident has stepped off their route to let a guided car pass.
+   const move=t=>{walk(t);g.position.x+=g.userData.sideX||0;g.position.z+=g.userData.sideZ||0;};routes.push(move);move(0);g.userData.clock=0;
  }
  for(let i=0;i<20;i++)addTraffic(((i%5)-2)*56,(Math.floor(i/5)-2)*56,6+i%3,i*4.1);
  for(let i=0;i<32;i++)addResident((i%8-4)*56,(Math.floor(i/8)-2)*56,i);
@@ -427,8 +470,7 @@ export function cityWorld(host,onMove,onImpact){
  let guidedMission=null,trailPath=null,trailWaypoint=null;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const incidentScene=createIncidentScene({scene,reduced,dynamicUsage:T.DynamicDrawUsage});
- let shiftTime=0,events=[],incidentKey='',observing=null;
- const solidAt=(x,z)=>!inCity(x,z)||obstacles.some(o=>Math.abs(x-o.x)<o.w&&Math.abs(z-o.z)<o.d);
+ let shiftTime=0,events=[],incidentKey='',observing=null,urgent=false,passAt=0,passes=0;
  const starSpots=starCandidates().filter(s=>!solidAt(s.x,s.z)&&!solidAt(s.x+1.5,s.z)&&!solidAt(s.x-1.5,s.z)&&!solidAt(s.x,s.z+1.5)&&!solidAt(s.x,s.z-1.5));
  const activityScene=createActivityScene({scene,person,label,races:RACES,stars:starSpots,reduced});
  let playState=()=>null;
@@ -534,6 +576,38 @@ export function cityWorld(host,onMove,onImpact){
    if(!reduced)crashFx.carHit(g,kick.power,tx,tz,dust.position,{fixed:!!m.parked||!m.move,heading});
    onImpact(kick.power);
  }
+ // A wall, tree, pole or hedge stops the car. One report per contact; a hard hit throws debris.
+ let sceneryContact=null,contactX=0,contactZ=0,sceneryHits=0,damage=0,objectHits=0;
+ function sceneryImpact(o,speed,way){
+   if(sceneryContact===o)return;sceneryContact=o;contactX=px;contactZ=pz;
+   if(speed<3)return;
+   const power=Math.min(1,Math.max(.25,speed/31)),sx=Math.sin(heading)*way,sz=Math.cos(heading)*way;
+   impactAge=0;impactPower=power;impactSide=0;sceneryHits++;
+   dust.position.set(px+sx*3,.6,pz+sz*3);
+   if(speed>=8){damage++;if(!reduced)crashFx.wallHit(power,dust.position,sx,sz,paint||'#'+(car.userData.body?.material?.color?.getHexString?.()||'9aa3ab'));}
+   onImpact(power,o.kind);
+ }
+ function resetObjects(){
+   for(const o of loose)Object.assign(o,{x:o.homeX,z:o.homeZ,y:0,angle:0,vx:0,vz:0,vy:0,spin:0,moving:false});
+   damage=objectHits=sceneryHits=0;sceneryContact=null;
+ }
+ // Residents on a walking circuit step to the side of a guided car coming up behind or toward them.
+ function stepAside(dt){
+   const guided=active&&driving&&path.length>0,sx=Math.sin(heading),sz=Math.cos(heading),decay=Math.exp(-dt*1.4);
+   for(const g of walkers){
+     const m=g.userData;if(m.hit)continue;
+     const dx=g.position.x-px,dz=g.position.z-pz;
+     if(guided&&Math.abs(dx)<12&&Math.abs(dz)<12){
+       const ahead=dx*sx+dz*sz,side=dx*sz-dz*sx;
+       if(ahead>-1&&ahead<11&&Math.abs(side)<3.2){
+         const way=side<0?-1:1,nx=(m.sideX||0)+sz*way*dt*3,nz=(m.sideZ||0)-sx*way*dt*3;
+         if(Math.hypot(nx,nz)<4&&!blocked(g.position.x-(m.sideX||0)+nx,g.position.z-(m.sideZ||0)+nz)){m.sideX=nx;m.sideZ=nz;}
+         continue;
+       }
+     }
+     if(m.sideX||m.sideZ){m.sideX*=decay;m.sideZ*=decay;if(Math.hypot(m.sideX,m.sideZ)<.02)m.sideX=m.sideZ=0;}
+   }
+ }
  function advanceTraffic(dt){
    for(const g of traffic){
      if(g===occupied||g.userData.parked){g.userData.vx=g.userData.vz=0;continue;}
@@ -608,6 +682,7 @@ export function cityWorld(host,onMove,onImpact){
    return findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});
  }
  function go(x,z){
+   urgent=false;
    const route=planRoute(x,z);
    path=route||[];
    guidedMission=destination?.x===x&&destination.z===z?destination:null;
@@ -681,6 +756,11 @@ export function cityWorld(host,onMove,onImpact){
    for(const g of contacts)if(impactAge>1&&!vansTouch(px,pz,heading,g.position.x,g.position.z,g.rotation.y,3))contacts.delete(g);
    if(!paused)frameIncident(dt);
    braking=false;
+   if(sceneryContact&&Math.hypot(px-contactX,pz-contactZ)>1.2)sceneryContact=null;
+   if(!paused&&dt>0){
+     for(const o of loose)stepObject(o,dt,objectBlocked);
+     stepAside(dt);
+   }
    if(active&&!paused){
      if(driving&&(kvx||kvz)){
        const nx=px+kvx*dt,nz=pz+kvz*dt,fade=Math.exp(-dt*12);
@@ -694,7 +774,7 @@ export function cityWorld(host,onMove,onImpact){
      const sx=keyX+(useStick?stick.x:0);
      const sy=keyY-(useStick?stick.z:0);
      let dx=sx*right.x+sy*forward.x,dz=sx*right.z+sy*forward.z;
-     if(sx||sy)path=[];
+     if(sx||sy){path=[];urgent=false;}
      while(path.length&&Math.hypot(path[0].x-px,path[0].z-pz)<.001){const reached=path.shift();px=reached.x;pz=reached.z;}
      if(path.length){dx=path[0].x-px;dz=path[0].z-pz;}
      const len=Math.hypot(dx,dz),guided=path.length>0;
@@ -710,17 +790,32 @@ export function cityWorld(host,onMove,onImpact){
        let speed=driving?(CAR_SPEED[car.userData.brand]||31)*(manualCar?perf.speed:1):16;
        momentum=reduced?1:Math.min(1,momentum+dt/.4);
        moving=true;
+       if(driving&&guided&&urgent)speed*=1.35;
        if(!manualCar)speed*=.3+.7*momentum;
+       const limit=speed;
        if(boostActive)boostEnergy=Math.max(0,boostEnergy-dt/(3*perf.boostTime));
        if(driving&&guided){
          // Do not predict travel beyond the stopping point and brake for a car past our goal.
          const goal=path.at(-1),approachLimit=Math.min(speed,Math.max(.5,Math.hypot(goal.x-px,goal.z-pz)/.7));
          const ahead=safeSpeed(px,pz,angle,approachLimit,fleet.filter(g=>g!==occupied));
          const pace=events.length?incidentTrafficAt(events,px,pz,angle):1;
-         speed=Math.min(ahead.speed,speed*pace);braking=speed<31;
+         speed=Math.min(ahead.speed,speed*pace);braking=speed<limit;
          if(braking&&dt>0)brakeTicks++;
+         if(urgent&&ahead.obstruction&&time>=passAt){
+           passAt=time+.5;
+           const pass=ahead.obstruction.userData.move&&!ahead.obstruction.userData.parked&&overtakeRoute({x:px,z:pz},angle,ahead.obstruction,traffic.filter(g=>g!==occupied),(x,z)=>blocked(x,z)||incidentLaneBlocked(events,x,z));
+           if(pass){
+
+             // Stay on the current straight before merging into the remaining route.
+             const next=path.find(p=>Math.hypot(p.x-px,p.z-pz)>20);
+             if(next&&Math.abs((next.x-px)*dz/len-(next.z-pz)*dx/len)<4.5&&(next.x-px)*dx/len+(next.z-pz)*dz/len>Math.hypot(pass.at(-1).x-px,pass.at(-1).z-pz)+3){
+               const rejoin=path.findIndex(p=>Math.hypot(p.x-px,p.z-pz)>Math.hypot(pass.at(-1).x-px,pass.at(-1).z-pz));
+               if(rejoin>=0&&clearSegment(pass.at(-1),path[rejoin],blocked)){path=[...pass,...path.slice(rejoin)];speed=0;passes++;}
+             }
+           }
+         }
          yieldTime=speed<4?yieldTime+dt:0;
-         if(yieldTime>.9&&time>=replanAt&&ahead.obstruction){
+         if(yieldTime>(urgent?.25:.9)&&time>=replanAt&&ahead.obstruction){
            replanAt=time+2;
            const p=ahead.obstruction.position;
            const clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
@@ -728,6 +823,12 @@ export function cityWorld(host,onMove,onImpact){
            if(detour?.length){path=detour;speed=0;yieldTime=0;}
          }
        }else yieldTime=0;
+       // A guided car slows for a resident crossing ahead of it.
+       if(driving&&guided)for(const g of walkers){
+         const wx=g.position.x-px,wz=g.position.z-pz;if(g.userData.hit||Math.abs(wx)>13||Math.abs(wz)>13)continue;
+         const sin=Math.sin(angle),cos=Math.cos(angle),ahead=wx*sin+wz*cos;
+         if(ahead>0&&ahead<12&&Math.abs(wx*cos-wz*sin)<2.7){speed=Math.min(speed,Math.max(2,(ahead-4)*3));braking=true;}
+       }
        let nx=px,nz=pz;
        if(manualCar){
          // Each model has its own handling (CAR_HANDLING), upgrades multiply it. The car swings toward the stick
@@ -776,8 +877,21 @@ export function cityWorld(host,onMove,onImpact){
        }
        else if(guided){if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}else path=[];}
        else if(driving){
-         if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}
+         // The whole body stops at scenery. A car already against it may still slide along or back away.
+         const wall=fixedTouch(nx,nz,vehicleAngle);
+         if(wall&&gapTo(wall,nx,nz)<gapTo(wall,px,pz)-1e-6)sceneryImpact(wall,Math.abs(driveSpeed),Math.sign(driveSpeed)||1);
+         else if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}
        }else{if(!blocked(nx,pz))px=nx;if(!blocked(px,nz))pz=nz;}
+       // Loose street furniture in the car's way is knocked along its direction of travel.
+       if(driving&&(px!==startX||pz!==startZ)){
+         const mx=px-startX,mz=pz-startZ,pace=dt>0?Math.hypot(mx,mz)/dt:0;
+         for(const o of loose){
+           if(Math.abs(o.x-px)>6||Math.abs(o.z-pz)>6||!sceneryTouch(px,pz,vehicleAngle,o))continue;
+           if(!o.moving){objectHits++;if(!guided)onImpact(Math.min(.3,.1+pace/90),'object');}
+           kickObject(o,mx,mz,Math.max(6,pace));
+           if(!objectBlocked(o.x+mx,o.z+mz,o)){o.x+=mx;o.z+=mz;}
+         }
+       }
        const moved=px!==startX||pz!==startZ;
        if(moved)blockedTime=0;
        if(manualCar&&!moved&&dt>0)driveSpeed=0;
@@ -802,6 +916,7 @@ export function cityWorld(host,onMove,onImpact){
      stepCarWheels(car.userData.shell,distance,steer,dt);
      if(draw)poseCarWheels(car.userData.shell);
    }
+   if(!path.length)urgent=false;
    animateRunner(dt,Math.hypot(px-startX,pz-startZ));
    const bob=!reduced&&moving&&!driving&&!jump?Math.abs(Math.sin(time*14))*.32:0;
    avatar.position.set(px,jump+bob,pz);avatar.rotation.y=visHeading;avatar.visible=active&&!driving;
@@ -824,7 +939,7 @@ export function cityWorld(host,onMove,onImpact){
    if(destination){marker.position.set(destination.x,6+(reduced?0:Math.sin(time*3)*.5),destination.z);marker.rotation.y=time*.65;ring.position.set(destination.x,.5,destination.z);}
    for(const {gate,sign,x,z} of gateSigns)gate.visible=sign.visible=active&&!districtOpen(career,x===222?225:x,z===-222?-225:z);
    if(occupied){occupied.position.set(px,0,pz);occupied.rotation.y=heading;}
-   if(draw){moveStreetActors();incidentScene.update(events,shiftTime,traffic);activityScene.update(time,active?playState():null);drawBeams();}
+   if(draw){renderObjects();moveStreetActors();incidentScene.update(events,shiftTime,traffic);activityScene.update(time,active?playState():null);drawBeams();}
    flame.visible=driving&&boostActive&&!reduced;if(flame.visible)flame.scale.z=.8+Math.sin(time*60)*.25;
    planes.forEach((g,i)=>{
      const angle=time*(.053+i*.007)+i*2;
@@ -892,8 +1007,12 @@ export function cityWorld(host,onMove,onImpact){
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
-     return {trailDots:trail.count,shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,crash:crashFx.stats(),brakeTicks,impactVisible:dust.visible,knock:Number(Math.max(...traffic.map(g=>Math.hypot(g.userData.kx,g.userData.kz))).toFixed(2)),car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
-   },observe(id){observing=id;},events:incidentReports,yielding:()=>braking,start(x,z,elapsed=0){shiftTime=elapsed;events=cityIncidentsAt(shiftTime);observing=events.find(e=>Math.hypot(e.observer.x-x,e.observer.z-z)<4)?.id||null;viewX=.58;viewZ=.815;viewHeight=108;focusX=focusZ=0;incidentKey='';impactAge=1;impacts=brakeTicks=yieldTime=replanAt=kvx=kvz=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];velocity=driveSpeed=0;},setPaused(v){paused=v;boost=boostActive=false;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){events=[];shiftTime=0;drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
+     return {trailDots:trail.count,shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,crash:crashFx.stats(),urgent,passes,damage,sceneryHits,objectHits,objects:loose.filter(o=>Math.hypot(o.x-px,o.z-pz)<24).slice(0,8).map(({kind,x,z,moving})=>({kind,x,z,moving})),brakeTicks,impactVisible:dust.visible,knock:Number(Math.max(...traffic.map(g=>Math.hypot(g.userData.kx,g.userData.kz))).toFixed(2)),car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
+   },respondTo(event){
+     // Urgent driving needs a car; on foot the player is simply led to the lookout.
+     if(!go(event.observer.x,event.observer.z))return false;
+     observing=event.id;urgent=driving;return true;
+   },observe(id){observing=id;},events:incidentReports,yielding:()=>braking,start(x,z,elapsed=0){resetObjects();urgent=false;passes=0;shiftTime=elapsed;events=cityIncidentsAt(shiftTime);observing=events.find(e=>Math.hypot(e.observer.x-x,e.observer.z-z)<4)?.id||null;viewX=.58;viewZ=.815;viewHeight=108;focusX=focusZ=0;incidentKey='';impactAge=1;impacts=brakeTicks=yieldTime=replanAt=kvx=kvz=0;contacts.clear();position(x,z);active=true;manual=false;fit();},position,go,stop(){path=[];urgent=false;velocity=driveSpeed=0;},setPaused(v){paused=v;boost=boostActive=false;keys.clear();stick={x:0,z:0};},setStick(x,z){stick={x,z};},cargo(v){loaded=v;},target(p){destination=p;},celebrate(){party.visible=true;},reset(){events=[];shiftTime=0;drone.visible=false;active=false;party.visible=false;paused=false;path=[];fit();},jump(){if(!driving&&!jump)vy=8;},moving:()=>path.length>0,
    pose:()=>({x:px,z:pz,heading}),solidAt,stars:()=>starSpots,setPlay(read){playState=read;},openChanged(){activityScene.setOpen((x,z)=>districtOpen(career,x,z));},
    atmosphere:()=>({clock:clockLabel(shiftTime),hour:sky.hour,night:sky.night,glow:sky.glow,rain,shadows:sun.castShadow,quality}),
    // Work done for the last frame, shadow pass included; used by the browser checks.

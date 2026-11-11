@@ -252,3 +252,22 @@ Verification includes all four incident types in mobile Chromium and WebKit, all
 - Verified: 153 unit tests pass, 1 skipped. `qa-city-freeroam` 54 checks pass on the dev server (three runs) and on the built page. `qa-run-collisions` 24 and `qa-car-performance` 8 models pass.
 - Another session added crash physics (`city-crash*.js`) and surface materials (`city-materials.js`) to the same working copy during this work; they are in the build but were not reviewed here.
 - Built `play/` and kept earlier tracked assets. No commit, push or deploy. Open: real-phone frame rate and steering feel on a touch joystick, and an owner look at the car likenesses.
+
+## Pedestrian reactions and urgent scene response
+A moving player van gives ordinary walking residents and handoff residents a short hop and knockback, with one cue per contact. They land outside buildings and resume their routines. Auto-driven vans yield while residents step aside.
+A fresh agent expanded the phase animations and wrote short crew/action/next-step captions. Scene dispatch starts urgent driving, which travels faster on a clear road, attempts a checked pass, or takes an earlier road detour. Steering and cancelling end the mode.
+The final changes were copied into /tmp/prepx-scene-response on feat/city-scene-response because another map expansion began in the original shared worktree. This preview runs on loopback port 4399.
+
+## Physical scenery collisions
+- Added full van footprint contact against fixed scenery; trees, poles and parked vehicles now register as solids.
+- Benches, bins, crates and cones receive impulse, hop, friction and wall blocking. Building impacts shed bounded cosmetic bumper/hood/mirror pieces; new shifts repair damage. Hebrew cues and deterministic state expose outcomes.
+- Verified: 101 game tests pass, one PostgreSQL-dependent test skipped; Chromium and WebKit 390px wall damage/object shove/settling/pause checks pass. Chromium standard eight-route drive (301 road samples, zero impacts) and all four incident approaches/six outer landmarks pass. Official game client run and gameplay screenshots inspected. Physics props render in two instanced batches. Preview remains on port4399; no production publication. Damage resets on entering/resuming a shift; it is not persisted.
+
+## Merge of feat/city-scene-response into main (2026-11-11)
+
+- Merged the 3 November scene-response branch into the current game. `main` stayed the base wherever the two had diverged.
+- Kept from the branch: solid trees, lamp posts and hedges (the car's whole footprint stops at scenery while the player steers), loose benches, bins, cones and crates that a car knocks away, urgent driving to an incident with overtaking (`world.respondTo`), the on-scene guide (`#scene-guide`), stage, crew and next-step copy for every incident (added for the two newer types, spill and rescue), animated crews, hose, tow cradle and stop/go paddle in the incident scene.
+- Replaced by what `main` already had: the branch's pedestrian shove (`city-pedestrians.js` stays with its unit test but is not wired; `city-crash.js` owns struck residents), its four fly-off van parts (wall hits now throw `crashFx.wallHit` debris), its always-available van (urgent driving needs a car the player is in; on foot the dispatch button leads to the lookout as before), and its solid decorative parked cars (the fleet's real parked cars already collide).
+- Deliberate differences from the branch: guided driving keeps `main`'s planner and never reports scenery hits; loose objects never pin the car and do not block walking; residents step aside for a guided car and the car slows for them, but only walkers on a circuit, not the residents waiting at places.
+- Scenery lookups go through a 28 m grid, because trees and poles roughly tripled the number of obstacles.
+- Tests: `qa-city-objects.mjs` rewritten for the merged code, new `qa-city-urgent.mjs`, `qa-city-pedestrians.mjs` removed (covered by `qa-city-crash.mjs`). `qa-city-life.mjs` now takes a car and runs on desktop, but still stops at the second incident because its district is locked for a new player; it needs an unlocked-career fixture.

@@ -59,6 +59,11 @@ export function createCrashScene(T,scene,{box,tube,ball},{walkers,routes,locals,
   }
   if(power>=.55){smokers.set(g,{until:now+3+6*power,next:0});smokers.set('player',{until:now+2+4*power,next:0});}
  }
+ // The player's car met a wall, tree or pole at `at`, travelling along (tx,tz): pieces fly back off it.
+ function wallHit(power,at,tx,tz,color){
+  const before=parts.length;addParts(crashParts(power,at.x,at.z,-tx,-tz,color,random));stats.spawned+=parts.length-before;
+  if(power>=.7)smokers.set('player',{until:now+2+3*power,next:0});
+ }
  const airborne=g=>tumbles.get(g)?.air===true;
 
  function poseCar(g,s,live){
@@ -166,7 +171,7 @@ export function createCrashScene(T,scene,{box,tube,ball},{walkers,routes,locals,
    if(used){mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;}
   }
  }
- return {carHit,airborne,step,posePlayer,draw,
+ return {carHit,wallHit,airborne,step,posePlayer,draw,
   // Read by the browser checks.
   stats:()=>({...stats,parts:parts.length,wheels:parts.filter(p=>p.kind==='wheel').length,smoke:parts.filter(p=>p.kind==='smoke').length,down:people.filter(a=>a.g.userData.hit).length,tumbling:tumbles.size+(playerTumble?1:0),
    people:people.filter(a=>a.g.userData.hit).map(a=>({phase:a.g.userData.hit.phase,kind:a.g.userData.hit.kind,x:a.g.userData.hit.x,z:a.g.userData.hit.z,y:a.g.userData.hit.y})),

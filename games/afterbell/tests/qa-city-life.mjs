@@ -3,19 +3,23 @@ import {mkdir} from 'node:fs/promises';
 import {chromium,webkit} from 'playwright';
 import {places} from '../src/city-data.js';
 
-const browser=await (process.env.CITY_QA_ENGINE==='webkit'?webkit:chromium).launch();
+const browser=await (process.env.CITY_QA_ENGINE==='webkit'?webkit:chromium).launch(process.env.CITY_QA_ENGINE==='webkit'?{}:{args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
 const base=process.env.CITY_QA_URL||'http://127.0.0.1:4347/games/afterbell/play/index.html';
 await mkdir('output',{recursive:true});
 try{
- const page=await browser.newPage({viewport:{width:390,height:700},isMobile:true,hasTouch:true});
+ const page=await browser.newPage({viewport:{width:1100,height:780}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const state=()=>page.evaluate(()=>JSON.parse(render_game_to_text()));
  const tick=ms=>page.evaluate(ms=>{advanceTime(ms);return JSON.parse(render_game_to_text());},ms);
+ await page.route('**/api/afterbell/attempts',r=>r.fulfill({json:{saved:true}}));
  await page.goto(base);await page.fill('#player-name','QA');await page.click('#start');await tick(1);
- async function arrive(goal){
-   for(let i=0;i<80;i++){
+ // Urgent driving needs a car: take the one parked by the team house.
+ await page.click('#vehicle');assert.ok((await state()).driving,'took the car');
+ // A guided car parks a few metres short of an occupied forecourt, so arrival is judged from the car.
+ async function arrive(goal,radius=14){
+   for(let i=0;i<120;i++){
      const {player}=await tick(1000);
-     if(Math.hypot(player.x-goal.x,player.z-goal.z)<2.5)return;
+     if(Math.hypot(player.x-goal.x,player.z-goal.z)<radius)return;
    }
    assert.fail(JSON.stringify({goal,state:await state()}));
  }
@@ -24,14 +28,25 @@ try{
    const event=s.life.events.find(e=>e.type===type);assert.ok(event,JSON.stringify(s.life));
    await page.click('#dispatch');const i=s.life.events.findIndex(e=>e.id===event.id);
    assert.ok(await page.locator('.city-report h3').nth(i).isVisible());await page.click('[data-observe="'+i+'"]');
-   await arrive(event.observer);
+   assert.ok((await state()).driving);
+   if(type==='fire'){
+     assert.ok((await state()).life.urgent);
+     await page.keyboard.press('ArrowRight');await tick(40);
+     assert.equal((await state()).life.urgent,false);
+     await page.click('#dispatch');const index=(await state()).life.events.findIndex(e=>e.id===event.id);
+     await page.click('[data-observe="'+index+'"]');
+   }
+   await arrive(event.observer,11.5);await tick(1500);
    s=await state();if(s.life.shiftTime<workAt)s=await tick((workAt-s.life.shiftTime)*1000+20);
    assert.ok(s.life.events.some(e=>e.id===event.id&&e.phase==='working'),JSON.stringify({type,life:s.life}));
-   assert.equal(s.stage,0);await page.screenshot({path:'output/city-incident-'+type+'.png'});
+   assert.equal(s.stage,0);assert.ok(await page.locator('#scene-guide').isVisible());
+   assert.ok((await page.locator('#scene-now').innerText()).length>4);
+   assert.ok((await page.locator('#scene-next').innerText()).length>4);
+   await page.screenshot({path:'output/city-incident-'+type+'.png'});
    if(type==='fight'){
      await page.reload();await page.click('#resume');s=await tick(1);
      assert.equal(s.life.events.find(e=>e.id===event.id)?.phase,'working');
-     await page.click('#vehicle');
+     if(!(await state()).driving)await page.click('#vehicle');
    }
  }
  await page.click('#map');assert.equal(await page.locator('[data-place]').count(),14);

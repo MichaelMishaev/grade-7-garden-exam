@@ -5,7 +5,7 @@ import {makeRound} from '../src/core.js';
 import {headingDelta,vansTouch} from '../src/city-traffic.js';
 const q=JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
 const base=process.env.CITY_QA_URL||'http://127.0.0.1:5191/';
-const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1'}),errors=[];let checks=0;
+const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']}),errors=[];let checks=0;
 const ok=(v,s)=>{assert.ok(v,s);checks++;};
 const state=p=>p.evaluate(()=>JSON.parse(render_game_to_text()));
 async function setup(driving,cars,x=0,z=-180){

@@ -180,8 +180,16 @@ function refresh(){
   syncWallet(w=>{if(witness(w,round,selected.id)){toast('📝 דיווח עדים נרשם · '+selected.title+' · +10 מטבעות');audio.play('coin');gain({xp:XP.witness,stats:{witness:1}});}});
  }
  if(followedEvent&&!selected){followedEvent=null;toast('הדיווח נסגר. אפשר להמשיך במשמרת.');}
+ const watching=selected&&Math.hypot(city.x-selected.observer.x,city.z-selected.observer.z)<12;
+ if(watching&&$('notice').textContent.startsWith('נסיעה דחופה')){clearTimeout(timer);$('notice').textContent='';}
+ $('scene-guide').hidden=!watching;
+ if(watching){
+  const now=selected.stageLabel||incidentPhase[selected.phase],next=selected.nextStep||'';
+  if($('scene-now').textContent!==now)$('scene-now').textContent=now;
+  if($('scene-next').textContent!==next)$('scene-next').textContent=next;
+ }
  const nearby=selected||events.find(e=>Math.hypot(e.x-city.x,e.z-city.z)<18);
- const report=nearby?(incidentIcon[nearby.type]||'📍')+' '+nearby.title+' · '+incidentPhase[nearby.phase]+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
+ const report=nearby?(incidentIcon[nearby.type]||'📍')+' '+nearby.title+' · '+(nearby.stageLabel||incidentPhase[nearby.phase])+' · '+Math.round(Math.hypot(nearby.x-city.x,nearby.z-city.z))+' מ׳':'';
  $('scene-report').hidden=!nearby;if($('scene-report').textContent!==report)$('scene-report').textContent=report;
  const pin=p?world.project(p):{visible:false};$('pin').hidden=!pin.visible;if(pin.visible){$('pin').style.left=pin.x+'px';$('pin').style.top=pin.y+'px';}
 }
@@ -361,7 +369,7 @@ function raceResult(e,r){
  $('race-again').onclick=()=>{city.waypoint={x:e.race.start.x,z:e.race.start.z,name:'קו הזינוק · '+e.race.name,district:'מרוץ רחוב'};save();closeSheet();world.go(e.race.start.x,e.race.start.z);};
 }
 $('action').onclick=interact;
-$('route').onclick=()=>{if(mode!=='explore')return;if(missionToggle.getAttribute('aria-expanded')==='true'){missionToggle.setAttribute('aria-expanded','false');missionToggle.focus({preventScroll:true});}const o=activeObjective(),p=o.point;if(!p){toast('אין יעד כרגע. בחרו נוסע, מרוץ או מקום בפרופיל (P) או במפה (M).');return;}if(!o.auto&&near(city,p)<=4.3){interact();return;}if(play?.racing()){toast('🏁 במרוץ נוהגים בעצמכם. בהצלחה!');return;}if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
+$('route').onclick=()=>{if(mode!=='explore')return;if(missionToggle.getAttribute('aria-expanded')==='true'){missionToggle.setAttribute('aria-expanded','false');missionToggle.focus({preventScroll:true});}const o=activeObjective(),p=o.point;if(!p){toast('אין יעד כרגע. בחרו נוסע, מרוץ או מקום בפרופיל (P) או במפה (M).');return;}if(!o.auto&&near(city,p)<=4.3){interact();return;}if(play?.racing()){toast('🏁 במרוץ נוהגים בעצמכם. בהצלחה!');return;}followedEvent=null;world.observe(null);if(world.moving())world.stop();else if(!world.go(p.x,p.z))toast('הדרך חסומה. נסו לצאת לרחוב.');refresh();};
 $('vehicle').onclick=()=>{if(mode!=='explore')return;const result=world.toggleVehicle();if(result.error){toast(result.error);return;}city.driving=result.driving;audio.play('door');save();updateTarget();refresh();toast(city.driving?world.carName()+' · Shift לטורבו, רווח לבלימה':'הרכב נשאר כאן. אפשר לקחת רכב אחר.');};
 function discoveryBoard(){
  const count=career.done.length,learning=learningTasks(career);
@@ -398,18 +406,19 @@ function dispatch(){
  const events=world.events();
  const reports=events.map((event,i)=>({event,i,distance:Math.round(Math.hypot(city.x-event.observer.x,city.z-event.observer.z))})).sort((a,b)=>a.distance-b.distance).map(({event,i,distance})=>{
   const following=event.id===followedEvent;
-  return `<section class="city-report${following?' following':''}">${following?'<div class="kicker">● בדרך לשם</div>':''}<small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${incidentIcon[event.type]||'📍'} ${esc(event.title)}</h3><p>${esc(event.detail)}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}" ${districtOpen(career,event.observer.x,event.observer.z)?'':'disabled'}>${districtOpen(career,event.observer.x,event.observer.z)?'':'🔒 האזור עדיין נעול · '}${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}הובלה לנקודת תצפית · ${distance} מ׳</button></section>`;
+  return `<section class="city-report${following?' following':''}">${following?'<div class="kicker">● בדרך לשם</div>':''}<small>${incidentPhase[event.phase]} · ${esc(event.district)} · ${esc(event.place)}</small><h3>${incidentIcon[event.type]||'📍'} ${esc(event.title)}</h3><p><b>${esc(event.stageLabel||incidentPhase[event.phase])}</b>${event.crew?' · '+esc(event.crew):''}</p><p>${esc(event.detail)}</p><p class="next-step">בהמשך: ${esc(event.nextStep||'חזרה לשגרה')}</p>${event.queued?`<p>כלי רכב בהמתנה: ${event.queued}</p>`:''}<button data-observe="${i}" ${districtOpen(career,event.observer.x,event.observer.z)?'':'disabled'}>${districtOpen(career,event.observer.x,event.observer.z)?'':'🔒 האזור עדיין נעול · '}${wallet.earnings[round.attemptId+':witness:'+event.id]?'':'+10 🪙 · '}${city.driving?'🚨 נסיעה דחופה לזירה':'הובלה לנקודת תצפית'} · ${distance} מ׳</button></section>`;
  }).join('');
  sheet(`<div class="kicker">רדיו המפרץ · דיווחי שטח</div><h2 id="sheet-title">מוקד העיר</h2>${reports||'<p>כרגע אין דיווחים פעילים.</p>'}<button class="cta" id="close-dispatch">חזרה לעיר</button>`,'dispatch');
  $('close-dispatch').onclick=()=>{closeSheet();$('dispatch').focus();};
  document.querySelectorAll('[data-observe]').forEach(b=>b.onclick=()=>{
   const event=events[Number(b.dataset.observe)],{observer}=event;closeSheet();
-  if(!world.go(observer.x,observer.z))toast('הגישה חסומה כרגע. אפשר לנסות שוב בהמשך.');
-  else{world.observe(event.id);followedEvent=event.id;toast('בדרך לנקודת תצפית · המשימה נשמרת.');}
+  if(!world.respondTo(event))toast('הגישה חסומה כרגע. אפשר לנסות שוב בהמשך.');
+  else{followedEvent=event.id;toast(city.driving?'נסיעה דחופה · בדרך לזירה':'בדרך לנקודת תצפית · המשימה נשמרת.');}
  });
 }
 $('dispatch').onclick=dispatch;
 let finishSaved=null;
+$('leave-scene').onclick=()=>{followedEvent=null;world.observe(null);world.stop();$('scene-guide').hidden=true;refresh();};
 async function finish(){
  const attempt=round.attemptId,score=academicScore(round);world.target(null);world.celebrate();finishSaved=null;
  const bestKey='prepx-best-'+quiz.id,previous=Number(read(localStorage,bestKey)||0),record=score>previous;if(record)put(localStorage,bestKey,String(score));
@@ -556,7 +565,10 @@ function step(x,z,dt,info){
  const events=play.tick({x,z,dt,driving:info.driving,speed:info.speed});
  if(events.length)handle(events);
 }
-try{world=cityWorld($('scene'),step,power=>{toast(power>.6?'התנגשות חזקה! · סעו בזהירות':'התנגשות קלה · אפשר להמשיך לנסוע');audio.play('crash',power);if(play){play.crash(power,carStats(wallet.upgrades).comfort);gain({stats:{crashes:1}});}try{navigator.vibrate?.(Math.round(40+140*power));}catch{}});}
+try{world=cityWorld($('scene'),step,(power,kind)=>{
+ if(kind==='object'){toast('החפץ נהדף מהדרך · סעו בזהירות');audio.play('door');return;}
+ const what={building:'פגעתם בקיר',tree:'פגעתם בעץ',pole:'פגעתם בעמוד',hedge:'פגעתם בגדר חיה'}[kind];
+ toast(what?what+(power>.6?' · מכה חזקה! סעו בזהירות':' · אפשר להמשיך לנסוע'):power>.6?'התנגשות חזקה! · סעו בזהירות':'התנגשות קלה · אפשר להמשיך לנסוע');audio.play('crash',power);if(play){play.crash(power,carStats(wallet.upgrades).comfort);gain({stats:{crashes:1}});}try{navigator.vibrate?.(Math.round(40+140*power));}catch{}});}
 catch{toast('כדי להיכנס לעיר צריך דפדפן עם תמיכה בתלת־ממד.');}
 setInterval(refresh,100);drawRoles();loadQuiz();
 window.render_game_to_text=()=>JSON.stringify({mode,source,quiz:quiz.id,role:city?.role,stage:city?.stage,phase:city?.phase,coordinateSystem:'x east, z south; metres; x -240 to 352, z -352 to 188 at the waterfront',player:world?.getPlayer(),target:city?activeObjective():null,driving:city?.driving,discovery:{...career,learning:learningTasks(career),contract:city?.contract},vehicle:world?.drivingState(),nearbyVehicle:world?.nearbyVehicle(),vehicles:world?.vehicles(),answered:round?Object.keys(round.answers).length:0,wallet:{coins:wallet.coins,equipped:wallet.equipped},life:world?.life(),rendering:{pixelRatio:world?.pixelRatio,...world?.renderStats()},progress:{xp:saga.xp,level:levelFor(saga.xp).level,stars:saga.stars.length,badges:saga.badges,races:saga.races,stats:saga.stats,daily:dailyStatus(saga).map(c=>({stat:c.stat,have:c.have,goal:c.goal,done:c.done}))},play:play?(({run,gig,offers,shower})=>({run,gig,offers,shower:shower&&{name:shower.name,got:shower.got,total:shower.total,left:shower.left,stars:shower.stars}}))(play.state()):null,action:city&&mode==='explore'?contextAction():null,atmosphere:world?.atmosphere(),totalStars:world?.stars().length});
