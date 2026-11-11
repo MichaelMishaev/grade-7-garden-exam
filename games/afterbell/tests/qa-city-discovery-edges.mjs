@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {makeRound} from '../src/core.js';
 const q=JSON.parse(await readFile(new URL('../src/content-snapshot.json',import.meta.url))).quizzes.find(q=>q.id==='facts');
 const base=process.env.CITY_QA_URL||'http://127.0.0.1:5189/';
-const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1'});let checks=0;const errors=[];
+const b=await chromium.launch({headless:process.env.CITY_QA_HEADED!=='1',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});let checks=0;const errors=[];
 const state=p=>p.evaluate(()=>JSON.parse(render_game_to_text()));
 const ok=(v,label)=>{assert.ok(v,label);checks++;};
 const done=['radio-walk','park-drive','market-walk'];

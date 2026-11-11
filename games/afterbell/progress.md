@@ -271,3 +271,18 @@ The final changes were copied into /tmp/prepx-scene-response on feat/city-scene-
 - Deliberate differences from the branch: guided driving keeps `main`'s planner and never reports scenery hits; loose objects never pin the car and do not block walking; residents step aside for a guided car and the car slows for them, but only walkers on a circuit, not the residents waiting at places.
 - Scenery lookups go through a 28 m grid, because trees and poles roughly tripled the number of obstacles.
 - Tests: `qa-city-objects.mjs` rewritten for the merged code, new `qa-city-urgent.mjs`, `qa-city-pedestrians.mjs` removed (covered by `qa-city-crash.mjs`). `qa-city-life.mjs` now takes a car and runs on desktop, but still stops at the second incident because its district is locked for a new player; it needs an unlocked-career fixture.
+
+## Traffic and guided-driving fixes, all city checks green (2026-11-11)
+
+Found while making every city browser check pass. The first four were in `main` before the scene-response merge.
+- Kerb-parked cars stood 3 m from the street centre line, inside the traffic lane: 11 of 37 traffic cars stopped behind them for good within two minutes of every shift. They now park 7 m out (home-lot cars at x 7). Measured after: 0 frozen at 120 s, none frozen for good through 960 s.
+- Traffic deadlocks: a car pulling away from the car touching it is never held, and a ring of cars each waiting on the next is released after six seconds (`pass` set in `advanceTraffic`).
+- A guided trip planned around only its latest blockage and could shuttle between two blocked approaches for minutes. `detourAround` keeps blockages for 25 s and drops the oldest when together they close every way.
+- A guided car and oncoming traffic could wait on each other at the last road point: after five seconds the car creeps forward (contact is still refused, a marshal's stop is still obeyed).
+- An incident changing phase replanned every guided trip, which pulled a car that had already left the road back to the street. It now replans only when a closure lies on the remaining route.
+- From the merge: a guided leg that grazed a solid tree dropped the route without a word. On foot it now slides and replans (up to six times); a car within 10 m of its goal parks there. An urgent drive that meets standing traffic within 10 m of the scene parks too.
+- Beside a parked car, the stopping point is chosen off the roadway when one exists.
+- Phone: the activity banner sits under an opened mission card instead of taking the tap on the discoveries button.
+- `life()` reports `worldTime`; `qa-city-crash.mjs` waits for a fixed world time so page-load time no longer moves the resident it aims at.
+- Checks: every city script launches Chromium with hardware WebGL. Rewritten for today's game: `qa-city`, `qa-default-run`, `qa-city-discovery`, `qa-city-roads`, `qa-city-impact`, `qa-city-life`. New: `qa-city-overtake`. `qa-city-roads` now allows 56 m of access leg (was 32 m) and 120 s per trip (was 40 s). `qa-city-discovery` still carries two workarounds from before the fixes above (waits out the banner before opening the card; re-taps the route button up to three times and prints a note if it had to); neither fired in the final runs.
+- Final run: 163 unit tests, 15 city checks on the dev server, 6 of them again on the built page, `qa-home-entry` (40) and `qa-guided-trip` on the local site, root suite 350 pass / 9 skipped. The campus-only checks were not run; that code was not touched.

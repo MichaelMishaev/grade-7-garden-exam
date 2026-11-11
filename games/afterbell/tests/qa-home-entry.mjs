@@ -6,7 +6,7 @@ await mkdir(out,{recursive:true});
 const checks=[],errors=[],failedAssets=[],assets=[],screenshots=[];
 function check(name,passed,detail){checks.push({name,passed:!!passed,...(detail?{detail}:{})});console.log(`${passed?'PASS':'FAIL'} ${name}`);}
 async function shot(page,name){if(await page.evaluate(()=>typeof window.advanceTime==='function')){await page.evaluate(()=>advanceTime(16));await page.waitForTimeout(120);}const path=`${out}/${name}.png`;await page.screenshot({path,animations:'disabled',scale:'css',timeout:15000});screenshots.push(path);}
-const browser=await chromium.launch({headless:true,args:['--enable-webgl']});
+const browser=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
 try{
   for(const profile of [
     {name:'android-390',viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3.5,userAgent:'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36'},

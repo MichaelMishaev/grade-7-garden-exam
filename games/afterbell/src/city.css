@@ -140,7 +140,8 @@ fieldset{margin:14px 0;border:0;padding:0}#roles{display:flex;gap:6px;margin-top
  .mapwrap{width:88px;height:88px}#minimap{border-width:2px}
  #profile{padding:4px 6px;gap:5px;min-height:44px}#rank-level{width:26px;height:26px;font-size:13px}.rank-text b,.rank-text small{display:none}
  #clock{font-size:10px;padding:1px 6px}#sound{width:30px;height:30px;min-height:30px;font-size:13px}
- #activity{top:calc(68px + env(safe-area-inset-top));left:104px;right:max(8px,env(safe-area-inset-right));transform:none;max-width:none;font-size:12px;padding:5px 6px 5px 10px;line-height:1.3}
+ /* Below the mission card, so an opened card is never covered by the banner. */
+ #activity{z-index:0;top:calc(68px + env(safe-area-inset-top));left:104px;right:max(8px,env(safe-area-inset-right));transform:none;max-width:none;font-size:12px;padding:5px 6px 5px 10px;line-height:1.3}
  #fx{top:calc(120px + env(safe-area-inset-top));left:104px;right:8px;transform:none;width:auto}
  .pop{font-size:13px}.pop.big{font-size:14px;padding:8px 12px}
  #drive-controls #horn{min-width:44px;padding-inline:4px}

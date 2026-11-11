@@ -30,15 +30,18 @@ async function open(start,reducedMotion){
  },{start,heading:HEADING});
  await p.reload();await p.click('#resume');await p.evaluate(()=>advanceTime(1));
  const tick=ms=>p.evaluate(ms=>{advanceTime(ms);return JSON.parse(render_game_to_text());},ms);
- return {p,errors,tick};
+ // Page load takes a varying amount of real time. Wait for a fixed world time, so the resident is where the test expects.
+ const until=async t=>{let s=await tick(1);assert.ok(s.life.worldTime<=t,'world time already past '+t+': '+s.life.worldTime);while(s.life.worldTime<t-.03)s=await tick(Math.min(50,(t-s.life.worldTime)*1000));return s;};
+ return {p,errors,tick,until};
 }
 const drive=async(p,on)=>{await p.keyboard[on?'down':'up']('ArrowUp');};
 let checks=0;const ok=(value,label)=>{assert.ok(value,label);checks++;};
 try{
  // 1. A fast car throws a resident: they fly, land, lie still, get up and walk back to their route.
  {
-  const w=resident(12,1.2),{p,errors,tick}=await open({x:w.x-DRIVE.x*26,z:w.z-DRIVE.z*26});
-  await drive(p,true);let s,top=0;
+  // Resident 12 stands at a corner of their block from world time 6.25 to 8.25; the car arrives inside that window.
+  const w=resident(12,7.2),{p,errors,tick,until}=await open({x:w.x-DRIVE.x*26,z:w.z-DRIVE.z*26});
+  await until(4.9);await drive(p,true);let s,top=0;
   for(let n=0;n<45;n++){s=await tick(50);if(s.life.crash.down)break;}
   ok(s.life.crash.walkerHits===1&&s.life.crash.people[0].kind==='thrown','a fast car throws the resident');
   ok(/התנגשות/.test(await p.locator('#notice').textContent()),'the player is told about the hit');
@@ -58,8 +61,8 @@ try{
  }
  // 2. A slow car: the resident jumps clear before it arrives and nobody is hurt.
  {
-  const w=resident(12,1.2),{p,errors,tick}=await open({x:w.x-DRIVE.x*8.5,z:w.z-DRIVE.z*8.5});
-  await drive(p,true);let s;
+  const w=resident(12,7.2),{p,errors,tick,until}=await open({x:w.x-DRIVE.x*6.5,z:w.z-DRIVE.z*6.5});
+  await until(5.8);await drive(p,true);let s;
   for(let n=0;n<40;n++){s=await tick(25);if(s.life.crash.down)break;}
   await drive(p,false);await p.keyboard.down('Space');
   ok(s.life.crash.dodges===1&&s.life.crash.walkerHits===0&&s.life.crash.people[0].kind==='dodge','a slow car makes the resident jump aside: '+JSON.stringify(s.life.crash));

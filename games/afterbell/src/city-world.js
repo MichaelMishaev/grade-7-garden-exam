@@ -45,7 +45,7 @@ export function cityWorld(host,onMove,onImpact){
  // Windows and lamp heads share one glass material whose glow follows the time of day.
  const glowMaterial=surface('glass',{emissive:'#ffc46b',emissiveIntensity:0});
  const lampSpots=[];
- const batches=new Map(),obstacles=[],loose=[],parkedSpawns=[{x:-10,z:20,brand:'toyota'},{x:-10,z:30,brand:'vw'},{x:3,z:35,brand:'modelY'},{x:3,z:45,brand:'bmw'},{x:3,z:65,brand:'mercedes'}];
+ const batches=new Map(),obstacles=[],loose=[],parkedSpawns=[{x:-10,z:20,brand:'toyota'},{x:-10,z:30,brand:'vw'},{x:7,z:35,brand:'modelY'},{x:7,z:45,brand:'bmw'},{x:7,z:65,brand:'mercedes'}];
  let career={done:[]};
  // kind picks the surface material (see city-materials.js); one instanced batch per shape and kind.
  function prop(shape,color,x,y,z,w,h,d,ry=0,kind='plain'){
@@ -135,7 +135,8 @@ export function cityWorld(host,onMove,onImpact){
    tree(x+15,z+12);
    block('#e6d9b7',x,.22,z+17,3,.12,14);block.grass('#4f7a45',x-10,.95,z+13,8,1.8,1.8);solid(x-10,z+13,8,1.8,'hedge');
    streetObject('bench',x+8,z+19);streetObject('bin',x+12,z+19);streetObject(id%2?'crate':'cone',x-13,z+19);
-   if(id%3!==0){const vx=ix*56+3,vz=iz*56+21;
+   // Parked at the kerb, 7 m from the centre line: 3 m put them in the traffic lane and froze the cars behind them.
+   if(id%3!==0){const vx=ix*56+7,vz=iz*56+21;
      parkedSpawns.push({x:vx,z:vz,brand:trafficBrand(id).id});
    }
  }
@@ -557,7 +558,7 @@ export function cityWorld(host,onMove,onImpact){
  const dust=new T.Group();
  for(let i=0;i<9;i++)part(dust,ball,i%3?'#d5c4a5':'#ffb347',0,0,0,.2,.2,.2);
  scene.add(dust);dust.visible=false;
- let impactAge=1,impactPower=0,impactSide=0,impacts=0,yieldTime=0,blockedTime=0,replanAt=0,braking=false,brakeTicks=0;
+ let impactAge=1,impactPower=0,impactSide=0,impacts=0,yieldTime=0,waited=0,blockedTime=0,snags=0,replanAt=0,braking=false,brakeTicks=0;
  const contacts=new Set();
  // Roll-overs, loose parts and struck residents (city-crash-scene.js). Off with reduced motion.
  const crashFx=createCrashScene(T,scene,{box,tube,ball},{walkers,routes,locals,blocked});
@@ -633,9 +634,13 @@ export function cityWorld(host,onMove,onImpact){
      m.move(m.clock+clockStep);
      p.x+=m.kx;p.z+=m.kz;g.rotation.y+=m.kyaw;
      g.rotation.x=m.hitAge<.6?Math.sin(m.hitAge*26)*Math.exp(-m.hitAge*7)*m.hitPower*.2:0;
+     if(m.pass)for(const o of m.pass)if(Math.hypot(o.position.x-x,o.position.z-z)>9)m.pass.delete(o);
      const hit=fleet.find(other=>{
-       if(other===g)return false;
+       if(other===g||m.pass?.has(other))return false;
        const dx=other.position.x-x,dz=other.position.z-z;
+       // A car pulling away from the one touching it is never held: two queued cars at a corner
+       // otherwise block each other for good once a closure has packed them bumper to bumper.
+       if(Math.hypot(other.position.x-p.x,other.position.z-p.z)>Math.hypot(dx,dz)+1e-4&&Math.hypot(dx,dz)>3)return false;
        // Leave room ahead for a parked/queued driver to turn out, without blocking adjacent lanes.
        const following=dx*Math.sin(angle)+dz*Math.cos(angle)>0&&Math.abs(dx*Math.cos(angle)-dz*Math.sin(angle))<2.8;
        return sweptVehicleContact({x,z,angle},{x:p.x,z:p.z,angle:g.rotation.y},other,following ? .9 : .08);
@@ -645,12 +650,20 @@ export function cityWorld(host,onMove,onImpact){
        // Held where it was: keep that spot as its offset from the lane until the way clears.
        m.move(m.clock);m.kx=x-p.x;m.kz=z-p.z;m.kvx=m.kvz=0;
        p.set(x,0,z);g.rotation.y=angle;
+       // Two or more drivers each waiting for the next in a ring would wait for ever. After six seconds
+       // the first of them in fleet order is let through the car that holds it.
+       m.held=(m.holder===hit?m.held:0)+dt;m.holder=hit;
+       if(m.held>6&&hit!==occupied){
+         const ring=[g];let c=hit;
+         while(c&&c!==g&&ring.length<7&&c.userData.held>6&&c.userData.move&&!c.userData.parked){ring.push(c);c=c.userData.holder;}
+         if(c===g&&ring.every(o=>traffic.indexOf(o)>=traffic.indexOf(g))){(m.pass??=new Set()).add(hit);m.held=0;m.holder=null;}
+       }
        if(hit===occupied&&active&&driving){if(!path.length){
          // Strength comes from both cars' speeds: a head-on meeting is harder than this car's own pace.
          const rvx=Math.sin(heading)*driveSpeed-cvx/dt,rvz=Math.cos(heading)*driveSpeed-cvz/dt,rv=Math.hypot(rvx,rvz)||1,hx=x-px,hz=z-pz;
          impact(g,Math.max(cs/dt,(rvx*hx+rvz*hz)/Math.max(.01,Math.hypot(hx,hz))),rvx/rv,rvz/rv);
        }else if(yieldTime>.65&&!reversing)m.reverseUntil=time+2.5;}
-     }else m.clock+=clockStep;
+     }else{m.clock+=clockStep;m.held=0;m.holder=null;}
      const distance=(p.x-x)*Math.sin(g.rotation.y)+(p.z-z)*Math.cos(g.rotation.y);
      const steer=Math.abs(distance)>.001?Math.atan(3.8*headingDelta(angle,g.rotation.y)/distance):0;
      stepCarWheels(g,distance,steer,dt);
@@ -671,18 +684,35 @@ export function cityWorld(host,onMove,onImpact){
    // If every approach is temporarily closed, keep the destination and wait at the cordon.
    return drivingRoute(start,goal,base);
  }
+ // A trip remembers the blockages it met for a while. Planning around only the latest one made the car
+ // shuttle between two blocked approaches instead of trying a third.
+ let avoid=[];
+ function detourAround(p,clearance){
+   avoid=avoid.filter(a=>a.until>time&&Math.hypot(px-a.x,pz-a.z)>a.r+.3&&Math.hypot(p.x-a.x,p.z-a.z)>1);
+   avoid.push({x:p.x,z:p.z,r:clearance,until:time+25});
+   const goal=path.at(-1);
+   // When every known blockage together closes the city off, forget the oldest first.
+   for(let from=0;from<avoid.length;from++){
+     const list=avoid.slice(from),detour=roadPlan(goal.x,goal.z,(x,z)=>list.some(a=>Math.hypot(x-a.x,z-a.z)<a.r));
+     if(detour?.length){avoid=list;return detour;}
+   }
+   return null;
+ }
  function planRoute(x,z){
    if(!districtOpen(career,x,z))return null;
    if(driving){
      const obstruction=fleet.find(g=>g!==occupied&&(parked.includes(g)||g.userData.parked)&&Math.hypot(x-g.position.x,z-g.position.z)<7);
-     const goals=obstruction?[[8,0],[-8,0],[0,8],[0,-8]].map(([dx,dz])=>({x:obstruction.position.x+dx,z:obstruction.position.z+dz})).filter(p=>!blocked(p.x,p.z)).sort((a,b)=>Math.hypot(a.x-px,a.z-pz)-Math.hypot(b.x-px,b.z-pz)):[{x,z}];
+     // Beside a parked car, stop 8 m from it, and off the roadway when there is such a spot: a car left
+     // standing in a traffic lane gets hit.
+     const inStreet=p=>Math.abs(p.x-Math.round(p.x/56)*56)<5.5||Math.abs(p.z-Math.round(p.z/56)*56)<5.5;
+     const goals=obstruction?[[8,0],[-8,0],[0,8],[0,-8]].map(([dx,dz])=>({x:obstruction.position.x+dx,z:obstruction.position.z+dz})).filter(p=>!blocked(p.x,p.z)).sort((a,b)=>inStreet(a)-inStreet(b)||Math.hypot(a.x-px,a.z-pz)-Math.hypot(b.x-px,b.z-pz)):[{x,z}];
      for(const goal of goals){const route=roadPlan(goal.x,goal.z);if(route!==null)return route;}
      return null;
    }
    return findRoute({x:px,z:pz},{x,z},blocked,{step:2,radius:2,bound:CITY_EDGE});
  }
  function go(x,z){
-   urgent=false;
+   urgent=false;avoid=[];snags=0;
    const route=planRoute(x,z);
    path=route||[];
    guidedMission=destination?.x===x&&destination.z===z?destination:null;
@@ -717,8 +747,11 @@ export function cityWorld(host,onMove,onImpact){
    shiftTime+=dt;events=cityIncidentsAt(shiftTime);
    const key=events.map(e=>e.id+'-'+e.phase).join('|');
    if(key!==incidentKey&&driving&&path.length){
-     const goal=path.at(-1),route=roadPlan(goal.x,goal.z);
-     if(route)path=route;
+     // Plan again only when a closure now lies on what is left of the route. Replanning every time an
+     // incident changed phase sent a car that was already off the road back out to the street.
+     let from={x:px,z:pz},open=true;
+     for(const p of path){if(!clearSegment(from,p,(x,z)=>incidentLaneBlocked(events,x,z))){open=false;break;}from=p;}
+     if(!open){const goal=path.at(-1),route=roadPlan(goal.x,goal.z);if(route)path=route;}
    }
    incidentKey=key;
  }
@@ -814,15 +847,24 @@ export function cityWorld(host,onMove,onImpact){
              }
            }
          }
-         yieldTime=speed<4?yieldTime+dt:0;
-         if(yieldTime>(urgent?.25:.9)&&time>=replanAt&&ahead.obstruction){
+         // Yielding means a car ahead is what slows us. Slowing down to stop at the goal is not a blockage:
+         // counting it sent an arriving car off on a detour and back, sometimes several times.
+         yieldTime=speed<4&&ahead.speed<approachLimit-.001?yieldTime+dt:0;
+         // An urgent drive that meets standing traffic within sight of the scene has arrived: it parks there
+         // instead of leaving to look for another way in and coming back.
+         if(urgent&&yieldTime>.25&&ahead.obstruction&&Math.hypot(goal.x-px,goal.z-pz)<10){path=[];speed=0;yieldTime=0;}
+         else if(yieldTime>(urgent?.25:.9)&&time>=replanAt&&ahead.obstruction){
            replanAt=time+2;
            const p=ahead.obstruction.position;
            const clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
-           const goal=path.at(-1),detour=roadPlan(goal.x,goal.z,(x,z)=>Math.hypot(x-p.x,z-p.z)<clearance);
+           const detour=detourAround(p,clearance);
            if(detour?.length){path=detour;speed=0;yieldTime=0;}
          }
-       }else yieldTime=0;
+         // Waiting on a car that is itself waiting on us would never end. After five seconds creep forward;
+         // real contact is still refused below, and a marshal's stop (pace 0) is still obeyed.
+         waited=ahead.speed<1&&pace>.05?waited+dt:0;
+         if(waited>5)speed=Math.max(speed,2);
+       }else yieldTime=waited=0;
        // A guided car slows for a resident crossing ahead of it.
        if(driving&&guided)for(const g of walkers){
          const wx=g.position.x-px,wz=g.position.z-pz;if(g.userData.hit||Math.abs(wx)>13||Math.abs(wz)>13)continue;
@@ -863,8 +905,8 @@ export function cityWorld(host,onMove,onImpact){
            braking=true;blockedTime+=dt;
            if(blockedTime>1&&hit.userData.move&&!hit.userData.parked&&!(hit.userData.reverseUntil>time))hit.userData.reverseUntil=time+2.5;
            if(blockedTime>4&&time>=replanAt){
-             replanAt=time+2;const p=hit.position,goal=path.at(-1),clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
-             const detour=roadPlan(goal.x,goal.z,(x,z)=>Math.hypot(x-p.x,z-p.z)<clearance);
+             replanAt=time+2;const p=hit.position,clearance=Math.min(6,Math.hypot(px-p.x,pz-p.z)-.2);
+             const detour=detourAround(p,clearance);
              if(detour?.length){path=detour;blockedTime=0;}
            }
          }
@@ -875,7 +917,16 @@ export function cityWorld(host,onMove,onImpact){
            impact(hit,Math.max(0,closing),rvx/rv,rvz/rv);
          }
        }
-       else if(guided){if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;}else path=[];}
+       else if(guided){
+         if(clearSegment({x:px,z:pz},{x:nx,z:nz},blocked)){px=nx;pz=nz;snags=0;}
+         // A planned leg can graze the corner of a tree or post. Plan again from here a few times before giving up.
+         else if(time>=replanAt){
+           // On foot, first slide along the obstacle the way free walking does, so the new plan starts clear of the corner.
+           if(!driving){if(!blocked(nx,pz))px=nx;else if(!blocked(px,nz))pz=nz;}
+           // A car that is nearly there parks where it is: the last metres are walked.
+           replanAt=time+.4;const goal=path.at(-1),near=driving&&Math.hypot(goal.x-px,goal.z-pz)<10,route=near||++snags>6?null:planRoute(goal.x,goal.z);path=route?.length?route:[];
+         }
+       }
        else if(driving){
          // The whole body stops at scenery. A car already against it may still slide along or back away.
          const wall=fixedTouch(nx,nz,vehicleAngle);
@@ -1007,7 +1058,7 @@ export function cityWorld(host,onMove,onImpact){
      cap.visible=gear.includes('cap');drone.visible=gear.includes('drone');update(0);
    },life(){
      const point=g=>[g.position.x,g.position.z].map(n=>Number(n.toFixed(2)));
-     return {trailDots:trail.count,shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,crash:crashFx.stats(),urgent,passes,damage,sceneryHits,objectHits,objects:loose.filter(o=>Math.hypot(o.x-px,o.z-pz)<24).slice(0,8).map(({kind,x,z,moving})=>({kind,x,z,moving})),brakeTicks,impactVisible:dust.visible,knock:Number(Math.max(...traffic.map(g=>Math.hypot(g.userData.kx,g.userData.kz))).toFixed(2)),car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
+     return {trailDots:trail.count,worldTime:Math.round(time*100)/100,shiftTime:Math.round(shiftTime*100)/100,events:incidentReports().map(({id,type,phase,x,z,observer,queued})=>({id,type,phase,x,z,observer,queued})),cars:traffic.length,residents:walkers.length,planes:planes.length,impacts,crash:crashFx.stats(),urgent,passes,damage,sceneryHits,objectHits,objects:loose.filter(o=>Math.hypot(o.x-px,o.z-pz)<24).slice(0,8).map(({kind,x,z,moving})=>({kind,x,z,moving})),brakeTicks,impactVisible:dust.visible,knock:Number(Math.max(...traffic.map(g=>Math.hypot(g.userData.kx,g.userData.kz))).toFixed(2)),car:point(traffic[0]),walker:point(walkers[0]),plane:point(planes[0]),assistant:drone.visible?point(drone):null};
    },respondTo(event){
      // Urgent driving needs a car; on foot the player is simply led to the lookout.
      if(!go(event.observer.x,event.observer.z))return false;
