@@ -1,6 +1,19 @@
 // Story progress is separate from academic points. Only completed tasks award access.
 export const CAR_TASKS={toyota:0,vw:0,ford:1,modelY:1,model3:3,bmw:3,mercedes:5,cybertruck:7};
 export const CAR_SPEED={toyota:25,vw:22,ford:31,modelY:35,model3:42,bmw:45,mercedes:53,cybertruck:62};
+// Handling rises with the unlock tier. accel/brake scale the drive rates, turn is the base yaw rate (rad/s)
+// for steering toward the stick direction at speed, grip divides the wet-road grip loss. The bus and the
+// pickup feel heavier than their tier mates; the Teslas pull hardest off the line.
+export const CAR_HANDLING={
+ toyota:{accel:1,brake:1,turn:2,grip:1},
+ vw:{accel:.85,brake:.9,turn:1.7,grip:.9},
+ ford:{accel:1.08,brake:1.04,turn:2.1,grip:1.02},
+ modelY:{accel:1.22,brake:1.08,turn:2.3,grip:1.05},
+ model3:{accel:1.35,brake:1.14,turn:2.6,grip:1.08},
+ bmw:{accel:1.3,brake:1.16,turn:2.7,grip:1.1},
+ mercedes:{accel:1.42,brake:1.22,turn:2.85,grip:1.12},
+ cybertruck:{accel:1.6,brake:1.28,turn:3,grip:1.15}
+};
 export const contracts=[
  {id:'radio-walk',place:'radio',name:'הסמטאות של הרדיו',detail:'הגיעו ברגל לרדיו המפרץ.',drive:false},
  {id:'park-drive',place:'park',name:'נסיעת הבכורה',detail:'הגיעו ברכב לגן הפסלים.',drive:true},

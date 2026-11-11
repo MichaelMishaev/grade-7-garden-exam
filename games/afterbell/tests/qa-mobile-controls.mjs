@@ -37,16 +37,18 @@ try {
   assert.equal((await read()).vehicle.speed,0,'Space brakes to a stop');
  };
  for(const initial of [0,Math.PI/2,Math.PI,-Math.PI/2]){
-  for(const [key,axis] of [['ArrowRight',[.815,-.58]],['KeyA',[-.815,.58]],['KeyW',[-.58,-.815]],['ArrowDown',[.58,.815]]]){
+  // Keyboard driving is car-relative: Up/W always accelerates along the heading, Down/S backs up, Left/Right steer the car.
+  for(const [key,sign] of [['ArrowUp',1],['KeyW',1],['ArrowDown',-1]]){
    await desktop.goto(base+'?quiz=facts&qa-heading='+initial);
    await desktop.locator('#resume').click();
    await tick(0);
    const before=await read();
    await hold(key,450);
    const after=await read();
-   const dx=after.player.x-before.player.x,dz=after.player.z-before.player.z;
-   assert.ok(dx*axis[0]+dz*axis[1]>1,key+' moves in its screen direction at heading '+initial);
-   assert.ok(Math.abs(dx*axis[1]-dz*axis[0])<.1,key+' stays on its screen axis');
+   const dx=after.player.x-before.player.x,dz=after.player.z-before.player.z,axis=[Math.sin(initial)*sign,Math.cos(initial)*sign];
+   assert.ok(dx*axis[0]+dz*axis[1]>1,key+' moves along the car heading at heading '+initial);
+   assert.ok(Math.abs(dx*axis[1]-dz*axis[0])<.1,key+' stays on the car axis');
+   assert.ok(Math.abs(heading(after)-initial)<1e-6,key+' does not turn the car');
    await brakeDesktop();
   }
  }
@@ -62,7 +64,7 @@ try {
  assert.equal((await read()).driving,true);
  await desktop.screenshot({path:output+'/desktop.png'});
  assert.deepEqual(desktopErrors,[]);
- console.log('PASS desktop screen-relative arrows and WASD at four headings, brake and shortcuts');
+ console.log('PASS desktop car-relative arrows and WASD at four headings, brake and shortcuts');
  await desktop.close();
  for(const viewport of [{width:320,height:568},{width:568,height:320},{width:844,height:390}]){
   const page = await browser.newPage({viewport,isMobile:true,hasTouch:true});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
-import {buildCar,CAR_BRANDS,poseCarWheels,stepCarWheels,WHEEL_RADIUS} from '../src/city-cars.js';
+import {buildCar,CAR_BRANDS,poseCarWheels,stepCarWheels} from '../src/city-cars.js';
 import {CAR_TASKS,CAR_SPEED} from '../src/city-discovery.js';
 test('every higher task tier unlocks strictly faster driving and boost',()=>{
  for(const a of Object.keys(CAR_BRANDS))for(const b of Object.keys(CAR_BRANDS))if(CAR_TASKS[a]>CAR_TASKS[b]){
@@ -33,16 +33,48 @@ test('all eight cars have valid sculpted meshes and reflective physical material
 test('wheel meshes roll around their own axles and only the front axle steers',()=>{
  const car=buildCar(T,null,null,null,'toyota');
  const [rear,front]=car.userData.wheels;
- const axle=front.meshes[0].position.clone();
- stepCarWheels(car,WHEEL_RADIUS,.4,.2);
+ const axle=front.meshes[0].position.clone(),radius=car.userData.wheelRadius;
+ // Each model rolls on its own tyre size, so one radius of travel is one radian.
+ assert.ok(radius>.38&&radius<.56);
+ stepCarWheels(car,radius,.4,.2);
  poseCarWheels(car);
  assert.equal(rear.meshes[0].rotation.x,1);
  assert.equal(front.meshes[0].rotation.x,1);
  assert.equal(rear.meshes[0].rotation.y,0);
  assert.ok(front.meshes.every(mesh=>mesh.rotation.y>.35));
  assert.ok(front.meshes[0].position.equals(axle));
- stepCarWheels(car,-WHEEL_RADIUS,0,1);
+ stepCarWheels(car,-radius,0,1);
  poseCarWheels(car);
  assert.equal(front.meshes[0].rotation.x,0);
  assert.equal(front.meshes[0].rotation.y,0);
+});
+
+test('every model stays inside the shared 3.6 x 6 footprint and keeps its wheels on the ground',()=>{
+ for(const id of Object.keys(CAR_BRANDS)){
+  const g=buildCar(T,null,null,null,id),box=new T.Box3().setFromObject(g);
+  assert.ok(box.max.x<=1.85&&box.min.x>=-1.85,id+' width '+box.max.x);
+  assert.ok(box.max.z<=3.06&&box.min.z>=-3.06,id+' length '+box.min.z+'..'+box.max.z);
+  for(const w of g.userData.wheels){const m=w.meshes[0];m.geometry.computeBoundingBox();assert.ok(Math.abs(m.position.y-m.geometry.boundingBox.max.y-.3)<.02,id+' tyre touches the road');}
+ }
+});
+
+test('paint colours share one body geometry; tail lamps stay detectable for brake lights',()=>{
+ for(const id of Object.keys(CAR_BRANDS)){
+  const a=buildCar(T,null,null,null,id),b=buildCar(T,null,null,null,id,'#123456');
+  assert.equal(a.children[0].geometry,b.children[0].geometry);assert.notEqual(a.children[0].material,b.children[0].material);
+  assert.equal(b.children[0].material.color.getHexString(),new T.Color('#123456').getHexString());
+  for(let i=1;i<a.children.length;i++)assert.equal(a.children[i].material,b.children[i].material,'trim, glass and wheels are shared');
+  assert.equal(a.children.filter(m=>m.userData.tail).length,1,id+' one tail-lamp mesh');
+  assert.ok(a.children.every(m=>m.userData.carShared));
+ }
+});
+
+test('garage anchors sit on each body: roof above the bonnet, deck behind the cabin, tail at the back',()=>{
+ for(const id of Object.keys(CAR_BRANDS)){
+  const a=buildCar(T,null,null,null,id).userData.anchors,top=buildCar(T,null,null,null,id).userData.roofHeight;
+  assert.ok(a.roof.y<=top+.06&&a.roof.y>top-.5,id+' roof '+a.roof.y+' / '+top);
+  assert.ok(a.roof.front>a.roof.back&&a.roof.w>.6&&a.roof.w<1.3,id+' roof span');
+  assert.ok(a.hood.y<a.roof.y-.3&&a.hood.z>1.5,id+' bonnet');
+  assert.ok(a.deck.z< -2&&a.deck.y>1&&a.tail.z< -2.8&&a.sill>.3&&a.side>1.2,id+' rear and sides');
+ }
 });

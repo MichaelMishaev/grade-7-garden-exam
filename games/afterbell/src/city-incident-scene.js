@@ -1,11 +1,12 @@
 import * as T from 'three';
+import {bodyShapes} from './city-materials.js';
 
 const clamp=t=>Math.min(1,Math.max(0,t));
 const ease=t=>{t=clamp(t);return t*t*(3-2*t);};
 
 // Local +z follows the affected traffic lane; local +x is across the street.
 export function createIncidentScene({scene,reduced=false,dynamicUsage}){
- const material=new T.MeshStandardMaterial({roughness:.87,flatShading:true});
+ const material=new T.MeshStandardMaterial({roughness:.78});
  function batch(shape){
    const mesh=new T.InstancedMesh(shape,material,384);
    mesh.instanceMatrix.setUsage(dynamicUsage);
@@ -14,6 +15,8 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    mesh.frustumCulled=false;mesh.count=0;scene.add(mesh);return mesh;
  }
  const boxes=batch(new T.BoxGeometry(1,1,1)),stones=batch(new T.IcosahedronGeometry(1,0));
+ // People share the rounded body shapes of the residents.
+ const body=bodyShapes(),figures=[body.limb,body.head,body.hair,body.torso].map(batch),[limbs,heads,hairs,torsos]=figures;
  const pose=new T.Group(),color=new T.Color();
  let originX=0,originZ=0,heading=0,sin=0,cos=1;
  function origin(x,z,angle){
@@ -24,7 +27,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
    pose.rotation.set(pitch,heading,roll,'YXZ');pose.scale.set(w,h,d);pose.updateMatrix();
    mesh.setMatrixAt(mesh.count,pose.matrix);mesh.setColorAt(mesh.count,color.set(c));mesh.count++;
  }
- const box=(...v)=>piece(boxes,...v),rock=(...v)=>piece(stones,...v);
+ const box=(...v)=>piece(boxes,...v),rock=(...v)=>piece(stones,...v),limb=(...v)=>piece(limbs,...v);
  function at(anchor,dx,dz,turn=0){
    const a=anchor.heading,s=Math.sin(a),c=Math.cos(a);
    origin(anchor.x+dx*c+dz*s,anchor.z-dx*s+dz*c,a+turn);
@@ -36,16 +39,16 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
  }
  function person(anchor,x,z,turn,shirt,gesture=0,uniform=false,lean=0){
    at(anchor,x,z,turn);
-   box('#334851',-.36,1.04,0,.54,1.18,.7);
-   box('#334851',.36,1.04,.1,.54,1.18,.7);
-   box(shirt,0,2.12,lean*.42,1.42,1.24,.8,lean);
+   limb('#334851',-.36,1.04,0,.54,1.3,.6);
+   limb('#334851',.36,1.04,.1,.54,1.3,.6);
+   piece(torsos,shirt,0,2.12,lean*.42,1.36,1.3,.78,lean);
    for(const side of [-1,1]){
      const pitch=side>0?gesture:gesture*.45;
-     box(shirt,side*.87,2.07,.12+Math.sin(pitch)*.4,.34,1,.42,-pitch);
-     box('#be896a',side*.87,1.67+Math.abs(pitch)*.23,.16+Math.sin(pitch)*.85,.34,.37,.37);
+     limb(shirt,side*.87,2.07,.12+Math.sin(pitch)*.4,.36,1.05,.42,-pitch);
+     piece(heads,'#be896a',side*.87,1.67+Math.abs(pitch)*.23,.16+Math.sin(pitch)*.85,.36,.38,.38);
    }
-   box('#cf9875',0,3.22,lean,1,.98,.89);
-   box(uniform?'#efbc50':'#534445',0,3.72,lean,1.04,.22,.94);
+   piece(heads,'#cf9875',0,3.24,lean,1,1.08,.98);
+   piece(hairs,uniform?'#efbc50':'#3d3231',0,3.4,lean-.06,1.1,1,1.1);
    if(uniform)box('#ebe780',0,2.13,0,1.48,.19,.86);
  }
  // Branded silhouettes mirror src/city-cars.js: no textures here, so each make is
@@ -276,7 +279,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
  return {update(events,time,traffic=[]){
    const state=events.map(e=>e.id+e.phase).join('|');
    if(time>=lastTime&&time-lastTime<1/24&&lastState===state)return;
-   lastTime=time;lastState=state;boxes.count=stones.count=0;
+   lastTime=time;lastState=state;boxes.count=stones.count=0;for(const mesh of figures)mesh.count=0;
    for(const e of events){
      if(e.type==='fire')fire(e,time);
      else if(e.type==='fight')fight(e,time);
@@ -285,7 +288,7 @@ export function createIncidentScene({scene,reduced=false,dynamicUsage}){
      else if(e.type==='spill')spill(e);
      else if(e.type==='rescue')rescue(e,time);
    }
-   for(const mesh of [boxes,stones]){
+   for(const mesh of [boxes,stones,...figures]){
      mesh.visible=mesh.count>0;mesh.instanceMatrix.needsUpdate=true;
      if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
    }

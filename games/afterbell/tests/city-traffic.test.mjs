@@ -62,3 +62,19 @@ test('a crash shoves the other car harder than it bounces the player, and only a
  assert.ok(side.spin*other.spin<0);
  assert.ok(crashKick(200,0,1,0,-6).bounce<=8);
 });
+
+test('keyboardDrive: Up always accelerates along the heading, Down brakes then reverses',async()=>{
+ const {keyboardDrive}=await import('../src/city-traffic.js');
+ for(const heading of [0,1,2.4,-2,Math.PI]){
+  const up=keyboardDrive({heading,keyY:1,speed:5,limit:30,dt:1/60});
+  assert.ok(up.speed>5,'accelerates at heading '+heading);
+  assert.ok(Math.abs(up.dx*Math.sin(heading)+up.dz*Math.cos(heading)-Math.hypot(up.dx,up.dz))<1e-9,'moves along the heading');
+  const down=keyboardDrive({heading,keyY:-1,speed:10,limit:30,dt:1/60});
+  assert.ok(down.speed<10&&down.speed>0,'brakes while rolling forward');
+ }
+ let speed=0;for(let i=0;i<120;i++)speed=keyboardDrive({heading:0,keyY:-1,speed,limit:30,dt:1/60}).speed;
+ assert.ok(speed<-5,'reverses once stopped');
+ assert.ok(keyboardDrive({heading:0,keyY:1,speed:-5,limit:30,dt:1/60}).speed>-5,'Up while backing brakes first');
+ const l=keyboardDrive({heading:0,keyX:-1,keyY:1,sideSign:1,speed:10,limit:30,dt:1/60}),r=keyboardDrive({heading:0,keyX:1,keyY:1,sideSign:1,speed:10,limit:30,dt:1/60});
+ assert.ok(l.heading<0&&r.heading>0&&l.speed>10,'steering turns the car while still accelerating');
+});

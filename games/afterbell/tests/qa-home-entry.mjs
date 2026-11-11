@@ -40,7 +40,7 @@ try{
     check(`${name}: production bundle has no Vite client`,await page.evaluate(()=>![...document.scripts].some(s=>s.src.includes('@vite/client')||s.src.includes('/src/'))));
     check(`${name}: game starts from a valid content source`,await page.evaluate(()=>['database','snapshot'].includes(JSON.parse(render_game_to_text()).source)));
     check(`${name}: game page has no horizontal overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    if(profile.isMobile){check('Android profile has DPR 3.5',await page.evaluate(()=>devicePixelRatio===3.5));check('high-DPR renderer caps render resolution',await page.evaluate(()=>JSON.parse(render_game_to_text()).rendering.pixelRatio<=1.6));}
+    if(profile.isMobile){check('Android profile has DPR 3.5',await page.evaluate(()=>devicePixelRatio===3.5));check('high-DPR renderer caps render resolution',await page.evaluate(()=>JSON.parse(render_game_to_text()).rendering.pixelRatio<=2));}
     await shot(page,`built-welcome-${name}`);
     await page.locator('#player-name').fill('בדיקת קישור');
     if(profile.isMobile)await page.locator('#start').tap();else await page.locator('#start').click();

@@ -11,6 +11,8 @@ try{
  const state=()=>p.evaluate(()=>JSON.parse(render_game_to_text()));
  await p.goto(base);
  await p.evaluate(()=>localStorage.setItem('prepx-city-wallet-v1:QA',JSON.stringify({coins:178,owned:[],equipped:[],earnings:{}})));
+ // Shop items unlock by completed missions; nine opens every accessory bought below.
+ await p.evaluate(()=>localStorage.setItem('prepx-city-discovery-v1:QA',JSON.stringify({done:['radio-walk','park-drive','market-walk','station-drive','court-walk','ferry-drive','qa:delivery:0','qa:delivery:1','qa:delivery:2']})));
  await p.fill('#player-name','QA');await p.click('#start');await p.click('#shop');
  for(const id of ['scarf','glasses','pack','beacon','stripes','spare','spoiler','underglow','surfboard']){
   if(id==='beacon')await p.click('#van-stock');

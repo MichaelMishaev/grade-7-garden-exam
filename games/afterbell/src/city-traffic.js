@@ -49,23 +49,41 @@ export function headingDelta(from, to) {
  return Math.atan2(Math.sin(to - from), Math.cos(to - from));
 }
 
-export function manualDrive({heading, throttle, steering=0, speed, limit, brake, boost, dt}) {
- const requestedSpeed = limit * throttle * (throttle < 0 ? .48 : 1) * (1 - .5 * Math.abs(steering));
+// grip: 1 on a dry road, lower in rain, where speed builds and sheds more slowly.
+// accel and brakeForce scale the engine and brake rates (car and upgrades); coasting stays the same.
+// aim/turnRate: the car swings from heading toward aim at turnRate·grip·(1+8/speed) rad/s, so it is
+// sharp when slow and swings wider at speed; below 1.5 m/s it may point anywhere. A sharp turn eases off the
+// throttle. The defaults (no aim, infinite rate) keep the old instant behaviour.
+export function manualDrive({heading, throttle, steering=0, speed, limit, brake, boost, dt, grip=1, accel=1, brakeForce=1, aim=heading, turnRate=Infinity}) {
+ const want = headingDelta(heading, aim), finite = Number.isFinite(turnRate), slow = Math.abs(speed) < 1.5;
+ const maxYaw = !finite || slow ? Infinity : turnRate * grip * (1 + 8 / Math.abs(speed)) * dt;
+ const swing = Math.max(-maxYaw, Math.min(maxYaw, want));
+ const bend = finite ? 1 - .3 * Math.min(1, Math.abs(want - swing) / 1.6) : 1;
+ const requestedSpeed = limit * throttle * (throttle < 0 ? .48 : 1) * (1 - .5 * Math.abs(steering)) * bend;
  const changingDirection = speed * requestedSpeed < 0;
  const target = brake || changingDirection ? 0 : requestedSpeed;
  const magnitude = Math.abs(speed);
- let rate = boost ? 34 : 19;
- if (brake) rate = 32 + magnitude * .28;
+ let rate = (boost ? 34 : 19) * accel;
+ if (brake) rate = (32 + magnitude * .28) * brakeForce;
  else if (!throttle) rate = 7 + magnitude * .38;
  else if (changingDirection || Math.abs(target) < magnitude) rate = 19 + magnitude * .22;
+ rate *= grip;
 
  const change = target - speed;
  const nextSpeed = speed + Math.sign(change) * Math.min(Math.abs(change), rate * dt);
  const distance = (speed + nextSpeed) / 2 * dt;
  const yaw = distance * Math.tan(steering) / 3.8;
  const turn = Math.max(-3.2 * dt, Math.min(3.2 * dt, yaw));
- const travelAngle = heading + turn / 2;
- return {dx: Math.sin(travelAngle) * distance, dz: Math.cos(travelAngle) * distance, heading: heading + turn, speed: nextSpeed};
+ const travelAngle = heading + swing / 2 + turn / 2;
+ return {dx: Math.sin(travelAngle) * distance, dz: Math.cos(travelAngle) * distance, heading: heading + swing + turn, speed: nextSpeed};
+}
+
+// Keyboard driving is car-relative: keyY>0 (Up/W) always accelerates along the heading, keyY<0 (Down/S) brakes
+// while rolling forward and reverses once stopped (and the opposite for Up while backing); keyX steers the wheels,
+// less at speed. sideSign says which way positive yaw is "right" for the camera; turn is the car's handling.
+export function keyboardDrive({keyX=0, keyY=0, sideSign=1, turn=2, brake=false, speed, ...rest}) {
+ const stopping = keyY > 0 && speed < -.5 || keyY < 0 && speed > .5;
+ return manualDrive({...rest, speed, throttle: keyY, steering: keyX * sideSign * .275 * turn / (1 + Math.abs(speed) / 14), brake: brake || stopping});
 }
 
 // Splits a crash between two equal vans. (tx,tz) is the unit direction of the player's motion relative to the
