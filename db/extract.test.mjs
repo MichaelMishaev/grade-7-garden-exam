@@ -9,16 +9,16 @@ const perParent = Object.groupBy(content.questions, (q) => q.exam_id ?? q.quiz_i
 const refs = new Map(content.study_references.map((r) => [r.id, r]));
 
 test('extracts every subject, exam, quiz, reference and question from the source files', () => {
-  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [5, 4, 5, 11, 19, 176]);
+  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [5, 4, 5, 11, 19, 196]);
   assert.deepEqual(Object.fromEntries(Object.entries(perParent).map(([k, v]) => [k, v.length])), {
-    'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, 'english-v1-practice': 20, 'bible-v1-samuel': 20, facts: 6, questions: 6, instructions: 6,
+    'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, 'english-v1-practice': 20, 'bible-v1-samuel': 40, facts: 6, questions: 6, instructions: 6,
     'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5,
     'math-coordinates': 6, 'math-signed': 6, 'math-area': 6, 'math-geometry': 6
   });
 });
 
 test('ids are unique and every question belongs to exactly one parent', () => {
-  assert.equal(new Set(content.questions.map((q) => q.id)).size, 176);
+  assert.equal(new Set(content.questions.map((q) => q.id)).size, 196);
   for (const q of content.questions) assert.equal(Number(q.exam_id !== null) + Number(q.quiz_id !== null), 1);
 });
 

@@ -109,7 +109,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.deepEqual((await content.getSubject(sql, 'physics')).exams.map((e) => [e.id, e.references.map((r) => r.id)]),
       [['physics-v1-assessment', ['physics-pdf', 'physics-site']]]);
     const bible = await content.getExam(sql, 'bible-v1-samuel');
-    assert.equal(bible.questions.length, 20);
+    assert.equal(bible.questions.length, 40);
     assert.match(bible.passage_html, /חומר לימוד/);
     assert.deepEqual(bible.questions.filter(q => q.type === 'checkbox').map(q => q.correct), [[0, 1], [0, 1], [0, 1]]);
     const english = await content.getExam(sql, 'english-v1-practice');

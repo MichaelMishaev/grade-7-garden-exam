@@ -37,13 +37,14 @@ for (const examId of Object.keys(exams)) {
 
   test(`${examId}: max is the question's share of 100 in QuizCore.scoreQuiz and the shares add up to its pending points`, () => {
     const weightOf = q => (Object.hasOwn(WEIGHT, q.difficulty) ? WEIGHT[q.difficulty] : WEIGHT.medium);
-    const total = questions.reduce((sum, q) => sum + weightOf(q), 0);
+    const scoringQuestions = examId === 'bible-v1-samuel' ? questions.slice(0, 20) : questions;
+    const total = scoringQuestions.reduce((sum, q) => sum + weightOf(q), 0);
     let sum = 0;
     for (const q of open) {
       assert.equal(openRubricFor(examId, q.id).max, Math.round(weightOf(q) / total * 10000) / 100, q.id);
       sum += openRubricFor(examId, q.id).max;
     }
-    const { earned, pending } = globalThis.QuizCore.scoreQuiz(questions, {});
+    const { earned, pending } = globalThis.QuizCore.scoreQuiz(scoringQuestions, {});
     assert.equal(earned, 0);
     assert.ok(Math.abs(sum - pending) <= 1, `${sum} vs scoreQuiz pending ${pending}`);
     // A perfect run: all auto answers right + full AI marks is exactly 100 once rounded like the server does.

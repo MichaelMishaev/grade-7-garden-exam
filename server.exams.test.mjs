@@ -260,7 +260,7 @@ test('English: exactly 20 answers use the shared teacher pipeline and preserve t
 
 test('Bible: rejects incomplete or oversized submissions, then uses the shared teacher and sender', () => withServer(async ({ submit, calls }) => {
   const exam = 'bible-v1-samuel';
-  const answers = extractContent().questions.filter(q => q.exam_id === exam).map(q => ({
+  const answers = extractContent().questions.filter(q => q.exam_id === exam).slice(0, 20).map(q => ({
     question: q.prompt,
     answer: q.type === 'open' ? 'תשובת בדיקה' : q.type === 'checkbox' ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct]
   }));

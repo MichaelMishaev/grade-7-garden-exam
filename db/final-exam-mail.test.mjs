@@ -54,7 +54,8 @@ test('production submission survives grading failure and restart, then emails a 
     await migrate(sql);
     await seed(sql);
     const exam = 'bible-v1-samuel';
-    const questions = extractContent().questions.filter(q => q.exam_id === exam);
+    const bank = extractContent().questions.filter(q => q.exam_id === exam);
+    const questions = [bank[20], ...bank.slice(1, 20)];
     const payload = { exam, resultToken: randomBytes(16).toString('hex'), attempt: 1, name: `Synthetic QA ${randomUUID()}`, answers: questions.map(q => ({
       question: q.prompt, questionId: 'browser-supplied-id', answer: q.type === 'open' ? 'Synthetic written answer' : q.type === 'checkbox' ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct]
     })) };

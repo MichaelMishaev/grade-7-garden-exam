@@ -19,7 +19,27 @@
     {"id": "bible-17", "type": "open", "topic": "תפילת ההודיה של חנה", "difficulty": "hard", "prompt": "הסבירו במילים שלכם את הפסוק ״ה׳ מוריש ומעשיר, משפיל אף מרומם״. מה אפשר ללמוד ממנו על גאווה?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 1–10"}},
     {"id": "bible-18", "type": "open", "topic": "שמואל ומעשי נער הכוהן", "difficulty": "hard", "prompt": "תארו את שני המעשים של נער הכוהן בעניין בשר הקרבן. הסבירו מה היה פסול בדרישה השנייה.", "ref": {"id": "bible-samuel-study", "part": "ב׳ 11–16"}},
     {"id": "bible-19", "type": "open", "topic": "הניגוד בין שמואל לבני עלי", "difficulty": "medium", "prompt": "מה מלמד המעיל שחנה הביאה לשמואל מדי שנה על הקשר ביניהם? הסבירו את התשובה לפי המעשה שלה.", "ref": {"id": "bible-samuel-study", "part": "ב׳ 17–26"}},
-    {"id": "bible-20", "type": "open", "topic": "הנבואה על בית עלי", "difficulty": "hard", "prompt": "איש האלוהים הוכיח את בית עלי בעניין הקרבנות. מה היה העיקרון שבני המשפחה הפרו, ומה היה האות לכך שהנבואה תתקיים?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 27–36"}}
+    {"id": "bible-20", "type": "open", "topic": "הנבואה על בית עלי", "difficulty": "hard", "prompt": "איש האלוהים הוכיח את בית עלי בעניין הקרבנות. מה היה העיקרון שבני המשפחה הפרו, ומה היה האות לכך שהנבואה תתקיים?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 27–36"}},
+    {"id": "bible-21", "type": "mcq", "topic": "משפחת אלקנה והעלייה לשילה", "difficulty": "easy", "prompt": "מי הכעיסה את חנה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 1–8"}, "choices": ["פנינה", "עלי", "אלקנה", "שמואל"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 1–8: פנינה הכעיסה את חנה מפני שלא היו לה ילדים."}},
+    {"id": "bible-22", "type": "mcq", "topic": "משפחת אלקנה והעלייה לשילה", "difficulty": "easy", "prompt": "כיצד הגיבה חנה כשפנינה הכעיסה אותה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 1–8"}, "choices": ["בכתה ולא אכלה", "שמחה ושרה", "עזבה את ביתה לתמיד", "הוכיחה את עלי"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 1–8: חנה בכתה ולא אכלה."}},
+    {"id": "bible-23", "type": "mcq", "topic": "התפילה, הנדר והשיחה עם עלי", "difficulty": "easy", "prompt": "מה ביקשה חנה בתפילתה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 9–18"}, "choices": ["בן", "בית בשילה", "תפקיד לכוהן", "עושר רב"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 9–18: חנה ביקשה בן ונדרה להקדישו לה׳."}},
+    {"id": "bible-24", "type": "mcq", "topic": "התפילה, הנדר והשיחה עם עלי", "difficulty": "easy", "prompt": "מה ראה עלי בזמן תפילת חנה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 9–18"}, "choices": ["שפתיה נעות אך קולה לא נשמע", "חנה שרה בקול רם", "חנה אוכלת ליד המזבח", "שמואל מדבר עם חנה"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 9–18: שפתיה נעו אך קולה לא נשמע."}},
+    {"id": "bible-25", "type": "mcq", "topic": "לידת שמואל וקיום הנדר", "difficulty": "easy", "prompt": "מתי הביאה חנה את שמואל לשילה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 19–28"}, "choices": ["לאחר שנגמל", "לפני לידתו", "ביום שבו נולד", "רק לאחר מות עלי"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 19–28: חנה המתינה עד ששמואל נגמל ואז הביאה אותו לשילה."}},
+    {"id": "bible-26", "type": "mcq", "topic": "תפילת ההודיה של חנה", "difficulty": "easy", "prompt": "מפני מה הזהירה חנה בתפילתה?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 1–10"}, "choices": ["מפני גאווה ודיבור גבוה", "מפני העלייה לשילה", "מפני הכנת מעיל", "מפני תפילה שקטה"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 1–10: חנה הזהירה מפני דיבור גאוותני: ״אל תרבו תדברו גבוהה גבוהה״."}},
+    {"id": "bible-27", "type": "mcq", "topic": "שמואל ומעשי נער הכוהן", "difficulty": "easy", "prompt": "באיזה כלי השתמש נער הכוהן כדי להעלות בשר?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 11–16"}, "choices": ["מזלג בעל שלוש שיניים", "כף עץ קטנה", "סכין בעלת להב אחד", "סל ארוג"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 11–16: לנער הכוהן היה מזלג בעל שלוש שיניים."}},
+    {"id": "bible-28", "type": "mcq", "topic": "הניגוד בין שמואל לבני עלי", "difficulty": "easy", "prompt": "מה חנה הביאה לשמואל מדי שנה?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 17–26"}, "choices": ["מעיל קטן", "מזלג בעל שלוש שיניים", "כתר זהב", "נבל יין"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 17–26: חנה הכינה לשמואל מעיל קטן והביאה אותו בעלייה השנתית."}},
+    {"id": "bible-29", "type": "mcq", "topic": "משפחת אלקנה והעלייה לשילה", "difficulty": "medium", "prompt": "לאיזה מקום עלה אלקנה בקביעות כדי להשתחוות ולזבוח?", "ref": {"id": "bible-samuel-study", "part": "א׳ 1–8"}, "choices": ["שילה", "יריחו", "בית לחם", "חברון"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 1–8: אלקנה עלה לשילה כדי להשתחוות ולזבוח."}},
+    {"id": "bible-30", "type": "mcq", "topic": "התפילה, הנדר והשיחה עם עלי", "difficulty": "medium", "prompt": "מה אמר עלי לאחר שחנה הסבירה את תפילתה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 9–18"}, "choices": ["לכי לשלום ובקשתך תתקבל", "חזרי מיד לביתך בלי להתפלל", "קראי לבנך על שמי", "עלי לבוא איתך לרמה"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 9–18: עלי אמר לחנה ללכת לשלום ובירך אותה שבקשתה תתקבל."}},
+    {"id": "bible-31", "type": "mcq", "topic": "לידת שמואל וקיום הנדר", "difficulty": "medium", "prompt": "כיצד קיימה חנה את נדרה לאחר ששמואל נגמל?", "ref": {"id": "bible-samuel-study", "part": "א׳ 19–28"}, "choices": ["הביאה אותו לבית ה׳ בשילה והקדישה אותו לה׳", "השאירה אותו אצל פנינה", "שלחה אותו ללמוד בביתו של אלקנה", "ביקשה מעלי לבחור לו שם"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 19–28: לאחר שנגמל חנה הביאה את שמואל לשילה והקדישה אותו לה׳."}},
+    {"id": "bible-32", "type": "mcq", "topic": "תפילת ההודיה של חנה", "difficulty": "medium", "prompt": "מה מבטא הצירוף ״משפיל אף מרומם״ בתפילת חנה?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 1–10"}, "choices": ["ה׳ יכול לשנות את מצבו של אדם", "מצבו של אדם לעולם אינו משתנה", "עלי מחליט מי יתעשר", "המעיל של שמואל גבוה ורחב"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 1–10: חנה מתארת את כוח ה׳ לשנות את מצבם של בני אדם."}},
+    {"id": "bible-33", "type": "mcq", "topic": "שמואל ומעשי נער הכוהן", "difficulty": "medium", "prompt": "מה ביקש המקריב לפני שנער הכוהן ייקח בשר לצלייה?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 11–16"}, "choices": ["להקטיר תחילה את החֵלֶב", "לשלוח את הבשר לחנה", "לבשל את כל הבשר בביתו", "לתת לעלי לבחור שם לנער"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 11–16: המקריב ביקש להמתין תחילה להקטרת החֵלֶב."}},
+    {"id": "bible-34", "type": "mcq", "topic": "שמואל ומעשי נער הכוהן", "difficulty": "medium", "prompt": "מה איים נער הכוהן לעשות אם לא ייתנו לו את הבשר?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 11–16"}, "choices": ["לקחת אותו בכוח", "להחזיר את המזלג", "להפסיק לבשל לשנה", "להביא מעיל לשמואל"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 11–16: הנער איים לקחת את הבשר בכוח."}},
+    {"id": "bible-35", "type": "mcq", "topic": "הניגוד בין שמואל לבני עלי", "difficulty": "medium", "prompt": "כיצד הגיבו בני עלי לתוכחת אביהם?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 17–26"}, "choices": ["לא שמעו בקולו", "שמעו בקולו מיד", "ביקשו מחנה להוכיח אותם", "עזבו מיד את שילה"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 17–26: עלי הוכיח את בניו, אך הם לא שמעו בקולו."}},
+    {"id": "bible-36", "type": "mcq", "topic": "הנבואה על בית עלי", "difficulty": "medium", "prompt": "מה הודיע איש האלוהים לעלי על ביתו?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 27–36"}, "choices": ["שבית עלי ייענש", "ששמואל יפסיק לשרת", "שפנינה תביא מעיל מדי שנה", "שאלקנה יפסיק לעלות לשילה"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 27–36: איש האלוהים הודיע שבית עלי ייענש על יחסו לקרבנות."}},
+    {"id": "bible-37", "type": "mcq", "topic": "התפילה, הנדר והשיחה עם עלי", "difficulty": "hard", "prompt": "מה מסביר את הטעות של עלי בנוגע לחנה?", "ref": {"id": "bible-samuel-study", "part": "א׳ 9–18"}, "choices": ["הוא ראה את שפתיה נעות ולא שמע את קולה", "הוא שמע אותה שרה ושכח את דבריה", "הוא ראה אותה נושאת מזלג", "הוא ראה את שמואל מתפלל"], "correct": 0, "explanation": {"he": "בשמואל א׳ א׳ 9–18: עלי ראה את שפתיה של חנה נעות בלי לשמוע את קולה ולכן חשב שהיא שיכורה."}},
+    {"id": "bible-38", "type": "mcq", "topic": "שמואל ומעשי נער הכוהן", "difficulty": "hard", "prompt": "מדוע הדרישה לבשר חי לפני הקטרת החֵלֶב הייתה פסולה לפי התקציר?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 11–16"}, "choices": ["מפני שהחֵלֶב היה מיועד תחילה למזבח", "מפני שבכלל לא היה קרבן", "מפני שהבשר נועד להכנת מעיל", "מפני שהמקריב כבר אכל את החֵלֶב"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 11–16: החֵלֶב היה מיועד למזבח, והנער דרש בשר לפני שהחֵלֶב הוקטר."}},
+    {"id": "bible-39", "type": "mcq", "topic": "הניגוד בין שמואל לבני עלי", "difficulty": "hard", "prompt": "איזה ניגוד מתואר בין שמואל לבני עלי?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 17–26"}, "choices": ["שמואל שירת את ה׳ ובני עלי פגעו בכבוד הקרבן", "שמואל פגע בקרבן ובני עלי הכינו לו מעיל", "שמואל לא שמע בקול עלי ובני עלי התפללו בשקט", "שמואל איים לקחת בשר ובני עלי נשארו בבית אלקנה"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 17–26: שמואל המשיך לשרת את ה׳; לעומתו מעשי בני עלי פגעו בכבוד הקרבן."}},
+    {"id": "bible-40", "type": "mcq", "topic": "הנבואה על בית עלי", "difficulty": "hard", "prompt": "מה היה האות שהודיע איש האלוהים לעלי?", "ref": {"id": "bible-samuel-study", "part": "ב׳ 27–36"}, "choices": ["מות חופני ופינחס ביום אחד", "לידת שמואל בשילה", "תפילת חנה בקול רם", "חזרת אלקנה להר אפרים"], "correct": 0, "explanation": {"he": "בשמואל א׳ ב׳ 27–36: מות שני בני עלי, חופני ופינחס, ביום אחד יהיה אות לנבואה."}}
   ];
 
   const $ = id => document.getElementById(id);
@@ -31,7 +51,7 @@
     ? contentApi.loadContent('exams/bible-v1-samuel', null, { valid: exam => contentApi.examFromApi(exam, inlineQuestions) !== null })
       .then(exam => (exam && contentApi.examFromApi(exam, inlineQuestions)) || inlineQuestions, () => inlineQuestions)
     : Promise.resolve(inlineQuestions)
-  ).then(questions => {
+  ).then(bank => {
   const storageKey = 'bible-exam-draft-v1';
   const examId = 'bible-v1-samuel';
   const refNames = { 'bible-samuel-study': 'שמואל א׳' };
@@ -46,10 +66,22 @@
   const validPick = (q, value) => Array.isArray(value) && value.length > 0 && new Set(value).size === value.length && value.every(i => Number.isInteger(i) && i >= 0 && i < q.choices.length);
   let saved = {};
   try { saved = JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch (_) {}
-  const validOrder = Array.isArray(saved.order) && saved.order.length === questions.length && new Set(saved.order).size === questions.length && saved.order.every(id => questions.some(q => q.id === id));
+  const validOrder = Array.isArray(saved.order) && saved.order.length === 20 && new Set(saved.order).size === 20 && saved.order.every(id => bank.some(q => q.id === id));
   // docs/TESTING.md §4: questions and choices are always shuffled, per student.
-  const order = validOrder ? saved.order : QuizCore.shuffled(questions).map(q => q.id);
-  const ordered = order.map(id => questions.find(q => q.id === id));
+  function drawRound() {
+    let round;
+    do {
+      round = [
+        ...QuizCore.shuffled(bank.filter(q => q.difficulty === 'easy')).slice(0, 8),
+        ...QuizCore.shuffled(bank.filter(q => q.difficulty === 'medium')).slice(0, 8),
+        ...QuizCore.shuffled(bank.filter(q => q.difficulty === 'hard')).slice(0, 4)
+      ];
+    } while (!round.some(q => q.type === 'open') || !round.some(q => q.type === 'checkbox'));
+    return QuizCore.shuffled(round).map(q => q.id);
+  }
+  const order = validOrder ? saved.order : drawRound();
+  const ordered = order.map(id => bank.find(q => q.id === id));
+  const questions = ordered;
   const answers = validOrder && saved.answers && typeof saved.answers === 'object' ? saved.answers : {};
   const flags = new Set(validOrder && Array.isArray(saved.flags) ? saved.flags : []);
   const choiceOrders = {};

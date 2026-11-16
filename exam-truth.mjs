@@ -60,7 +60,14 @@ export function judgeAnswers(examId, answers) {
     }
     return { matched: true, questionId: q.id, correct: verdict, ...(q.choices ? { options: q.choices } : {}), correctAnswer: keyText(q), reference: referenceText(q), flags };
   });
-  const { earned, pending } = globalThis.QuizCore.scoreQuiz(questions.map(({ id, type, difficulty }) => ({ id, type, difficulty })), results);
+  const scoredQuestions = examId === 'bible-v1-samuel' ? questions.filter(q => used.has(q.id)) : questions;
+  const { earned, pending } = globalThis.QuizCore.scoreQuiz(scoredQuestions.map(({ id, type, difficulty }) => ({ id, type, difficulty })), results);
+  // AI rubric maxima for this exam assume the original 8/8/4 difficulty mix.
+  if (examId === 'bible-v1-samuel' && answers.length === 20 && unmatched === 0 &&
+      ['easy', 'medium', 'hard'].some((level, i) => scoredQuestions.filter(q => q.difficulty === level).length !== [8, 8, 4][i])) {
+    judged[0] = { ...judged[0], matched: false, flags: ['⚠ הרכב השאלות אינו תקין'] };
+    unmatched++;
+  }
   const notes = [];
   if (mismatches) notes.push(`⚠ ב־${mismatches} תשובות הדפדפן דיווח תוצאה שונה מחישוב השרת (הציון והסימונים כאן חושבו בשרת)`);
   if (unmatched) notes.push(`⚠ ${unmatched} תשובות לא זוהו מול השאלות (לא זוהתה שאלה), ולכן הציון עשוי להיות נמוך מהאמיתי`);

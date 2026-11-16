@@ -413,7 +413,7 @@ test('the AI reason never reaches the browser from /api/grade-open or /api/submi
 for (const examId of ['english-v1-practice', 'hebrew-v1-garden', 'bible-v1-samuel']) {
   for (const fraction of [0, 0.5, 1]) {
     test(`${examId}: every open answer reaches AI in one call and final score stays in 0–100 (${fraction})`, () => {
-      const questions = rows.filter(q => q.exam_id === examId);
+      const questions = rows.filter(q => q.exam_id === examId).slice(0, 20);
       const open = questions.filter(q => q.type === 'open');
       const ai = mockOpenAi({ grade: q => ({ score: Math.round(q.maxScore * fraction * 100) / 100, reason: 'בדיקת תרגול' }) });
       return withServer(async ({ submit, emails }) => {
@@ -454,3 +454,23 @@ test('configured AI with a missing rubric reports failure instead of silently sk
     } finally { await new Promise(resolve => server.close(resolve)); }
   })();
 });
+
+for (const fraction of [0, 0.5, 1]) {
+  test(`Bible: sampled questions receive the correct weighted AI score (${fraction})`, () => {
+    const all = rows.filter(q => q.exam_id === 'bible-v1-samuel');
+    const questions = [...all.filter(q => q.difficulty === 'easy').slice(4, 12), ...all.filter(q => q.difficulty === 'medium').slice(0, 8), ...all.filter(q => q.difficulty === 'hard').slice(2, 6)];
+    const ai = mockOpenAi({ grade: q => ({ score: Math.round(q.maxScore * fraction * 100) / 100, reason: 'בדיקת תרגול' }) });
+    return withServer(async ({ submit, emails }) => {
+      const response = await submit({ exam: 'bible-v1-samuel', name: STUDENT, attempt: 1, answers: questions.map(q => ({ questionId: 'untrusted', question: q.prompt, answer: q.type === 'open' ? 'Synthetic answer' : Array.isArray(q.correct) ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct] })) });
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.grading.status, 'ok');
+      assert.deepEqual(Object.keys(body.grading.scores).sort(), questions.filter(q => q.type === 'open').map(q => q.id).sort());
+      const auto = globalThis.QuizCore.scoreQuiz(questions, Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, 1]))).earned;
+      const points = Object.values(body.grading.scores).reduce((sum, mark) => sum + mark.score, 0);
+      assert.match(emails[0].body.text, new RegExp(`ציון כולל \\(כולל בדיקת AI\\): ${Math.min(100, auto + Math.round(points))} מתוך 100`));
+      if (fraction === 1) assert.equal(auto + Math.round(points), 100);
+      assert.equal(ai.requests.length, 1);
+    }, { ai });
+  });
+}

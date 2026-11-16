@@ -35,6 +35,8 @@ test('Bible mobile: local entry, required name, locks, reload, review, failed se
     assert.match(await page.locator('.variant-meta').innerText(), /19\.11/);
     assert.equal(await page.locator('.reference-link').getAttribute('href'), 'bible-exam.html#article');
     await page.locator('.variant-start').click();
+    await page.evaluate(ids => sessionStorage.setItem('bible-exam-draft-v1', JSON.stringify({ order: ids })), questions.slice(0, 20).map(q => q.id));
+    await page.reload();
     await page.clock.install();
     await page.locator('#begin').click();
     assert.match(await page.locator('#name-error').innerText(), /יש לכתוב שם/);
