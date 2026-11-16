@@ -32,10 +32,10 @@
   <meta name="apple-mobile-web-app-title" content="PrepX">
 </head>
 <body><main><a class="prepx-brand" href="index.html" aria-label="PrepX — עמוד הבית"><img src="assets/branding/prepx-logo.png" alt="PrepX" width="2172" height="724"></a><span class="mark" aria-hidden="true">✓</span><h1>כל הכבוד, סיימת!</h1><p>הטופס נשלח בהצלחה.</p><dl id="summary" hidden></dl><p id="grade-note" hidden>זהו מבחן עם תשובות פתוחות, לכן הציון יינתן לאחר בדיקת המורה.</p><a href="index.html">חזרה לכל המבחנים</a></main><script>
-try { sessionStorage.removeItem('garden-exam-draft-v1'); sessionStorage.removeItem('library-exam-draft-v1'); sessionStorage.removeItem('physics-exam-draft-v1'); } catch (_) {}
+try { sessionStorage.removeItem('garden-exam-draft-v1'); sessionStorage.removeItem('library-exam-draft-v1'); sessionStorage.removeItem('physics-exam-draft-v1'); sessionStorage.removeItem('bible-exam-draft-v1'); } catch (_) {}
 try {
-  // Every exam ends here. Show the summary of the exam that was sent last (garden, library or physics).
-  const results = ['garden-exam-result-v1', 'library-exam-result-v1', 'physics-exam-result-v1']
+  // Older links can still open a simple receipt. Current exams show their results on the exam page.
+  const results = ['garden-exam-result-v1', 'library-exam-result-v1', 'physics-exam-result-v1', 'bible-exam-result-v1']
     .map(key => { try { return JSON.parse(sessionStorage.getItem(key)); } catch (_) { return null; } })
     .filter(x => x && !isNaN(Date.parse(x.startedAt)) && !isNaN(Date.parse(x.finishedAt)));
   const r = results.sort((a, b) => Date.parse(b.finishedAt) - Date.parse(a.finishedAt))[0];
@@ -49,7 +49,7 @@ try {
   if (r.score && points(r.score.earned) && points(r.score.pending)) rows.push(['ציון חלקי (לפני בדיקת המורה)', r.score.earned + ' מתוך ' + (100 - r.score.pending)]);
   const dl = document.getElementById('summary');
   rows.forEach(([k, v]) => { const d = document.createElement('div'), t = document.createElement('dt'), x = document.createElement('dd'); t.textContent = k; x.textContent = v; d.append(t, x); dl.append(d); });
-  dl.hidden = false; document.getElementById('grade-note').hidden = false;
+  dl.hidden = false; document.getElementById('grade-note').hidden = r.exam === 'bible-v1-samuel';
 } catch (_) {}
 </script></body>
 </html>

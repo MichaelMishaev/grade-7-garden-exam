@@ -83,6 +83,12 @@ test('read API matches extracted content', { skip }, async () => {
   assert.equal(hebrew.exams.length, source.exams.filter((e) => e.subject_id === 'hebrew').length);
   assert.equal(hebrew.quizzes.length, source.quizzes.filter((q) => q.subject_id === 'hebrew').length);
   assert.equal((await fetch(`${base}/api/quizzes/nope`)).status, 404);
+  const bible = await getJson('/api/exams/bible-v1-samuel');
+  const bibleSubject = await getJson('/api/subjects/bible');
+  assert.deepEqual(bibleSubject.exams.map(e => [e.id, e.date_label]), [['bible-v1-samuel', '19.11']]);
+  assert.equal(bible.questions.length, 20);
+  assert.equal(bible.questions.filter(q => q.type === 'checkbox' && q.correct.length === 2).length, 3);
+  assert.ok(bible.questions.every(q => q.ref?.id === 'bible-samuel-study' && bible.references[0].parts.some(p => p.part === q.ref.part)));
   const physics = await getJson('/api/exams/physics-v1-assessment');
   assert.equal(physics.questions.length, 27);
   assert.deepEqual(physics.references.map((r) => [r.id, r.kind, r.attribution]), [['physics-pdf', 'pdf', 'שרית שרת'], ['physics-site', 'site', 'שרית שרת']]);

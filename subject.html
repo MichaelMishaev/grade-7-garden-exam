@@ -345,12 +345,32 @@
           parts: ['מערכת צירים והרביע הראשון', 'מספרים מכוונים', 'שטחי ריבוע, מלבן ומשולש', 'זוויות וסימון זוויות', 'משולשים מיוחדים']
             .map(part => ({ part, title: part }))
         }]
+      },
+      bible: {
+        title: "תנ״ך",
+        description: "מבחן תרגול לכיתה ז׳ לקראת 19.11 · דגש על שמואל א׳ ב׳, פסוקים 11–15.",
+        variants: [{
+          id: 'bible-v1-samuel', title: 'שמואל א׳ · פרקים א׳–ב׳',
+          detail: 'משפחת אלקנה, חנה ושמואל, בני עלי ועבודת הקרבנות', date: '19.11', count: '20 שאלות', href: 'bible-exam.html',
+          references: [{ id: 'bible-samuel-study', kind: 'passage', title: 'תקציר לפי פסוקים · שמואל א׳, פרקים א׳–ב׳',
+            url: 'bible-exam.html#article', attribution: 'על פי נוסח המקרא', parts: [
+              { part: 'א׳ 1–8', title: 'משפחת אלקנה והעלייה לשילה' },
+              { part: 'א׳ 9–18', title: 'התפילה, הנדר והשיחה עם עלי' },
+              { part: 'א׳ 19–28', title: 'לידת שמואל וקיום הנדר' },
+              { part: 'ב׳ 1–10', title: 'תפילת ההודיה של חנה' },
+              { part: 'ב׳ 11–16', title: 'שמואל ומעשי נער הכוהן' },
+              { part: 'ב׳ 17–26', title: 'הניגוד בין שמואל לבני עלי' },
+              { part: 'ב׳ 27–36', title: 'הנבואה על בית עלי' }
+            ]
+          }]
+        }]
       }
     };
     const examDates = {
       'hebrew-v1-garden': '2026-10-29',
       'hebrew-v2-library': '2026-10-29',
-      'physics-v1-assessment': '2026-11-02'
+      'physics-v1-assessment': '2026-11-02',
+      'bible-v1-samuel': '2026-11-19'
     };
     const key = new URLSearchParams(location.search).get('subject');
     const subjectKey = Object.hasOwn(subjects, key) ? key : 'hebrew';

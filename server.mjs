@@ -48,6 +48,10 @@ export const exams = Object.assign(Object.create(null), {
     code: 'PHY-001', count: 27, idempotencyPrefix: 'physics-exam', subject: 'תשובות למשימת הערכה במדידות - פיזיקה - כיתה ז׳',
     title: 'תשובות למשימת הערכה במדידות', subtitle: 'פיזיקה · כיתה ז׳2 · שי עגנון, נתניה'
   },
+  'bible-v1-samuel': {
+    code: 'BIB-001', count: 20, idempotencyPrefix: 'bible-exam', subject: 'תשובות למבחן תרגול בתנ״ך - כיתה ז׳',
+    title: 'תשובות למבחן תרגול בתנ״ך', subtitle: 'שמואל א׳, פרקים א׳–ב׳ · כיתה ז׳2'
+  },
   'english-v1-practice': {
     code: 'ENG-001', count: 20, idempotencyPrefix: 'english-exam', subject: 'תשובות למבחן תרגול באנגלית - כיתה ז׳',
     title: 'תשובות למבחן תרגול באנגלית', subtitle: 'אנגלית · כיתה ז׳2 · שי עגנון, נתניה'

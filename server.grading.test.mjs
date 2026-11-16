@@ -410,7 +410,7 @@ test('the AI reason never reaches the browser from /api/grade-open or /api/submi
   for (const response of [await submit(libraryPayload()), await grade(gradeBody())]) assert.doesNotMatch(await response.text(), /תשובה טובה|reason/);
 }));
 
-for (const examId of ['english-v1-practice', 'hebrew-v1-garden']) {
+for (const examId of ['english-v1-practice', 'hebrew-v1-garden', 'bible-v1-samuel']) {
   for (const fraction of [0, 0.5, 1]) {
     test(`${examId}: every open answer reaches AI in one call and final score stays in 0–100 (${fraction})`, () => {
       const questions = rows.filter(q => q.exam_id === examId);
@@ -418,7 +418,8 @@ for (const examId of ['english-v1-practice', 'hebrew-v1-garden']) {
       const ai = mockOpenAi({ grade: q => ({ score: Math.round(q.maxScore * fraction * 100) / 100, reason: 'בדיקת תרגול' }) });
       return withServer(async ({ submit, emails }) => {
         const response = await submit({ exam: examId, name: STUDENT, attempt: 1, answers: [...questions].reverse().map(q => ({
-          questionId: 'untrusted-id', question: plainText(q.prompt), answer: q.type === 'open' ? 'Synthetic written answer' : q.choices[q.correct]
+          questionId: 'untrusted-id', question: plainText(q.prompt),
+          answer: q.type === 'open' ? 'Synthetic written answer' : q.type === 'checkbox' ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct]
         })) });
         assert.equal(response.status, 200);
         const body = await response.json();

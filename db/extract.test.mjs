@@ -9,16 +9,16 @@ const perParent = Object.groupBy(content.questions, (q) => q.exam_id ?? q.quiz_i
 const refs = new Map(content.study_references.map((r) => [r.id, r]));
 
 test('extracts every subject, exam, quiz, reference and question from the source files', () => {
-  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [4, 3, 4, 11, 18, 156]);
+  assert.deepEqual(['subjects', 'passages', 'exams', 'quizzes', 'study_references', 'questions'].map((k) => content[k].length), [5, 4, 5, 11, 19, 176]);
   assert.deepEqual(Object.fromEntries(Object.entries(perParent).map(([k, v]) => [k, v.length])), {
-    'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, 'english-v1-practice': 20, facts: 6, questions: 6, instructions: 6,
+    'hebrew-v1-garden': 20, 'hebrew-v2-library': 20, 'physics-v1-assessment': 27, 'english-v1-practice': 20, 'bible-v1-samuel': 20, facts: 6, questions: 6, instructions: 6,
     'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5,
     'math-coordinates': 6, 'math-signed': 6, 'math-area': 6, 'math-geometry': 6
   });
 });
 
 test('ids are unique and every question belongs to exactly one parent', () => {
-  assert.equal(new Set(content.questions.map((q) => q.id)).size, 156);
+  assert.equal(new Set(content.questions.map((q) => q.id)).size, 176);
   for (const q of content.questions) assert.equal(Number(q.exam_id !== null) + Number(q.quiz_id !== null), 1);
 });
 
@@ -27,6 +27,10 @@ test('graded questions have a valid answer and positions are 1..n', () => {
     assert.deepEqual(list.map((q) => q.position), list.map((_, i) => i + 1), parent);
     for (const q of list) {
       if (q.type === 'mcq' || q.type === 'truefalse') assert.ok(Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.choices.length, q.id);
+      if (q.type === 'checkbox') {
+        assert.ok(new Set(q.correct).size === q.correct.length && q.correct.length > 1 && q.correct.length < q.choices.length, q.id);
+        assert.ok(q.correct.every(index => Number.isInteger(index) && index >= 0 && index < q.choices.length), q.id);
+      }
       if (q.type === 'fill') {
         assert.equal(q.choices, null, q.id);
         assert.ok(Number.isFinite(q.correct.value) && q.correct.tolerance === 1e-8 && 'unit' in q.correct, q.id);
@@ -60,7 +64,7 @@ test('quizzes link to the right subject and exam, and the Hebrew exams have a pa
 
 test('every exam version has its own study references, with known kinds and parts', () => {
   assert.deepEqual(content.exams.map((e) => [e.id, content.study_references.filter((r) => r.exam_id === e.id).map((r) => r.id)]), [
-    ['hebrew-v1-garden', ['garden-passage']], ['hebrew-v2-library', ['library-passage']], ['physics-v1-assessment', ['physics-pdf', 'physics-site']], ['english-v1-practice', ['english-teacher-material', 'english-reading', 'english-vocabulary-12', 'english-vocabulary-20', 'english-vocabulary-28', 'english-parts-sort', 'english-parts-quiz', 'english-negative-1', 'english-negative-2', 'english-affirmative-1', 'english-affirmative-2', 'english-questions-1', 'english-questions-2']]
+    ['hebrew-v1-garden', ['garden-passage']], ['hebrew-v2-library', ['library-passage']], ['physics-v1-assessment', ['physics-pdf', 'physics-site']], ['english-v1-practice', ['english-teacher-material', 'english-reading', 'english-vocabulary-12', 'english-vocabulary-20', 'english-vocabulary-28', 'english-parts-sort', 'english-parts-quiz', 'english-negative-1', 'english-negative-2', 'english-affirmative-1', 'english-affirmative-2', 'english-questions-1', 'english-questions-2']], ['bible-v1-samuel', ['bible-samuel-study']]
   ]);
   for (const r of content.study_references) {
     assert.ok(['pdf', 'site', 'passage'].includes(r.kind) && r.title && r.url, r.id);
@@ -85,6 +89,10 @@ test('every question follows a reference of its own subject, at a part that exis
   for (const q of content.questions.filter((x) => subjectOf(x) === 'physics')) {
     assert.ok(q.reference_part, q.id);
     assert.match(`${q.reference_id}:${q.reference_part}`, /^(physics-pdf:עמוד [1-6]|physics-site:פרק [1-4])$/, q.id);
+  }
+  for (const q of perParent['bible-v1-samuel']) {
+    assert.ok(q.reference_part, q.id);
+    if (q.type !== 'open') assert.ok(q.explanation_he, q.id);
   }
   // exam questions follow their own exam's references
   for (const q of content.questions.filter((x) => x.exam_id)) assert.equal(refs.get(q.reference_id).exam_id, q.exam_id, q.id);

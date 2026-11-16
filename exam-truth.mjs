@@ -10,7 +10,7 @@ import './quiz-core.js';
 // Same prefix db/submissions.mjs strips: the library page puts its version and title before every prompt.
 const libraryPrefix = 'גרסה 2 · הספרייה בהפסקה · ';
 // Source names as the exam pages print them (library-exam.js, physics-exam.js).
-const refNames = { 'library-passage': 'הקטע', 'physics-pdf': 'סיכום המורה', 'physics-site': 'אתר התרגול' };
+const refNames = { 'bible-samuel-study': 'שמואל א׳', 'library-passage': 'הקטע', 'physics-pdf': 'סיכום המורה', 'physics-site': 'אתר התרגול' };
 
 let rows;
 const indexes = new Map();

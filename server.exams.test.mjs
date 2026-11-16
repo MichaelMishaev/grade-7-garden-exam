@@ -129,7 +129,7 @@ test('unknown exam values are rejected before anything is sent', () => withServe
     assert.deepEqual(await response.json(), { error: 'Unknown exam' });
   }
   assert.equal(calls.length, 0);
-  assert.deepEqual(Object.keys(exams), ['hebrew-v1-garden', 'hebrew-v2-library', 'physics-v1-assessment', 'english-v1-practice']);
+  assert.deepEqual(Object.keys(exams), ['hebrew-v1-garden', 'hebrew-v2-library', 'physics-v1-assessment', 'bible-v1-samuel', 'english-v1-practice']);
 }));
 
 test('physics idempotency key is stable per payload, per student, and never equal to the garden key', () => withServer(async ({ submit, calls }) => {
@@ -185,7 +185,7 @@ test('physics email render: title, subtitle, marks, pending labels and escaping'
 // docs/TESTING.md §1, §6, §8: permanent test codes, attempt numbers, and the full email content.
 test('every table exam has a unique permanent code, shown in the subject, the text and the html with the attempt number', () => withServer(async ({ submit, calls }) => {
   assert.deepEqual(Object.fromEntries(Object.entries(exams).map(([id, e]) => [id, e.code])),
-    { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001', 'english-v1-practice': 'ENG-001' });
+    { 'hebrew-v1-garden': 'HEB-001', 'hebrew-v2-library': 'HEB-002', 'physics-v1-assessment': 'PHY-001', 'english-v1-practice': 'ENG-001', 'bible-v1-samuel': 'BIB-001' });
   assert.equal(new Set(Object.values(exams).map((e) => e.code)).size, Object.keys(exams).length);
   const library = { ...legacyPayloads[1], exam: 'hebrew-v2-library', attempt: 3 };
   assert.equal((await submit(library)).status, 200);
@@ -257,3 +257,25 @@ test('English: exactly 20 answers use the shared teacher pipeline and preserve t
   assert.match(calls[0].headers['Idempotency-Key'], /^english-exam\//);
   assert.equal(stored[0].examId, 'english-v1-practice');
 }));
+
+test('Bible: rejects incomplete or oversized submissions, then uses the shared teacher and sender', () => withServer(async ({ submit, calls }) => {
+  const exam = 'bible-v1-samuel';
+  const answers = extractContent().questions.filter(q => q.exam_id === exam).map(q => ({
+    question: q.prompt,
+    answer: q.type === 'open' ? 'תשובת בדיקה' : q.type === 'checkbox' ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct]
+  }));
+  const payload = { exam, name: 'Synthetic QA', answers };
+  for (const invalid of [answers.slice(0, -1), [...answers, answers[0]]]) {
+    assert.equal((await submit({ ...payload, answers: invalid })).status, 400);
+  }
+  assert.equal(calls.length, 0);
+  assert.equal((await submit(legacyPayloads[0])).status, 200);
+  assert.equal((await submit(payload)).status, 200);
+  const [legacy, bible] = calls;
+  assert.equal(bible.headers.Authorization, legacy.headers.Authorization);
+  assert.equal(bible.body.from, legacy.body.from);
+  assert.deepEqual(bible.body.to, legacy.body.to);
+  assert.match(bible.headers['Idempotency-Key'], /^bible-exam\/[0-9a-f]{64}$/);
+  assert.match(bible.body.subject, /BIB-001/);
+  assert.match(bible.body.text, /^20\./m);
+}, { db: null }));

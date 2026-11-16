@@ -60,7 +60,13 @@ const physicsStructure = Object.fromEntries(['06', '11', '20', '22', '23', '25',
 const englishStructure = { 'english-05': { max: 3.57 }, 'english-19': { max: 7.14 }, 'english-20': { max: 7.14 } };
 const gardenStructure = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`garden-${String(i + 1).padStart(2, '0')}`, { max: 5 }]));
 
+const bibleStructure = {
+  'bible-16': { max: 5.36 }, 'bible-17': { max: 7.14 }, 'bible-18': { max: 7.14 },
+  'bible-19': { max: 5.36 }, 'bible-20': { max: 7.14 }
+};
+
 const structures = {
+  'bible-v1-samuel': { structure: bibleStructure, contextOf: (_part, rest) => rest.context ?? '' },
   'english-v1-practice': { structure: englishStructure, contextOf: (_part, rest) => rest.context ?? '' },
   'hebrew-v1-garden': { structure: gardenStructure, contextOf: (_part, rest) => rest.context ?? '' },
   'hebrew-v2-library': { structure: libraryStructure, contextOf: (part, rest) => rest.context ?? libraryText(part) },

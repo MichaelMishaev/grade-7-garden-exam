@@ -19,13 +19,13 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql', '007_final_submission_email.sql', '008_ai_conclusion.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
-    assert.equal(first.questions.inserted, 156);
+    assert.equal(first.questions.inserted, extractContent().questions.length);
     assert.equal(first.study_references.inserted, extractContent().study_references.length);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
     assert.deepEqual(await verify(sql), []);
     assert.deepEqual((await sql`SELECT id, code FROM exams ORDER BY id`).map((r) => [r.id, r.code]),
-      [['english-v1-practice', 'ENG-001'], ['hebrew-v1-garden', 'HEB-001'], ['hebrew-v2-library', 'HEB-002'], ['physics-v1-assessment', 'PHY-001']]);
+      [['bible-v1-samuel', 'BIB-001'], ['english-v1-practice', 'ENG-001'], ['hebrew-v1-garden', 'HEB-001'], ['hebrew-v2-library', 'HEB-002'], ['physics-v1-assessment', 'PHY-001']]);
     // a code is unique, and verify reports a changed one
     await assert.rejects(sql`UPDATE exams SET code = 'HEB-001' WHERE id = 'hebrew-v2-library'`);
     await sql`UPDATE exams SET code = 'HEB-009' WHERE id = 'hebrew-v2-library'`;
@@ -47,7 +47,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.equal((await seed(sql)).questions.retired, 1);
     assert.deepEqual(await verify(sql), []);
     assert.equal((await content.getQuiz(sql, 'physics-units')).questions.length, 5);
-    assert.equal((await sql`SELECT count(*)::int AS count FROM questions`)[0].count, 157);
+    assert.equal((await sql`SELECT count(*)::int AS count FROM questions`)[0].count, currentContent.questions.length + 1);
     assert.deepEqual({ ...(await sql`SELECT retired, source_hash FROM questions WHERE id = 'physics-units-11'`)[0] }, { retired: true, source_hash: 'legacy-preserved' });
     assert.equal((await seed(sql)).questions.retired, 0);
     await seed(sql, legacyContent);
@@ -108,6 +108,10 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.deepEqual(quiz.questions[0].ref, { id: 'physics-site', part: 'פרק 4' });
     assert.deepEqual((await content.getSubject(sql, 'physics')).exams.map((e) => [e.id, e.references.map((r) => r.id)]),
       [['physics-v1-assessment', ['physics-pdf', 'physics-site']]]);
+    const bible = await content.getExam(sql, 'bible-v1-samuel');
+    assert.equal(bible.questions.length, 20);
+    assert.match(bible.passage_html, /חומר לימוד/);
+    assert.deepEqual(bible.questions.filter(q => q.type === 'checkbox').map(q => q.correct), [[0, 1], [0, 1], [0, 1]]);
     const english = await content.getExam(sql, 'english-v1-practice');
     assert.equal(english.questions.length, 20);
     assert.equal(english.references.length, source.study_references.filter(ref => ref.exam_id === 'english-v1-practice').length);

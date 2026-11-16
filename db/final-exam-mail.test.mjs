@@ -30,7 +30,9 @@ test('production submission survives grading failure and restart, then emails a 
       env, db, finalExamMail: true, mailPollMs,
       aiFetch: async (_url, init) => {
         const prompt = JSON.parse(init.body).messages[1].content;
-        const questions = JSON.parse(prompt.slice(prompt.indexOf('\n') + 1)).questions;
+        const document = JSON.parse(prompt.slice(prompt.indexOf('\n') + 1));
+        assert.doesNotMatch(JSON.stringify(document), /Synthetic QA/);
+        const questions = document.questions;
         calls.push(questions.map(q => q.questionId).sort());
         if (!gradingAvailable) return Response.json({}, { status: 503 });
         const results = questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול מלאה' }));
@@ -51,10 +53,10 @@ test('production submission survives grading failure and restart, then emails a 
   try {
     await migrate(sql);
     await seed(sql);
-    const exam = 'english-v1-practice';
+    const exam = 'bible-v1-samuel';
     const questions = extractContent().questions.filter(q => q.exam_id === exam);
     const payload = { exam, resultToken: randomBytes(16).toString('hex'), attempt: 1, name: `Synthetic QA ${randomUUID()}`, answers: questions.map(q => ({
-      question: q.prompt, answer: q.type === 'open' ? 'Synthetic written answer' : q.choices[q.correct]
+      question: q.prompt, questionId: 'browser-supplied-id', answer: q.type === 'open' ? 'Synthetic written answer' : q.type === 'checkbox' ? q.correct.map(i => q.choices[i]).join(' · ') : q.choices[q.correct]
     })) };
     const post = (submission = payload) => fetch(base + '/api/submit-exam', { method: 'POST', headers: {
       Origin: 'https://hitech.agnon.online', 'Content-Type': 'application/json'
@@ -74,7 +76,7 @@ test('production submission survives grading failure and restart, then emails a 
     assert.equal((await lookup(payload.resultToken, 'https://unrelated.example')).status, 403);
     assert.equal((await lookup('guess')).status, 400);
     assert.equal(emails.length, 0);
-    const [saved] = await sql`SELECT id, ai_status, email_status FROM submissions WHERE exam_code = 'ENG-001' AND student_name = ${payload.name}`;
+    const [saved] = await sql`SELECT id, ai_status, email_status FROM submissions WHERE exam_code = 'BIB-001' AND student_name = ${payload.name}`;
     assert.deepEqual([saved.ai_status, saved.email_status], ['failed', 'pending']);
     await stop();
 
@@ -100,9 +102,9 @@ test('production submission survives grading failure and restart, then emails a 
     assert.equal(emails.length, 1);
     assert.deepEqual(emailAttempts, [emails[0], emails[0]], 'the provider retry uses the same email and idempotency key');
     assert.match(emails[0].body.text, /ציון כולל \(כולל בדיקת AI\): 100 מתוך 100/);
-    assert.equal((emails[0].body.text.match(/^AI: /gm) ?? []).length, 3);
+    assert.equal((emails[0].body.text.match(/^AI: /gm) ?? []).length, 5);
     assert.doesNotMatch(emails[0].body.html, /ממתינה לבדיקת המורה/);
-    assert.deepEqual(calls, Array(2).fill(['english-05', 'english-19', 'english-20']));
+    assert.deepEqual(calls, Array(2).fill(['bible-16', 'bible-17', 'bible-18', 'bible-19', 'bible-20']));
 
     const duplicates = await Promise.all([post(), post()]);
     for (const duplicate of duplicates) {
@@ -119,7 +121,8 @@ test('production submission survives grading failure and restart, then emails a 
     for (const [id, code, openCount] of [
       ['hebrew-v1-garden', 'HEB-001', 20],
       ['hebrew-v2-library', 'HEB-002', 4],
-      ['physics-v1-assessment', 'PHY-001', 7]
+      ['physics-v1-assessment', 'PHY-001', 7],
+      ['english-v1-practice', 'ENG-001', 3]
     ]) {
       const rows = extractContent().questions.filter(q => q.exam_id === id);
       const token = randomBytes(16).toString('hex');
