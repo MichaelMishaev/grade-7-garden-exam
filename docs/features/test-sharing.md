@@ -72,3 +72,20 @@ Verification: SH-9 and SH-10 pass in the 5-test sharing browser suite.
 Full suite: 312 passed, 8 database-dependent skips; full-stack e2e: 10
 database-dependent skips. Exam/practice mobile screenshots reviewed at 390×844;
 isolated database matches source. Physical WhatsApp preview remains untested.
+
+## Clear test navigation and sharing
+
+Students and parents arriving directly at an exam or practice quiz need visible
+labels for sharing that test and returning to the home page. Keep the existing
+fresh, host-relative test URL and native/copy/manual recovery behavior. The
+controls remain outside attempt stages; navigating home does not submit or clear
+an attempt. The shared URL contains no student data. Use Hebrew, keyboard focus
+and 44px touch targets on mobile.
+
+| ID | Observable acceptance criterion | Verification |
+| --- | --- | --- |
+| SH-11 | Every exam and practice page displays labelled share and home controls throughout the attempt; home opens the site's home page. | Mobile browser suite passed at 390×844 |
+| SH-12 | Subject-page sharing is visibly labelled and retains the correct direct test URL and fallback behavior. | Sharing browser suite passed |
+| SH-13 | Controls fit a 390px viewport, support keyboard focus and retain 44px targets. | Mobile browser suite passed at 390×844 |
+
+Verification: the sharing and exam parity suites passed (18 tests). Native share and clipboard outcomes were mocked; physical-device sharing was not exercised. Home targets were checked as links. No production deployment was made.

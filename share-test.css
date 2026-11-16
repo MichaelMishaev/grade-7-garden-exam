@@ -1,7 +1,7 @@
 /* Icon-only sharing uses the logo accent and a full-size touch target. */
 .test-share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
-.test-share-button { display: inline-grid; place-items: center; width: 44px; height: 44px; min-height: 44px; min-width: 44px; padding: 0; border: 1px solid #e8ddff; border-radius: 50%; background: #f6f1ff; color: #7025ff; font: inherit; cursor: pointer; }
-.test-share-button:focus-visible, .test-share-manual input:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
+.test-share-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: auto; height: 44px; min-height: 44px; min-width: 44px; padding: 0 12px; border: 1px solid #e8ddff; border-radius: 999px; background: #f6f1ff; color: #7025ff; font: inherit; cursor: pointer; }
+.test-home-link:focus-visible, .test-share-button:focus-visible, .test-share-manual input:focus-visible { outline: 3px solid #247eb5; outline-offset: 3px; }
 .test-share-button:disabled { opacity: .65; cursor: wait; }
 .test-share-status { color: #36576c; font-size: 13px; }
 .test-share-manual { width: 100%; color: #36576c; font-size: 13px; }
@@ -14,3 +14,9 @@
 .test-share-top .test-share-status:not(:empty), .test-share-top .test-share-manual { position: absolute; z-index: 5; inset-inline-end: 0; top: 52px; box-sizing: border-box; width: min(300px, calc(100vw - 32px)); padding: 12px; border: 1px solid #e8ddff; border-radius: 12px; background: #fff; box-shadow: 0 6px 20px #27354118; }
 .test-share-top .test-share-manual { top: 110px; }
 @media (hover: hover) { .test-share-button:hover { background: #ede3ff; border-color: #c9afff; } }
+
+.test-home-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; color: #5520b7; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.test-toolbar { gap: 8px; }
+.test-toolbar .prepx-brand { width: min(120px, 30vw); }
+
+.topbar:has(.test-home-link) { flex-wrap: wrap; gap: 8px; }

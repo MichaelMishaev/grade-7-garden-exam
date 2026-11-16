@@ -7,6 +7,7 @@ function testShareControl(link, title) {
   button.type = 'button';
   button.className = 'test-share-button';
   button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 16V3m-4 4 4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+  button.append('שיתוף');
   button.title = 'שיתוף';
   button.setAttribute('aria-label', `שיתוף ${getTitle()}`);
   const status = document.createElement('span');
@@ -68,13 +69,17 @@ function mountInTestShare() {
   const control = testShareControl(link, title);
   control.classList.add('test-share-top');
   const brand = main.querySelector(':scope > .prepx-brand');
+  const home = document.createElement('a');
+  home.className = 'test-home-link';
+  home.href = 'index.html';
+  home.textContent = 'עמוד הבית';
   if (brand) {
     const toolbar = document.createElement('div');
     toolbar.className = 'test-toolbar';
     brand.before(toolbar);
-    toolbar.append(brand, control);
+    toolbar.append(brand, home, control);
   } else {
-    main.querySelector('header').append(control);
+    main.querySelector('header').append(home, control);
   }
 }
 if (document.readyState === 'loading') {

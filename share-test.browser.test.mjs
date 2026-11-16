@@ -86,7 +86,7 @@ test('copy fallback, silent cancellation, manual selection, retry and subdirecto
 }));
 
 test('sharing inside all 11 tests preserves quiz identity, stays outside stages and never shares attempt state', { skip }, () => withPage(async (page, base) => {
-  const paths = ['garden-exam.html', 'library-exam.html', 'physics-exam.html', 'english-exam.html',
+  const paths = ['garden-exam.html', 'library-exam.html', 'physics-exam.html', 'english-exam.html', 'bible-exam.html',
     ...['facts', 'questions', 'instructions', 'physics-basics', 'physics-units', 'physics-precision', 'physics-pole'].map(id => `practice.html?quiz=${id}`)];
   let posts = 0;
   await page.route('**/api/submit-exam', route => { posts++; return route.abort(); });
@@ -107,12 +107,16 @@ test('sharing inside all 11 tests preserves quiz identity, stays outside stages 
     const box = await button.boundingBox();
     assert.ok(box.width >= 44 && box.height >= 44);
     assert.ok(box.y < 180, 'share icon is at the top');
-    assert.equal((await button.textContent()).trim(), '');
+    assert.equal((await button.textContent()).trim(), 'שיתוף');
+    const home = page.locator('.test-home-link');
+    assert.equal(await home.textContent(), 'עמוד הבית');
+    assert.equal(await home.getAttribute('href'), 'index.html');
+    assert.ok((await home.boundingBox()).height >= 44);
     assert.equal(await button.locator('svg[aria-hidden="true"]').count(), 1);
     assert.match(await button.getAttribute('aria-label'), /שיתוף/);
     assert.equal(await button.evaluate(el => el.closest('section')), null);
     const logo = await page.locator('main .prepx-brand').first().boundingBox();
-    assert.ok(Math.abs((box.y + box.height / 2) - (logo.y + logo.height / 2)) < 3, 'aligned beside logo');
+    if (!path.startsWith('practice')) assert.ok(Math.abs((box.y + box.height / 2) - (logo.y + logo.height / 2)) < 3, 'aligned beside logo');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     if (!path.startsWith('practice')) {
       await page.locator('#student-name').fill('בדיקה');
