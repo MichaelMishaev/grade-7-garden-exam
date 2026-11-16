@@ -26,7 +26,7 @@ function openAi({ fail = false } = {}) {
     const body = JSON.parse(config.body);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     seen.push(document.questions.map(q => [q.questionId, q.studentAnswer]));
-    const results = document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'טוב' }));
+    const results = document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'טוב', correction: 'תשובה לדוגמה' }));
     return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results }) } }] }), { status: 200 });
   };
   return { fetchImpl, seen };

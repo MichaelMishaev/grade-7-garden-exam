@@ -9,6 +9,7 @@ import { extractContent } from './extract.mjs';
 import { createDb } from './runtime.mjs';
 import { createApp } from '../server.mjs';
 
+const correction = 'עלי חשב שחנה שיכורה, והיא הסבירה שהתפללה מתוך צער ולא שתתה יין.';
 const conclusion = 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.';
 const url = process.env.FINAL_MAIL_TEST_DATABASE_URL;
 if (url && !/^\/prepx_final_mail_test$/.test(new URL(url).pathname)) {
@@ -35,7 +36,10 @@ test('production submission survives grading failure and restart, then emails a 
         const questions = document.questions;
         calls.push(questions.map(q => q.questionId).sort());
         if (!gradingAvailable) return Response.json({}, { status: 503 });
-        const results = questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול מלאה' }));
+        const results = questions.map(q => ({
+          questionId: q.questionId, score: q.maxScore - (q.questionId === 'bible-16' ? 2 : 0), reason: 'בדיקת תרגול מלאה',
+          correction: q.questionId === 'bible-16' ? correction : ''
+        }));
         return Response.json({ choices: [{ message: { content: JSON.stringify({ results, conclusion }) } }] });
       },
       sendFetch: async (_url, init) => {
@@ -94,15 +98,15 @@ test('production submission survives grading failure and restart, then emails a 
     assert.equal(result.status, 200);
     const { grading } = await result.json();
     assert.deepEqual(grading, {
-      status: 'ok', finalScore: 100, conclusion, emailSent: false,
-      scores: Object.fromEntries(calls[1].map(id => [id, { score: grading.scores[id].max, max: grading.scores[id].max }]))
+      status: 'ok', finalScore: 98, conclusion, emailSent: false,
+      scores: Object.fromEntries(calls[1].map(id => [id, { score: id === 'bible-16' ? 3.5 : grading.scores[id].max, max: grading.scores[id].max, ...(id === 'bible-16' ? { correction } : {}) }]))
     });
     assert.equal(calls.length, 2, 'reading a score never triggers AI grading');
     await sql`UPDATE submissions SET final_mail_due_at = now() WHERE id = ${saved.id}`;
     await assertEventually(async () => (await db.finalMailStatus(saved.id)).email_status === 'accepted');
     assert.equal(emails.length, 1);
     assert.deepEqual(emailAttempts, [emails[0], emails[0]], 'the provider retry uses the same email and idempotency key');
-    assert.match(emails[0].body.text, /ציון כולל \(כולל בדיקת AI\): 100 מתוך 100/);
+    assert.match(emails[0].body.text, /ציון כולל \(כולל בדיקת AI\): 98 מתוך 100/);
     assert.equal((emails[0].body.text.match(/^AI: /gm) ?? []).length, 5);
     assert.doesNotMatch(emails[0].body.html, /ממתינה לבדיקת המורה/);
     assert.deepEqual(calls, Array(2).fill(['bible-16', 'bible-17', 'bible-18', 'bible-19', 'bible-20']));
@@ -111,7 +115,8 @@ test('production submission survives grading failure and restart, then emails a 
     for (const duplicate of duplicates) {
       assert.equal(duplicate.status, 200);
       const { grading } = await duplicate.json();
-      assert.equal(grading.finalScore, 100);
+      assert.equal(grading.finalScore, 98);
+      assert.equal(grading.scores['bible-16'].correction, correction);
       assert.equal(grading.conclusion, conclusion);
     }
     assert.equal(emails.length, 1);

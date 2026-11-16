@@ -84,44 +84,51 @@ async function openWithDraft(browser, origin, path, key, draft) {
   return { page, posts, errors };
 }
 
-const reviewItems = (page) => page.$$eval('#review-list .review-item', (els) => els.map((el) => [el.firstChild.textContent, el.lastChild.textContent]));
+async function goToQuestion(page, target) {
+  if (await page.locator('#review.active').count()) await page.click('#back-to-questions');
+  let position = Number((await page.textContent('#counter')).match(/\d+/)[0]);
+  while (position > target) {
+    await page.click('#previous');
+    position--;
+  }
+  while (position < target) {
+    await page.click('#next');
+    position++;
+  }
+}
 
-// Review screen == expectation: right question order, right answer on the right question, flags kept.
-async function assertReview(page, expected, flaggedPositions = []) {
-  await page.click('#review-button');
-  await page.waitForSelector('#review.active');
-  const items = await reviewItems(page);
+async function fillMissing(page, expected) {
+  await page.clock.install();
+  for (const [i, pair] of expected.pairs.entries()) {
+    if (pair.answer !== null) continue;
+    await goToQuestion(page, i + 1);
+    if (await page.locator('#choices input:not(:disabled):visible').count()) {
+      await page.locator('#choices label').first().click();
+    } else {
+      const numeric = await page.locator('#number-answer:visible').count();
+      await page.fill(numeric ? '#number-answer' : '#answer', numeric ? '1' : 'תשובה חדשה');
+      await page.click('#confirm');
+    }
+    await page.clock.fastForward(1501);
+  }
+  if (!(await page.locator('#review.active').count())) await page.click('#review-button');
+}
+
+async function assertSummary(page, expected, flaggedPositions = []) {
+  assert.equal(await page.locator('#explanations details[open]').count(), 0);
+  assert.equal(await page.locator('#results #send').count(), 0);
+  const items = await page.locator('#explanations details').evaluateAll(cards => cards.map(card => [
+    card.querySelector('summary').textContent,
+    card.querySelector('.result-detail-body p:not(.model-answer)').textContent.replace('התשובה שלי: ', '')
+  ]));
   assert.equal(items.length, expected.pairs.length);
   expected.pairs.forEach((pair, i) => {
-    const [title, summary] = items[i];
+    const [title, answer] = items[i];
     assert.ok(norm(title).startsWith(`${i + 1}. ${norm(expected.title(pair))}`), `question ${i + 1} title`);
-    assert.equal(norm(summary), pair.answer === null ? NONE : norm(pair.answer.replace(/\n/g, ' · ')), `answer on question ${i + 1}`);
+    if (pair.answer !== null) assert.equal(norm(answer), norm(pair.answer), `answer on question ${i + 1}`);
     assert.equal(title.includes('⚑'), flaggedPositions.includes(i), `flag on question ${i + 1}`);
   });
   return items;
-}
-
-// Answers whatever is still empty, one question at a time through the review list, then returns to the review screen.
-async function fillMissing(page) {
-  for (let guard = 0; guard < 60; guard++) {
-    if (!(await page.locator('#review.active').count())) await page.click('#review-button');
-    await page.waitForSelector('#review.active');
-    const index = (await reviewItems(page)).findIndex(([, summary]) => summary === NONE);
-    if (index === -1) return;
-    await page.locator('#review-list .review-item').nth(index).click();
-    const before = await page.textContent('#counter');
-    const kind = await page.evaluate(() => {
-      const el = (id) => document.getElementById(id);
-      if (el('choices') && !el('choices').hidden && document.querySelector('#choices input:not(:disabled)')) return 'choice';
-      if (el('number-answer-box') && !el('number-answer-box').hidden && !el('number-answer').disabled) return 'number';
-      return el('answer') && !el('answer').disabled ? 'text' : 'none';
-    });
-    assert.notEqual(kind, 'none', `question ${index + 1} must be answerable`);
-    if (kind === 'choice') await page.locator('#choices label').first().click();
-    else { await page.fill(kind === 'number' ? '#number-answer' : '#answer', kind === 'number' ? '1' : 'תשובה חדשה'); await page.click('#confirm'); }
-    await page.waitForFunction((was) => document.getElementById('counter').textContent !== was || document.querySelector('#review.active'), before, { timeout: 6000 });
-  }
-  assert.fail('could not answer every question');
 }
 
 // The payload the page POSTed and the email the (mock) provider got: one each, with the exact question/answer pairs.
@@ -133,7 +140,7 @@ function assertSent({ posts, mails }, expected, shown) {
   expected.pairs.forEach((pair, i) => {
     assert.equal(norm(answers[i].question), norm(pair.question), `question ${i + 1} sent`);
     if (pair.answer !== null) assert.equal(answers[i].answer, pair.answer, `answer ${i + 1} sent`);
-    else assert.equal(norm(answers[i].answer.replace(/\n/g, ' · ')), norm(shown[i][1]), `new answer ${i + 1} sent as shown on review`);
+    else assert.equal(norm(answers[i].answer.replace(/\n/g, ' · ')), norm(shown[i][1].replace(/\n/g, ' · ')), `new answer ${i + 1} sent as shown in the summary`);
     assert.notEqual(answers[i].answer, NONE, `answer ${i + 1} is real`);
     assert.ok(mails[0].text.includes(answers[i].answer.split('\n')[0]), `answer ${i + 1} is in the email`);
   });
@@ -153,12 +160,10 @@ test('garden: a mid-exam old draft keeps the original order, the answers on thei
   assert.equal(await page.textContent('#question-title'), gardenQuestions[7]);
   assert.deepEqual(await page.evaluate(() => JSON.parse(sessionStorage.getItem('garden-exam-draft-v1')).order), Array.from({ length: 20 }, (_, i) => i));
   const expected = expectations.garden(draft);
-  await assertReview(page, expected);
-  await fillMissing(page);
-  const shown = await reviewItems(page);
+  await fillMissing(page, expected);
   await page.click('#finish');
   await page.waitForSelector('#done-banner:not([hidden])');
-  assertSent({ posts, mails }, expected, shown);
+  assertSent({ posts, mails }, expected, await assertSummary(page, expected));
   await page.reload();
   await page.waitForSelector('#results.active');
   await page.waitForTimeout(400);
@@ -172,11 +177,10 @@ test('garden: an old draft with all 20 answers restores in order and sends once'
   await page.click('#begin');
   assert.equal(await page.textContent('#counter'), 'שאלה 20 מתוך 20');
   const expected = expectations.garden(draft);
-  await assertReview(page, expected);
-  const shown = await reviewItems(page);
+  await page.click('#review-button');
   await page.click('#finish');
   await page.waitForSelector('#done-banner:not([hidden])');
-  assertSent({ posts, mails }, expected, shown);
+  assertSent({ posts, mails }, expected, await assertSummary(page, expected));
   assert.deepEqual(errors, []);
 }));
 
@@ -191,12 +195,10 @@ test('library: a mid-exam old draft keeps its order, answers (radio and typed), 
   // a radio answered by the old page shows as picked and locked; the typed open answer is still there
   await page.click('#previous');
   assert.equal(await page.locator('#choices input:checked').count() + (await page.inputValue('#answer')).length > 0, true);
-  await assertReview(page, expected, [draft.order.indexOf(draft.flags[0])]);
-  await fillMissing(page);
-  const shown = await reviewItems(page);
+  await fillMissing(page, expected);
   await page.click('#finish');
   await page.waitForSelector('#done-banner:not([hidden])');
-  assertSent({ posts, mails }, expected, shown);
+  assertSent({ posts, mails }, expected, await assertSummary(page, expected, [draft.order.indexOf(draft.flags[0])]));
   await page.reload();
   await page.waitForSelector('#results.active');
   await page.waitForTimeout(400);
@@ -222,16 +224,13 @@ test('physics: a mid-exam old draft keeps the teacher order, choice/number/worki
   assert.equal(await page.textContent('#counter'), `שאלה ${draft.current + 1} מתוך 27`);
   assert.equal(first(await page.textContent('#question-title')), first(expected.pairs[draft.current].question));
   // the numeric task with working (id 12) comes back with both the number and the working
-  await page.click('#review-button');
-  await page.locator('#review-list .review-item').nth(11).click();
+  await goToQuestion(page, 12);
   assert.equal(await page.inputValue('#number-answer'), draft.answers['physics-exam-12']);
   assert.equal(await page.inputValue('#work'), draft.work['physics-exam-12']);
-  await assertReview(page, expected, [4]);
-  await fillMissing(page);
-  const shown = await reviewItems(page);
+  await fillMissing(page, expected);
   await page.click('#finish');
   await page.waitForSelector('#done-banner:not([hidden])');
-  assertSent({ posts, mails }, expected, shown);
+  assertSent({ posts, mails }, expected, await assertSummary(page, expected, [4]));
   await page.reload();
   await page.waitForSelector('#results.active');
   await page.waitForTimeout(400);

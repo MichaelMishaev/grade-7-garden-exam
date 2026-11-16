@@ -17,7 +17,7 @@ test('English mobile: local entry, required name, locks, reload, review, failed 
     const body = JSON.parse(init.body);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     aiRequests.push(document);
-    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול', correction: 'תשובה לדוגמה' })) }) } }] });
   }, sendFetch: async (url, init) => {
     if (++tries === 1) return Response.json({}, { status: 422 });
     emails.push(JSON.parse(init.body)); return Response.json({ id: 'mock-english' });

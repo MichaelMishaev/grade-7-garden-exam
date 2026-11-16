@@ -125,7 +125,7 @@ async function storedGrading(db, examId, ref, openRubricFor) {
 // No OPENAI_API_KEY = AI grading is off (not a failure): no call, no failure note, no retry.
 const aiConfigured = env => typeof env.OPENAI_API_KEY === 'string' && env.OPENAI_API_KEY.trim() !== '';
 
-const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max }]) => [id, { score, max }]));
+const exposedScores = scores => Object.fromEntries(Object.entries(scores).map(([id, { score, max, correction }]) => [id, { score, max, ...(score < max && typeof correction === 'string' && correction ? { correction } : {}) }]));
 
 // The browser keeps a random receipt in the locked draft. Store only its hash, in a
 // separate namespace from legacy payload hashes and the legacy grading-retry endpoint.

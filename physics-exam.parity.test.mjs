@@ -1,4 +1,4 @@
-// All exams share one flow: start → questions → review → results → send → thanks.html. The physics page must be the
+// All exams share one flow: start → questions → completion check → submit → read-only summary. The physics page must be the
 // library page (library-exam.html + library-exam.js) with physics content: same screens, ids, classes, button labels,
 // name box, results actions and CSS. Only the content-specific elements listed in `physicsOnly` may be added.
 import { test } from 'node:test';
@@ -78,12 +78,12 @@ test('same CSS: the library style block verbatim, same branding sheet, same head
 test('same behaviour in the scripts: draft, review gate, send, timeout, error text, thanks redirect', () => {
   const same = [
     "if (!$('student-name').value.trim()) { $('name-error').textContent = 'יש לכתוב שם לפני שמתחילים.'; $('student-name').focus(); return; }",
-    "if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }",
+    "if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. אפשר לחזור לשאלות ולהשלים את החסר.'; return; }",
     "location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam'",
     'signal: AbortSignal.timeout(45000)',
     "if (!response.ok || data.success !== true) throw new Error('Submission failed');",
-    "$('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';",
-    "sending = true; $('send').hidden = true; $('retry').disabled = true;",
+    "$('submission-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';",
+    "ExamResult.startSubmission();",
     // docs/TESTING.md §3, §6: radio answers lock and move on, typed answers lock on "אישור", finishing sends and locks
     "const advance = q => { clearTimeout(advanceTimer); advanceTimer = setTimeout(",
     "}, 1500); };",
@@ -94,8 +94,8 @@ test('same behaviour in the scripts: draft, review gate, send, timeout, error te
     "const clock = ms =>",
     "$('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });",
     "$('flag').addEventListener('change', () => { const id = ordered[current].id; $('flag').checked ? flags.add(id) : flags.delete(id); persist(); });",
-    "${flags.has(q.id) ? ' · ⚑ לבדיקה חוזרת' : ''}",
-    "source.className = 'source-line';",
+    "flagged: flags.has(q.id)",
+    "ExamResult.renderQuestions($('explanations')",
     // test details and attempt number for the teacher's email (docs/TESTING.md §1, §8)
     "const attemptNumber = (id, name) => { try { return (JSON.parse(localStorage.getItem(attemptKey) || '{}')[`${id}/${name.toLowerCase()}`] || 0) + 1; } catch (_) { return 1; } };",
     "const answerDetails = q =>",

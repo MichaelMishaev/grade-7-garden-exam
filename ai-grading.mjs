@@ -8,6 +8,7 @@ const maxItems = 40;
 const maxAnswerChars = 3000;
 const maxQuestionChars = 1000;
 const maxReasonChars = 300;
+const maxCorrectionChars = 500;
 const maxConclusionChars = 400;
 const maxReplyChars = 100000;
 
@@ -27,8 +28,11 @@ Rules:
 - "reason" is ONE short line in Hebrew for the teacher (at most 300 characters). Do not repeat the student's text at length.
 - "conclusion" is up to two short sentences in Hebrew addressed to the student (at most 400 characters). Summarize how
   they did on the written answers and give one concrete next step. Ground it in the marks and feedback you just gave.
-  Do not invent a strength, estimate the overall exam grade, quote the student, or reveal model answers or private rubrics.
-- Reply with JSON only, exactly {"results":[{"questionId":"...","score":0,"reason":"..."}],"conclusion":"..."}
+  Do not invent a strength, estimate the overall exam grade, quote the student, or include model answers in the conclusion.
+- "correction" is a short, standalone correct answer for the student (at most 500 characters), grounded in the model answer
+  and passage. Use Hebrew unless the question assesses written English, in which case write a correct answer in English.
+  Never include private rubric instructions, teacher feedback or the student's text. Use an empty string for full credit.
+- Reply with JSON only, exactly {"results":[{"questionId":"...","score":0,"reason":"...","correction":"..."}],"conclusion":"..."}
   with every questionId exactly once.`;
 
 const schema = {
@@ -42,8 +46,8 @@ const schema = {
         type: 'array',
         items: {
           type: 'object',
-          properties: { questionId: { type: 'string' }, score: { type: 'number' }, reason: { type: 'string' } },
-          required: ['questionId', 'score', 'reason'],
+          properties: { questionId: { type: 'string' }, score: { type: 'number' }, reason: { type: 'string' }, correction: { type: 'string' } },
+          required: ['questionId', 'score', 'reason', 'correction'],
           additionalProperties: false
         }
       }
@@ -70,7 +74,14 @@ function validate(content, requested) {
     const max = requested.byId[item.questionId];
     if (typeof item.score !== 'number' || !Number.isFinite(item.score) || item.score < 0 || item.score > max) return null;
     if (typeof item.reason !== 'string' || item.reason.length > maxReasonChars) return null;
-    scores[item.questionId] = { score: roundScore(item.score, max), max, reason: clean(item.reason, maxReasonChars) };
+    const score = roundScore(item.score, max);
+    const mark = { score, max, reason: clean(item.reason, maxReasonChars) };
+    if (typeof item.correction !== 'string' || item.correction.length > maxCorrectionChars) return null;
+    if (score < max) {
+      mark.correction = clean(item.correction, maxCorrectionChars);
+      if (!/\p{L}/u.test(mark.correction)) return null;
+    }
+    scores[item.questionId] = mark;
   }
   return { scores, conclusion };
 }
@@ -112,7 +123,7 @@ export async function gradeOpenAnswers({ examId, items, env = process.env, fetch
       body: JSON.stringify({
         model,
         ...(fixedTemperature ? {} : { temperature: 0 }),
-        max_completion_tokens: 4000,
+        max_completion_tokens: Math.max(4000, 450 * records.length),
         response_format: { type: 'json_schema', json_schema: schema },
         messages: [
           { role: 'system', content: systemPrompt },

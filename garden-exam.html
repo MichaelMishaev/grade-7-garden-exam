@@ -58,17 +58,12 @@
     .question-title { font-size: clamp(22px, 4.7vw, 27px); line-height: 1.45; margin: 0 0 25px; }
     .error { color: #aa3535; font-size: 14px; font-weight: 700; min-height: 20px; margin: 9px 0 0; }
     .review-title { font-size: 30px; margin: 0 0 12px; }
-    .review-list { display: grid; gap: 10px; margin-top: 22px; }
-    .review-item { text-align: right; width: 100%; display: block; border: 2px solid #e5e9ec; background: #fff; border-radius: 13px; padding: 14px 17px; color: inherit; }
-    .review-item:hover { border-color: #5a9e6d; }
-    .review-item strong { display: block; font-size: 14px; line-height: 1.5; }
-    .review-item span { display: block; margin-top: 4px; color: #586d60; font-size: 14px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .review-actions { margin-top: 26px; }
     .privacy { margin: 14px 0 0; }
     .footer { margin-top: 32px; text-align: center; color: #718477; font-size: 13px; }
     @media (max-width: 560px) { .shell { width: min(100% - 28px, 760px); padding-top: 17px; } header { margin-bottom: 26px; } .time { font-size: 12px; } .actions { flex-direction: column; } .actions .button { width: 100%; } .reading p:not(.byline) { font-size: 17px; } }
     @keyframes stage-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    @media (hover: hover) and (pointer: fine) { .primary:hover { background: #61d70a; } .secondary:hover, .review-item:hover { border-color: #b8c4ca; } }
+    @media (hover: hover) and (pointer: fine) { .primary:hover { background: #61d70a; } .secondary:hover { border-color: #b8c4ca; } }
     @media (prefers-reduced-motion: reduce) { .stage.active { animation: stage-fade 200ms ease both; } .button { transition: none; } .button:active { transform: none; } .bar > span { transition: none; } }
     @keyframes stage-fade { from { opacity: 0; } to { opacity: 1; } }
     .actions { flex-wrap: wrap; }
@@ -79,13 +74,9 @@
     .confirm-row .button { min-height: 48px; width: 100%; }
     .flag { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 18px 0 0; font-weight: 400; }
     .flag input { width: 22px; height: 22px; accent-color: #46a302; }
-    .review-item { min-height: 48px; }
     #timer { font-variant-numeric: tabular-nums; color: #273541; direction: ltr; }
     textarea:disabled { background: #f4f6f7; color: #3d4d57; }
     h1:focus, h2:focus { outline: none; }
-    .result-detail { padding: 18px; margin-top: 14px; line-height: 1.7; }
-    .result-detail h2 { font-size: 19px; margin-top: 0; }
-    .result-detail p { margin: 8px 0; white-space: pre-wrap; }
     .done-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin: 0 0 18px; border-radius: 18px; background: #e9fbdc; border: 2px solid #46a302; color: #1f4d0a; }
     .done-banner strong { display: block; font-size: 18px; }
     .done-banner span:not(.done-mark) { display: block; margin-top: 2px; font-size: 14px; }
@@ -110,6 +101,7 @@
 <meta property="og:image:alt" content="הלוגו של PrepX — הכנה למבחנים">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://hitech.agnon.online/assets/branding/share-preview.png">
+<link rel="stylesheet" href="exam-summary.css?v=1">
 </head>
 <body>
   <main class="shell" data-test-share>
@@ -148,24 +140,23 @@
         <label class="flag"><input id="flag" type="checkbox">סימון לבדיקה חוזרת</label>
         <p class="error" id="answer-error" role="alert"></p>
       </div>
-      <div class="actions"><button class="button secondary" id="previous" type="button">לשאלה הקודמת</button><button class="button primary" id="next" type="button">לשאלה הבאה</button><button class="button secondary" id="review-button" type="button">סקירת התשובות</button></div>
+      <div class="actions"><button class="button secondary" id="previous" type="button">לשאלה הקודמת</button><button class="button primary" id="next" type="button">לשאלה הבאה</button><button class="button secondary" id="review-button" type="button">בדיקת השלמה</button></div>
     </section>
 
     <section id="review" class="stage" aria-labelledby="review-title">
-      <h1 class="review-title" id="review-title" tabindex="-1">בודקים לפני הסיום</h1>
+      <h1 class="review-title" id="review-title" tabindex="-1">סיום המבחן</h1>
       <p class="intro" id="review-status"></p>
-      <div class="review-list" id="review-list"></div>
       <p class="error" id="review-error" role="alert"></p>
-      <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="finish" type="button">סיום ושליחה למורה</button></div>
+      <div class="actions review-actions"><button class="button secondary" id="back-to-questions" type="button">חזרה לשאלות</button><button class="button primary" id="finish" type="button">סיום ושליחה למורה</button><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button></div><p id="submission-status" class="privacy" role="status"></p>
     </section>
 
     <section id="results" class="stage" aria-labelledby="results-title">
       <div id="done-banner" class="done-banner" role="status" hidden><span class="done-mark" aria-hidden="true">✓</span><div><strong>סיימתם! התשובות נשלחו למורה.</strong><span>אי אפשר לשנות תשובות אחרי הסיום. כל הכבוד על המאמץ!</span></div></div>
-      <h1 class="review-title" id="results-title" tabindex="-1">סיימתם את המבחן!</h1>
+      <h1 class="review-title" id="results-title" tabindex="-1">סיכום המבחן</h1>
       <p class="intro" id="score" aria-live="polite" aria-atomic="true"></p>
       <p id="ai-conclusion" class="intro" style="overflow-wrap:anywhere" aria-live="polite" hidden></p>
-      <div id="explanations"></div>
-      <div class="actions"><button class="button primary" id="send" type="button" hidden>ניסיון שליחה חוזר</button><button class="button primary" id="regrade" type="button" hidden>בדיקה חוזרת של התשובות הפתוחות</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
+      <p class="intro">פתחו שאלה כדי לראות את התשובה שלכם ואת התיקון, אם נדרש.</p><div id="explanations"></div>
+      <div class="actions"><button class="button primary" id="regrade" type="button" hidden>בדיקה חוזרת של התשובות הפתוחות</button><button class="button secondary" id="retry" type="button" hidden>מבחן חדש</button><a class="button secondary" href="subject.html?subject=hebrew">לגרסאות בעברית</a></div>
       <p class="privacy" id="send-status" role="status"></p>
       <p class="privacy">עם הסיום, השם וכל 20 התשובות נשלחים אוטומטית בדוא״ל למורה באמצעות Resend. אישור שליחה אינו אישור שהדוא״ל הגיע לתיבה. התשובות הפתוחות נבדקות בשירות בינה מלאכותית.</p>
     </section>
@@ -174,7 +165,7 @@
   </main>
   <script src="quiz-core.js?v=3"></script>
   <script src="content-api.js?v=3"></script>
-  <script src="exam-result.js?v=2"></script>
+  <script src="exam-result.js?v=3"></script>
   <script>
     const questions = [
       'מהו הנושא המרכזי של הטקסט?',
@@ -276,26 +267,16 @@
       byId('flag').checked = flags.has(index);
       syncConfirm(index);
       byId('previous').textContent = position === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
-      byId('next').textContent = position === total - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
+      byId('next').textContent = position === total - 1 ? 'לסיום המבחן' : 'לשאלה הבאה';
       persist(); show('question-stage', 'question-title');
     }
     function review() {
-      const missing = questions.filter((_, i) => !answered(i)).length;
-      byId('review-status').textContent = `${missing} שאלות ללא תשובה · ${flags.size} שאלות מסומנות לבדיקה. אפשר ללחוץ על כל שאלה כדי לחזור אליה.`;
-      byId('review-error').textContent = '';
-      const list = byId('review-list');
-      list.replaceChildren();
-      order.forEach((index, position) => {
-        const item = document.createElement('button');
-        item.type = 'button'; item.className = 'review-item';
-        const title = document.createElement('strong'); title.textContent = `${position + 1}. ${questions[index]}${flags.has(index) ? ' · ⚑ לבדיקה חוזרת' : ''}`;
-        const summary = document.createElement('span'); summary.textContent = answerText(index);
-        item.append(title, summary);
-        item.addEventListener('click', () => questionAt(position));
-        list.append(item);
-      });
+      clearTimeout(advanceTimer);
+      const missing = order.filter(index => !answered(index)).length;
+      ExamResult.renderCompletion(missing, flags.size);
       show('review', 'review-title');
     }
+    const questionId = index => `garden-${String(index + 1).padStart(2, '0')}`;
     function results() {
       ExamResult.renderConclusion(byId('ai-conclusion'), grading);
       byId('done-banner').hidden = !sent; byId('retry').hidden = !sent;
@@ -305,20 +286,15 @@
         byId('send-status').textContent = '';
       }
       byId('regrade').hidden = !(sent && ['none', 'failed'].includes(grading.status));
-      let text = ExamResult.scoreText(grading, 0, questions.map((_, i) => `garden-${String(i + 1).padStart(2, '0')}`));
+      let text = ExamResult.scoreText(grading, 0, questions.map((_, i) => questionId(i)));
       if (startedAt && finishedAt) {
         const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
         text += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
       }
       byId('score').textContent = text;
-      byId('explanations').replaceChildren();
-      order.forEach((index, position) => {
-        const card = document.createElement('article'); card.className = 'card result-detail';
-        const title = document.createElement('h2'); title.textContent = `${position + 1}. ${questions[index]}`;
-        const answer = document.createElement('p'); answer.textContent = `התשובה שלי: ${answerText(index)}`;
-        card.append(title, answer);
-        byId('explanations').append(card);
-      });
+      ExamResult.renderQuestions(byId('explanations'), order.map(index => ({
+        id: questionId(index), question: questions[index], answer: answerText(index), flagged: flags.has(index)
+      })), grading.scores);
       if (!byId('results').classList.contains('active')) show('results', 'results-title');
     }
     byId('student-name').addEventListener('input', persist);
@@ -347,12 +323,12 @@
     byId('back-to-questions').addEventListener('click', () => questionAt(current));
     byId('finish').addEventListener('click', () => {
       const missing = order.findIndex(index => !answered(index));
-      if (missing !== -1) { byId('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
+      if (missing !== -1) { byId('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. אפשר לחזור לשאלות ולהשלים את החסר.'; return; }
       // Finishing sends at once and locks everything (docs/TESTING.md §6): there is no way back to edit.
       order.forEach(index => locked.add(index));
       resultToken = ExamResult.newToken();
       finished = true; if (!finishedAt) finishedAt = new Date().toISOString();
-      persist(); results(); sendExam();
+      persist(); sendExam();
     });
     byId('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
     byId('send').addEventListener('click', () => sendExam());
@@ -362,8 +338,9 @@
     const countAttempt = () => { try { const all = JSON.parse(localStorage.getItem(attemptKey) || '{}'); all[`${attemptId}/${byId('student-name').value.trim().toLowerCase()}`] = attemptNumber(); localStorage.setItem(attemptKey, JSON.stringify(all)); } catch (_) {} };
     async function sendExam() {
       if (sending || sent) return;
-      sending = true; byId('send').hidden = true; byId('retry').disabled = true;
-      byId('send-status').textContent = 'שולחים…';
+      sending = true;
+      ExamResult.startSubmission();
+      show('review', 'review-title');
       try {
         const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
           method: 'POST',
@@ -381,16 +358,16 @@
         try { sessionStorage.setItem('garden-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total })); } catch (_) {}
         persist(); results(); watchResult();
       } catch (_) {
-        byId('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
+        byId('submission-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
         byId('send').hidden = false;
-      } finally { sending = false; byId('retry').disabled = false; }
+      } finally { sending = false; }
     }
     byId('regrade').addEventListener('click', async () => {
       byId('regrade').disabled = true;
       try {
         const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/grade-open' : '/api/grade-open', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ exam: examId, submissionRef, answers: order.map(index => ({ questionId: `garden-${String(index + 1).padStart(2, '0')}`, question: questions[index], answer: answerText(index) })) }), signal: AbortSignal.timeout(30000)
+          body: JSON.stringify({ exam: examId, submissionRef, answers: order.map(index => ({ questionId: questionId(index), question: questions[index], answer: answerText(index) })) }), signal: AbortSignal.timeout(30000)
         });
         const data = await response.json();
         if (!response.ok || data.grading?.status !== 'ok') throw new Error('Grading failed');
@@ -401,7 +378,7 @@
     function watchResult() {
       ExamResult.watch(grading, resultToken, result => { grading = result; persist(); results(); });
     }
-    if (finished && questions.every((_, i) => answered(i))) { results(); if (sent) watchResult(); else sendExam(); }
+    if (finished && questions.every((_, i) => answered(i))) { if (sent) { results(); watchResult(); } else sendExam(); }
     });
   </script>
 </body>

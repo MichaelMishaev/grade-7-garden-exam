@@ -39,7 +39,10 @@ function mockOpenAi({ grade = q => ({ score: q.maxScore, reason: 'תשובה ט�
     requests.push({ url, config, body });
     if (respond) return respond(body, config);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
-    const results = document.questions.map(q => ({ questionId: q.questionId, ...grade(q) }));
+    const results = document.questions.map(q => {
+      const mark = grade(q);
+      return { questionId: q.questionId, ...mark, correction: mark.score < q.maxScore ? 'תשובה לדוגמה' : '' };
+    });
     return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results, conclusion }) } }] }), { status: 200 });
   };
   return { fetchImpl, requests };
@@ -111,6 +114,7 @@ test('failure: OpenAI 500, bad JSON, score above max, missing id, duplicate id a
     'http 500': () => new Response('upstream secret details', { status: 500 }),
     'not json': () => wrap('this is not json'),
     'score above max': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: q.maxScore + 1, reason: 'x' })) })),
+    'missing correction': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: 0, reason: 'x' })) })),
     'negative score': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: -1, reason: 'x' })) })),
     'score as string': body => wrap(JSON.stringify({ conclusion, results: good(body).map(q => ({ questionId: q.questionId, score: '3', reason: 'x' })) })),
     'missing id': body => wrap(JSON.stringify({ conclusion, results: good(body).slice(1).map(q => ({ questionId: q.questionId, score: 1, reason: 'x' })) })),
@@ -347,7 +351,7 @@ test('gradeOpenAnswers: none without open items, failed on unknown ids, none wit
   const item = { questionId: 'physics-exam-06', question: 'q', answer: 'a' };
   assert.deepEqual(await gradeOpenAnswers({ examId: 'physics-v1-assessment', items: [item], env: {}, fetchImpl: mockOpenAi().fetchImpl }), { status: 'none' });
   const result = await gradeOpenAnswers({ examId: 'physics-v1-assessment', items: [item], env, fetchImpl: mockOpenAi({ grade: () => ({ score: 1.8, reason: 'ok' }) }).fetchImpl });
-  assert.deepEqual(result, { status: 'ok', conclusion, scores: { 'physics-exam-06': { score: 2, max: 3.7, reason: 'ok' } } });
+  assert.deepEqual(result, { status: 'ok', conclusion, scores: { 'physics-exam-06': { score: 2, max: 3.7, reason: 'ok', correction: 'תשובה לדוגמה' } } });
 });
 
 test('the OpenAI key never appears in a response or in console output', () => withServer(async ({ submit, grade, logs }) => {
@@ -380,7 +384,7 @@ test('hardening: strict output validation (ids, range, types, duplicates, extra 
   const item = { questionId: 'library-15', question: 'q', answer: 'a' };
   const run = (results, review = conclusion) => gradeOpenAnswers({ examId: 'hebrew-v2-library', items: [item], env,
     fetchImpl: async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ results, conclusion: review }) } }] }), { status: 200 }) });
-  const good = { questionId: 'library-15', score: 1, reason: 'ok' };
+  const good = { questionId: 'library-15', score: 1, reason: 'ok', correction: 'תשובה לדוגמה' };
   for (const bad of [[{ ...good, score: -1 }], [{ ...good, score: 99 }], [{ ...good, score: '1' }], [{ ...good, score: null }], [{ ...good, reason: 5 }], [{ ...good, reason: 'ש'.repeat(301) }],
     [{ ...good, questionId: 'library-16' }], [good, good], [], [good, { ...good, questionId: 'library-16' }]]) {
     assert.deepEqual(await run(bad), { status: 'failed' }, JSON.stringify(bad));
@@ -425,6 +429,9 @@ for (const examId of ['english-v1-practice', 'hebrew-v1-garden', 'bible-v1-samue
         const body = await response.json();
         assert.equal(body.grading.status, 'ok');
         assert.deepEqual(Object.keys(body.grading.scores).sort(), open.map(q => q.id).sort());
+        for (const mark of Object.values(body.grading.scores)) {
+          assert.equal(Boolean(mark.correction), mark.score < mark.max);
+        }
         assert.equal(ai.requests.length, 1);
         const request = ai.requests[0].body.messages[1].content;
         assert.ok(!request.includes(STUDENT), 'student identity is never sent');
@@ -467,6 +474,9 @@ for (const fraction of [0, 0.5, 1]) {
       assert.equal(body.grading.status, 'ok');
       assert.deepEqual(Object.keys(body.grading.scores).sort(), questions.filter(q => q.type === 'open').map(q => q.id).sort());
       const auto = globalThis.QuizCore.scoreQuiz(questions, Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, 1]))).earned;
+      for (const mark of Object.values(body.grading.scores)) {
+        assert.deepEqual(Object.keys(mark).sort(), fraction < 1 ? ['correction', 'max', 'score'] : ['max', 'score']);
+      }
       const points = Object.values(body.grading.scores).reduce((sum, mark) => sum + mark.score, 0);
       assert.match(emails[0].body.text, new RegExp(`ציון כולל \\(כולל בדיקת AI\\): ${Math.min(100, auto + Math.round(points))} מתוך 100`));
       if (fraction === 1) assert.equal(auto + Math.round(points), 100);

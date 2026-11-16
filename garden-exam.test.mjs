@@ -20,11 +20,11 @@ test('shared behaviours are present in the page source', () => {
   assert.match(script, /examId = 'hebrew-v1-garden'/);
   assert.match(script, /QuizCore\.shuffled/);
   assert.match(script, /order\.forEach\(index => locked\.add\(index\)\)/, 'finishing locks everything');
-  assert.match(script, /persist\(\); results\(\); sendExam\(\)/, 'finish sends at once');
+  assert.match(script, /persist\(\); sendExam\(\)/, 'finish sends at once');
   assert.match(script, /storageKey = 'garden-exam-draft-v1'/);
   assert.match(script, /'garden-exam-result-v1'/);
   assert.match(script, /if \(sent\) \{[\s\S]*grading.status === 'pending'/);
-  assert.match(script, /if \(finished && questions\.every\(\(_, i\) => answered\(i\)\)\) \{ results\(\); if \(sent\) watchResult\(\); else sendExam\(\); \}/, 'reload shows the summary, sends only if not sent');
+  assert.match(script, /if \(finished && questions\.every\(\(_, i\) => answered\(i\)\)\) \{ if \(sent\) \{ results\(\); watchResult\(\); \} else sendExam\(\); \}/, 'reload shows the summary, sends only if not sent');
   assert.match(html, /id="timer"/);
   assert.match(html, /id="done-banner"/);
   assert.match(html, /ניסיון שליחה חוזר/);
@@ -57,7 +57,7 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     aiRequests.push(document);
     if (failAi) return Response.json({}, { status: 500 });
-    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול', correction: 'תשובה לדוגמה' })) }) } }] });
   }, sendFetch: async (url, config) => {
     calls.push(JSON.parse(config.body));
     return failNext ? new Response('{}', { status: 500 }) : new Response(JSON.stringify({ id: 'mock' }), { status: 200 });
@@ -100,7 +100,7 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     failNext = true;
     await page.click('#finish');
     await page.waitForSelector('#send:not([hidden])');
-    assert.ok(await page.textContent('#send-status').then((t) => t.includes('לא התקבל אישור')));
+    assert.ok(await page.textContent('#submission-status').then((t) => t.includes('לא התקבל אישור')));
     assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('garden-exam-draft-v1')).sent), false, 'draft kept after a failed send');
     assert.equal(calls.length, 4); // a provider 5xx is tried 4 times (1 + 3 retries) before the page sees the failure
     failNext = false;
@@ -125,7 +125,7 @@ test('browser: shuffle, confirm, lock, finish sends once, failure keeps the draf
     assert.equal(await page.isHidden('#done-banner'), false);
     assert.match(await page.textContent('#score'), /100 מתוך 100/);
     assert.match(await page.locator('#ai-conclusion').innerText(), /הוסיפו דוגמה מהטקסט/);
-    assert.equal(await page.locator('#explanations article').count(), 20);
+    assert.equal(await page.locator('#explanations details').count(), 20);
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));

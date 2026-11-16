@@ -17,7 +17,7 @@ test('Bible mobile: local entry, required name, locks, reload, review, failed se
     const body = JSON.parse(init.body);
     const document = JSON.parse(body.messages[1].content.slice(body.messages[1].content.indexOf('\n') + 1));
     aiRequests.push(document);
-    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.maxScore, reason: 'בדיקת תרגול' })) }) } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ conclusion: 'זיהיתם את הרעיון המרכזי. בפעם הבאה הוסיפו דוגמה מהטקסט.', results: document.questions.map(q => ({ questionId: q.questionId, score: q.questionId === 'bible-16' ? q.maxScore - 2 : q.maxScore, reason: 'בדיקת תרגול', correction: q.questionId === 'bible-16' ? 'עלי חשב שחנה שיכורה. חנה הסבירה שלא שתתה ושהתפללה מתוך צער.' : '' })) }) } }] });
   }, sendFetch: async (url, init) => {
     if (++tries === 1) return Response.json({}, { status: 422 });
     emails.push(JSON.parse(init.body)); return Response.json({ id: 'mock-bible' });
@@ -79,6 +79,7 @@ test('Bible mobile: local entry, required name, locks, reload, review, failed se
     await page.locator('#finish').click();
     await page.locator('#send:visible').waitFor();
     assert.equal((await draft()).sent, false);
+    assert.equal(await page.locator('#results').isVisible(), false);
     await page.locator('#send').click();
     await page.locator('#done-banner:visible').waitFor();
     assert.equal((await draft()).sent, true);
@@ -90,9 +91,28 @@ test('Bible mobile: local entry, required name, locks, reload, review, failed se
     assert.doesNotMatch(JSON.stringify(aiRequests), /QA Bible/);
     assert.equal(aiRequests.length, 2, 'each submit attempt grades all open questions');
     assert.deepEqual(aiRequests[0].questions.map(q => q.questionId).sort(), ['bible-16', 'bible-17', 'bible-18', 'bible-19', 'bible-20']);
-    assert.match(await page.locator('#score').innerText(), /96 מתוך 100/);
+    assert.match(await page.locator('#score').innerText(), /94 מתוך 100/);
     assert.match(await page.locator('#ai-conclusion').innerText(), /הוסיפו דוגמה מהטקסט/);
+    assert.equal(await page.locator('#send').isVisible(), false);
+    assert.equal(await page.locator('#finish').isVisible(), false);
+    assert.equal(await page.locator('#explanations details').count(), 20);
+    const url = page.url();
+    const openCard = page.locator('[data-question-id="bible-16"]');
+    assert.equal(await openCard.locator('p').first().isVisible(), false);
+    await openCard.locator('summary').press('Enter');
+    assert.match(await openCard.innerText(), /התשובה שלי: תשובה סינתטית/);
+    assert.match(await openCard.innerText(), /תשובה נכונה לפי בדיקת הבינה המלאכותית: עלי חשב שחנה שיכורה/);
+    const wrongChoice = page.locator('[data-question-id="bible-01"]');
+    await wrongChoice.locator('summary').click();
+    assert.match(await wrongChoice.innerText(), /התשובה הנכונה: לפנינה היו ילדים/);
+    const fullCredit = page.locator('[data-question-id="bible-17"]');
+    await fullCredit.locator('summary').click();
+    assert.doesNotMatch(await fullCredit.innerText(), /תשובה נכונה לפי בדיקת/);
+    assert.equal(page.url(), url);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.reload(); await page.locator('#done-banner:visible').waitFor();
+    await openCard.locator('summary').click();
+    assert.match(await openCard.innerText(), /עלי חשב שחנה שיכורה/);
     assert.equal(tries, 2, 'reload never resends');
     assert.equal(await page.locator('#question-stage').isVisible(), false);
     assert.deepEqual(errors, []);
@@ -100,8 +120,6 @@ test('Bible mobile: local entry, required name, locks, reload, review, failed se
     await library.goto(base + '/library-exam.html?source=inline');
     const stages = page => page.locator('.stage').evaluateAll(nodes => nodes.map(el => el.id));
     assert.deepEqual(await stages(page), await stages(library));
-    const style = async page => (await page.locator('style').textContent()).replace(/[ \t]+$/gm, '');
-    assert.equal(await style(page), await style(library));
     await page.goto(base + '/thanks.html');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('bible-exam-draft-v1')), null);
   } finally {

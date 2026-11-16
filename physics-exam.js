@@ -106,7 +106,6 @@
   let startedAt = validStamp(saved.startedAt) ? saved.startedAt : '';
   let finishedAt = finished && validStamp(saved.finishedAt) ? saved.finishedAt : '';
   let sending = false;
-  let lastScore = { earned: 0, pending: 0 };
   // Locking (docs/TESTING.md §3): a picked choice locks at once; open and numeric answers lock on "אישור".
   const locked = new Set(Array.isArray(saved.locked) ? saved.locked.filter(id => ids.has(id)) : []);
   let sent = saved.sent === true;
@@ -258,25 +257,19 @@
     syncConfirm(q);
     $('flag').checked = flags.has(q.id);
     $('previous').textContent = index === 0 ? 'חזרה לטקסט' : 'לשאלה הקודמת';
-    $('next').textContent = index === total - 1 ? 'לבדיקת התשובות' : 'לשאלה הבאה';
+    $('next').textContent = index === total - 1 ? 'לסיום המבחן' : 'לשאלה הבאה';
     persist(); show('question-stage', 'question-title');
   }
   function review() {
+    clearTimeout(advanceTimer);
     const missing = ordered.filter(q => !answered(q)).length;
-    $('review-status').textContent = `${missing} שאלות ללא תשובה · ${flags.size} שאלות מסומנות לבדיקה. אפשר ללחוץ על כל שאלה כדי לחזור אליה.`;
-    $('review-list').replaceChildren(); $('review-error').textContent = '';
-    ordered.forEach((q, i) => {
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'review-item';
-      const title = document.createElement('strong'); title.textContent = `${i + 1}. ${plainText(q.prompt).replace(/\n/g, ' ')}${flags.has(q.id) ? ' · ⚑ לבדיקה חוזרת' : ''}`;
-      const answer = document.createElement('span'); answer.textContent = answerText(q).replace(/\n/g, ' · ');
-      button.append(title, answer); button.addEventListener('click', () => questionAt(i)); $('review-list').append(button);
-    });
+    ExamResult.renderCompletion(missing, flags.size);
     show('review', 'review-title');
   }
   function results() {
     const graded = questions.filter(q => q.type !== 'open');
     const fractions = Object.fromEntries(graded.map(q => [q.id, isCorrect(q) ? 1 : 0]));
-    const score = lastScore = QuizCore.scoreQuiz(questions, fractions);
+    const score = QuizCore.scoreQuiz(questions, fractions);
     ExamResult.renderConclusion($('ai-conclusion'), grading);
     $('score').textContent = ExamResult.scoreText(grading, score.earned, questions.filter(q => q.type === 'open').map(q => q.id));
     $('done-banner').hidden = !sent; $('retry').hidden = !sent; $('regrade').hidden = !(sent && grading.status === 'failed');
@@ -289,39 +282,46 @@
       const mins = Math.max(1, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 60000));
       $('score').textContent += ` זמן המבחן: ${mins === 1 ? 'דקה אחת' : mins + ' דקות'}.`;
     }
-    $('topics').replaceChildren(); $('explanations').replaceChildren();
+    $('topics').replaceChildren();
     sections.forEach(({ title: topic }) => {
       const group = questions.filter(q => q.topic === topic); const auto = group.filter(q => q.type !== 'open');
       const item = document.createElement('li'); item.textContent = `${topic}: ${auto.filter(q => fractions[q.id]).length} מתוך ${auto.length} תשובות אוטומטיות נכונות · ${group.length - auto.length} פתוחות לבדיקה`;
       $('topics').append(item);
     });
-    ordered.forEach((q, i) => {
-      const card = document.createElement('article'); card.className = 'card result-detail';
-      const title = document.createElement('h2'); title.textContent = `${i + 1}. ${plainText(q.prompt).replace(/\n/g, ' ')}`;
-      const answer = document.createElement('p'); answer.textContent = `התשובה שלי: ${answerText(q).replace(/\n/g, ' · ')}`;
-      const feedback = document.createElement('p');
-      card.append(title, answer, feedback);
-      if (q.type === 'open') {
-        feedback.textContent = grading.scores[q.id] ? `ניקוד: ${grading.scores[q.id].score} מתוך ${grading.scores[q.id].max}` : '';
-        const { model, items } = checklist(q); // the teacher's model answer and her "בדקו:" list, verbatim
-        const sample = document.createElement('p'); sample.className = 'model-answer'; sample.innerHTML = model; card.append(sample);
-        if (items.length) {
-          const heading = document.createElement('p'); heading.className = 'model-answer'; heading.textContent = 'בדקו:';
-          const list = document.createElement('ul'); list.className = 'self-check';
-          items.forEach(text => { const li = document.createElement('li'); li.textContent = text; list.append(li); });
-          card.append(heading, list);
-        }
+    ExamResult.renderQuestions($('explanations'), ordered.map(q => {
+      // These figures, explanations and self-check lists are local, verbatim teacher content.
+      const figure = figures[q.id] ? document.createElement('div') : undefined;
+      if (figure) figure.innerHTML = figures[q.id];
+      const explanation = document.createElement('div');
+      if (q.type !== 'open') {
+        explanation.innerHTML = q.explanation.he;
       } else {
-        feedback.textContent = `${fractions[q.id] ? '✓ תשובה נכונה' : '✕ תשובה שגויה'} · התשובה הנכונה: ${correctText(q)}. `;
-        const why = document.createElement('span'); why.innerHTML = q.explanation.he; feedback.append(why); // her text, contains <bdi>
+        const { model, items } = checklist(q);
+        const sample = document.createElement('p');
+        sample.className = 'model-answer';
+        sample.innerHTML = model;
+        explanation.append(sample);
+        if (items.length) {
+          const heading = document.createElement('p');
+          heading.className = 'model-answer';
+          heading.textContent = 'בדקו:';
+          const list = document.createElement('ul');
+          list.className = 'self-check';
+          for (const text of items) {
+            const item = document.createElement('li');
+            item.textContent = text;
+            list.append(item);
+          }
+          explanation.append(heading, list);
+        }
       }
       const reference = q.ref && references[q.ref.id];
-      if (reference) {
-        const source = document.createElement('p'); source.className = 'source-line';
-        source.textContent = `מקור: ${q.ref.part} ${sourceIn[reference.kind]}`; card.append(source);
-      }
-      $('explanations').append(card);
-    });
+      return {
+        id: q.id, question: plainText(q.prompt), answer: answerText(q), flagged: flags.has(q.id),
+        correct: q.type === 'open' ? undefined : fractions[q.id] ? true : correctText(q),
+        explanation, figure, source: reference && `מקור: ${q.ref.part} ${sourceIn[reference.kind]}`
+      };
+    }), grading.scores);
     if (!$('results').classList.contains('active')) show('results', 'results-title');
   }
   $('student-name').addEventListener('input', persist);
@@ -340,11 +340,11 @@
   $('review-button').addEventListener('click', review);
   $('back-to-questions').addEventListener('click', () => questionAt(current));
   $('finish').addEventListener('click', () => {
-    if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. השאלות החסרות מסומנות ברשימה.'; return; }
+    if (ordered.some(q => !answered(q))) { $('review-error').textContent = 'יש להשלים את כל התשובות לפני הסיום. אפשר לחזור לשאלות ולהשלים את החסר.'; return; }
     // Finishing sends at once and locks everything (docs/TESTING.md §6): there is no way back to edit.
     ordered.forEach(q => locked.add(q.id));
     resultToken = ExamResult.newToken();
-    finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); results(); sendExam();
+    finished = true; if (!finishedAt) finishedAt = new Date().toISOString(); persist(); sendExam();
   });
   $('retry').addEventListener('click', () => { if (sending) return; try { sessionStorage.removeItem(storageKey); } catch (_) {} location.reload(); });
   $('send').addEventListener('click', () => sendExam());
@@ -352,8 +352,10 @@
   // the server's exam table (27 answers, own subject line, same Resend account and teacher).
   async function sendExam() {
     if (sending || sent) return;
-    sending = true; $('send').hidden = true; $('retry').disabled = true;
-    $('send-status').textContent = 'שולחים…';
+    sending = true;
+    ExamResult.startSubmission();
+    show('review', 'review-title');
+    const lastScore = QuizCore.scoreQuiz(questions, Object.fromEntries(questions.filter(q => q.type !== 'open').map(q => [q.id, isCorrect(q) ? 1 : 0])));
     try {
       const response = await fetch(location.hostname === 'michaelmishaev.github.io' ? 'https://hitech.agnon.online/api/submit-exam' : '/api/submit-exam', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -368,9 +370,9 @@
       try { sessionStorage.setItem('physics-exam-result-v1', JSON.stringify({ startedAt, finishedAt, total, score: { earned: lastScore.earned, pending: lastScore.pending } })); } catch (_) {}
       persist(); results(); watchResult();
     } catch (_) {
-      $('send-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
+      $('submission-status').textContent = 'לא התקבל אישור שליחה. הטיוטה נשמרה. בקשו מהמורה לבדוק אם ההודעה הגיעה לפני ניסיון נוסף.';
       $('send').hidden = false;
-    } finally { sending = false; $('retry').disabled = false; }
+    } finally { sending = false; }
   }
   // The open answers could not be checked: ask again without sending anything else (answers are already locked).
   $('regrade').addEventListener('click', async () => {
@@ -389,6 +391,6 @@
   function watchResult() {
     ExamResult.watch(grading, resultToken, result => { grading = result; persist(); results(); });
   }
-  if (finished && ordered.every(answered) && $('student-name').value.trim()) { results(); if (sent) watchResult(); else sendExam(); }
+  if (finished && ordered.every(answered) && $('student-name').value.trim()) { if (sent) { results(); watchResult(); } else sendExam(); }
   });
 })();

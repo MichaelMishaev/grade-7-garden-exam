@@ -21,6 +21,60 @@
     element.hidden = !conclusion;
   }
 
+  function renderCompletion(missing, flagged) {
+    const message = missing ? `נותרו ${missing} שאלות ללא תשובה.` : 'כל התשובות מולאו. אפשר לסיים את המבחן ולקבל סיכום.';
+    document.getElementById('review-status').textContent = flagged ? `${message} סומנו ${flagged} שאלות לבדיקה חוזרת.` : message;
+    document.getElementById('review-error').textContent = '';
+  }
+
+  function startSubmission() {
+    document.getElementById('review-title').textContent = 'שמירת המבחן';
+    for (const id of ['review-status', 'review-error', 'back-to-questions', 'finish', 'send']) {
+      document.getElementById(id).hidden = true;
+    }
+    document.getElementById('submission-status').textContent = 'שומרים את התשובות…';
+  }
+
+  function renderQuestions(container, questions, scores = {}) {
+    const expanded = new Set([...container.querySelectorAll('details[open]')].map(card => card.dataset.questionId));
+    const focusId = document.activeElement?.closest('details')?.dataset.questionId;
+    const cards = questions.map(({ id, question, answer, correct, explanation, source, flagged, figure }, index) => {
+      const card = document.createElement('details');
+      card.className = 'card result-detail';
+      card.dataset.questionId = id;
+      card.open = expanded.has(id);
+      const title = document.createElement('summary');
+      title.textContent = `${index + 1}. ${question}${flagged ? ' · ⚑' : ''}`;
+      const body = document.createElement('div');
+      body.className = 'result-detail-body';
+      const addLine = (text, className = '') => {
+        const line = document.createElement('p');
+        line.className = className;
+        line.textContent = text;
+        body.append(line);
+      };
+      if (figure) body.append(figure);
+      addLine(`התשובה שלי: ${answer}`);
+      if (correct !== undefined) {
+        addLine(correct === true ? '✓ תשובה נכונה' : `✕ תשובה שגויה · התשובה הנכונה: ${correct}`);
+        if (typeof explanation === 'string') addLine(explanation);
+        else if (explanation) body.append(explanation);
+      } else {
+        const mark = scores[id];
+        addLine(mark ? `ניקוד: ${mark.score} מתוך ${mark.max}` : 'התשובה עדיין לא נבדקה.');
+        if (mark?.score < mark?.max) {
+          addLine(mark.correction ? `תשובה נכונה לפי בדיקת הבינה המלאכותית: ${mark.correction}` : 'תשובה לדוגמה אינה זמינה לבדיקה זו.');
+          if (explanation) body.append(explanation);
+        }
+      }
+      if (source) addLine(source, 'source-line');
+      card.append(title, body);
+      return card;
+    });
+    container.replaceChildren(...cards);
+    cards.find(card => card.dataset.questionId === focusId)?.querySelector('summary').focus({ preventScroll: true });
+  }
+
   function watch(grade, token, onReady) {
     if (grade.status !== 'pending' || !token) return;
     const endpoint = location.hostname === 'michaelmishaev.github.io'
@@ -41,5 +95,5 @@
     setTimeout(check, delay);
   }
 
-  root.ExamResult = { newToken, scoreText, renderConclusion, watch };
+  root.ExamResult = { newToken, scoreText, renderConclusion, renderCompletion, startSubmission, renderQuestions, watch };
 })(globalThis);

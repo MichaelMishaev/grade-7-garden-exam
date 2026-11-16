@@ -35,7 +35,9 @@ test('results source line is plain text and never navigates away from the result
   const { readFileSync } = await import('node:fs');
   const js = readFileSync(new URL('./library-exam.js', import.meta.url), 'utf8');
   const results = js.slice(js.indexOf('function results()'), js.indexOf("$('student-name').addEventListener"));
-  assert.match(results, /source-line/);
+  assert.match(results, /ExamResult.renderQuestions/);
+  const renderer = readFileSync(new URL('./exam-result.js', import.meta.url), 'utf8');
+  assert.match(renderer, /addLine\(source, 'source-line'\)/);
   assert.doesNotMatch(results, /show\('start'/);
   assert.doesNotMatch(results, /createElement\('a'\)/);
 });
