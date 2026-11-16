@@ -19,7 +19,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.deepEqual(await migrate(sql), ['001_init.sql', '002_references.sql', '003_practice_results.sql', '004_attempts_codes_ai.sql', '005_checkbox_type.sql', '006_retired_questions.sql', '007_final_submission_email.sql', '008_ai_conclusion.sql']);
     assert.deepEqual(await migrate(sql), []);
     const first = await seed(sql);
-    assert.equal(first.questions.inserted, 132);
+    assert.equal(first.questions.inserted, 156);
     assert.equal(first.study_references.inserted, extractContent().study_references.length);
     const second = await seed(sql);
     assert.ok(Object.values(second).every((r) => r.inserted === 0 && r.updated === 0));
@@ -47,7 +47,7 @@ test('migrate, seed twice, verify, store a submission, read content', { skip: !u
     assert.equal((await seed(sql)).questions.retired, 1);
     assert.deepEqual(await verify(sql), []);
     assert.equal((await content.getQuiz(sql, 'physics-units')).questions.length, 5);
-    assert.equal((await sql`SELECT count(*)::int AS count FROM questions`)[0].count, 133);
+    assert.equal((await sql`SELECT count(*)::int AS count FROM questions`)[0].count, 157);
     assert.deepEqual({ ...(await sql`SELECT retired, source_hash FROM questions WHERE id = 'physics-units-11'`)[0] }, { retired: true, source_hash: 'legacy-preserved' });
     assert.equal((await seed(sql)).questions.retired, 0);
     await seed(sql, legacyContent);

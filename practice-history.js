@@ -8,7 +8,11 @@
     'physics-basics': { code: 'PRA-004', count: 11, open: [5, 10] },
     'physics-units': { code: 'PRA-005', count: 5, numeric: [0, 1, 2, 3, 4] },
     'physics-precision': { code: 'PRA-006', count: 6, numeric: [0, 1, 2, 4], open: [3, 5] },
-    'physics-pole': { code: 'PRA-007', count: 5, numeric: [1, 4], open: [0, 2, 3] }
+    'physics-pole': { code: 'PRA-007', count: 5, numeric: [1, 4], open: [0, 2, 3] },
+    'math-coordinates': { code: 'PRA-008', count: 6, numeric: [3, 4] },
+    'math-signed': { code: 'PRA-009', count: 6, numeric: [2, 3, 4, 5] },
+    'math-area': { code: 'PRA-010', count: 6, numeric: [0, 1, 3, 4, 5] },
+    'math-geometry': { code: 'PRA-011', count: 6, numeric: [1, 2] }
   });
 
   // Pause between a clicked answer and the next question (docs/TESTING.md §3).

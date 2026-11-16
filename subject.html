@@ -329,7 +329,23 @@
       ]
     }
   ]
-}
+},
+      math: {
+        title: 'מתמטיקה',
+        description: 'יום חמישי, 26.11.2026 · הכנה למבחן במתמטיקה לכיתה ז׳.',
+        variants: [],
+        quizzes: [
+          ['math-coordinates', 'מערכת צירים', 'נקודות ברביע הראשון, מרחקים ואורכי צלעות', 1],
+          ['math-signed', 'מספרים מכוונים', 'ערך מוחלט, מספרים נגדיים, חיבור וחיסור', 2],
+          ['math-area', 'שטחים ואורכי צלעות', 'ריבועים, מלבנים ומשולשים', 3],
+          ['math-geometry', 'זוויות ומשולשים מיוחדים', 'סימון זוויות, חיבור וחיסור וסוגי משולשים', 4]
+        ],
+        references: [{
+          id: 'math-november-topics', kind: 'passage', title: 'נושאי המבחן במתמטיקה ודוגמאות לתרגול', url: 'math-study.html', attribution: null,
+          parts: ['מערכת צירים והרביע הראשון', 'מספרים מכוונים', 'שטחי ריבוע, מלבן ומשולש', 'זוויות וסימון זוויות', 'משולשים מיוחדים']
+            .map(part => ({ part, title: part }))
+        }]
+      }
     };
     const examDates = {
       'hebrew-v1-garden': '2026-10-29',
@@ -339,19 +355,29 @@
     const key = new URLSearchParams(location.search).get('subject');
     const subjectKey = Object.hasOwn(subjects, key) ? key : 'hebrew';
     const isPhysics = subjectKey === 'physics';
+    const isMath = subjectKey === 'math';
+    const quizCounts = { 'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5,
+      'math-coordinates': 6, 'math-signed': 6, 'math-area': 6, 'math-geometry': 6 };
     const escapeHtml = value => String(value).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
     // Renders from the API (GET /api/subjects/:id) when it matches the inline subject; otherwise from the inline data.
     function render(subject) {
-    document.title = `${subject.title} · גרסאות המבחן | PrepX`;
+    document.title = `${subject.title} · ${isMath ? 'הכנה למבחן' : 'גרסאות המבחן'} | PrepX`;
     document.getElementById('subject-title').textContent = subject.title;
     document.getElementById('subject-description').textContent = subject.description;
-    document.getElementById('subject-art').src = isPhysics ? 'assets/atom.png' : 'assets/books.png';
-    if (isPhysics) {
+    document.getElementById('subject-art').src = isPhysics ? 'assets/atom.png' : isMath ? 'assets/exam-sheet.png' : 'assets/books.png';
+    if (subject.quizzes) {
       document.getElementById('practice-section').hidden = false;
-      document.querySelector('#practice-section .quiz-list').innerHTML = subject.quizzes.map(([id, title, detail, number]) => `<a class="quiz-row" href="practice.html?quiz=${id}"><span class="arrow" aria-hidden="true">←</span><span class="lesson-number" aria-hidden="true">${number}</span><span class="quiz-copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)} · ${{ 'physics-basics': 11, 'physics-units': 5, 'physics-precision': 6, 'physics-pole': 5 }[id]} שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span><span class="quiz-icon" aria-hidden="true">?</span></a>`).join('');
+      document.querySelector('#practice-section .quiz-list').innerHTML = subject.quizzes.map(([id, title, detail, number]) => `<a class="quiz-row" href="practice.html?quiz=${id}"><span class="arrow" aria-hidden="true">←</span><span class="lesson-number" aria-hidden="true">${number}</span><span class="quiz-copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)} · ${quizCounts[id]} שאלות</small><span class="practice-action">מתחילים לענות <span aria-hidden="true">←</span></span></span><span class="quiz-icon" aria-hidden="true">?</span></a>`).join('');
     }
     const list = document.getElementById('variant-list');
-    if (subject.variants.length === 0) {
+    if (isMath) {
+      list.parentElement.hidden = true;
+      const studyLink = document.createElement('a');
+      studyLink.className = 'practice-shortcut';
+      studyLink.href = subjects.math.references[0].url;
+      studyLink.textContent = 'לנושאי המבחן ולדוגמאות פתורות';
+      document.querySelector('.subject-intro .practice-shortcut').replaceWith(studyLink);
+    } else if (subject.variants.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-state';
       empty.textContent = isPhysics ? 'גרסאות מבחן עדיין לא נוספו. אפשר לתרגל לפי נושא בהמשך העמוד.' : 'אין עדיין גרסאות זמינות למבחן הזה. חזרו לכאן כשהחומר יתווסף.';
@@ -493,7 +519,7 @@
     const { loadContent, subjectFromApi, useApi } = window.ContentApi || {};
     if (loadContent && useApi()) {
       const inline = subjects[subjectKey];
-      loadContent(`subjects/${subjectKey}`, null, { valid: data => { const mapped = subjectFromApi(data, inline); return mapped !== null && (!isPhysics || ContentApi.sameData(mapped.quizzes, inline.quizzes)); } })
+      loadContent(`subjects/${subjectKey}`, null, { valid: data => { const mapped = subjectFromApi(data, inline); return mapped !== null && (!inline.quizzes || ContentApi.sameData(mapped.quizzes, inline.quizzes)); } })
         .then(data => render(data ? subjectFromApi(data, inline) : inline), () => render(inline));
     } else {
       render(subjects[subjectKey]);

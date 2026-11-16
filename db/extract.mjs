@@ -52,7 +52,7 @@ export function extractContent(root = defaultRoot) {
     { id: 'library', title: 'הספרייה נפתחת גם בהפסקה', body_html: article(libraryHtml), source_file: 'library-exam.html' }
   ];
 
-  const art = { hebrew: 'assets/books.png', physics: 'assets/atom.png', english: 'assets/books.png' };
+  const art = { hebrew: 'assets/books.png', physics: 'assets/atom.png', english: 'assets/books.png', math: 'assets/exam-sheet.png' };
   const subjects = Object.entries(subjectSource).map(([id, s], i) => ({
     id, title: s.title, description: s.description, art_path: art[id] ?? null, sort_order: i + 1
   }));
@@ -62,8 +62,10 @@ export function extractContent(root = defaultRoot) {
     id: v.id, code: examCodes[v.id] ?? null, subject_id: subjectId, title: v.title, detail: v.detail, date_label: v.date ?? null,
     href: v.href, passage_id: passageByExam[v.id] ?? null, question_count: Number.parseInt(v.count, 10), sort_order: i + 1
   }));
-  const references = variants.flatMap(({ subjectId, v }) => (v.references ?? []).map((r) => ({ ...r, subjectId, examId: v.id })))
-    .map((r, i) => ({
+  const references = [
+    ...variants.flatMap(({ subjectId, v }) => (v.references ?? []).map((r) => ({ ...r, subjectId, examId: v.id }))),
+    ...Object.entries(subjectSource).flatMap(([subjectId, s]) => (s.references ?? []).map((r) => ({ ...r, subjectId, examId: null })))
+  ].map((r, i) => ({
       id: r.id, subject_id: r.subjectId, exam_id: r.examId, quiz_id: null, kind: r.kind, title: r.title,
       url: r.url ?? null, attribution: r.attribution ?? null, parts: r.parts ?? null, sort_order: i + 1
     }));
@@ -71,11 +73,12 @@ export function extractContent(root = defaultRoot) {
 
   const hebrewRows = [...subjectHtml.matchAll(/href="practice\.html\?quiz=([\w-]+)"[\s\S]*?<strong>(.*?)<\/strong><small>(.*?) · \d+ שאלות<\/small>/g)]
     .map(([, id, title, detail]) => ({ id, list_title: title, list_detail: detail }));
-  const physicsList = subjectSource.physics.quizzes.map(([id, title, detail]) => ({ id, list_title: title, list_detail: detail }));
-  const listing = new Map([...hebrewRows, ...physicsList].map((r) => [r.id, r]));
+  const subjectQuizRows = Object.entries(subjectSource).flatMap(([subjectId, s]) =>
+    (s.quizzes ?? []).map(([id, title, detail]) => ({ id, subject_id: subjectId, list_title: title, list_detail: detail })));
+  const listing = new Map([...hebrewRows, ...subjectQuizRows].map((r) => [r.id, r]));
   const quizExam = new Map(variants.flatMap(({ v }) => (v.practiceQuizzes ?? []).map((quizId) => [quizId, v.id])));
   const quizzes = Object.entries(quizSource).map(([id, q], i) => ({
-    id, subject_id: id.startsWith('physics-') ? 'physics' : 'hebrew',
+    id, subject_id: listing.get(id)?.subject_id ?? 'hebrew',
     exam_id: quizExam.get(id) ?? null,
     title: q.title, description: q.description,
     list_title: listing.get(id)?.list_title ?? null, list_detail: listing.get(id)?.list_detail ?? null,
@@ -100,7 +103,7 @@ export function extractContent(root = defaultRoot) {
     ...englishQuestions.map(examQuestion('english-v1-practice')),
     ...Object.entries(quizSource).flatMap(([quizId, quiz]) => quiz.questions.map((q, i) => ({
       id: `${quizId}-${pad(i + 1)}`, exam_id: null, quiz_id: quizId, position: i + 1, type: q.type || 'mcq',
-      topic: null, difficulty: null, prompt: q.text, choices: q.choices ?? null, correct: q.correct,
+      topic: q.topic ?? null, difficulty: null, prompt: q.text, choices: q.choices ?? null, correct: q.correct,
       explanation_he: q.he ?? null, explanation_en: q.en ?? null, ...ref(q.ref)
     })))
   ].map((q) => ({ ...q, source_hash: hash([q.id, q.exam_id, q.quiz_id, q.position, q.type, q.topic, q.difficulty, q.prompt, q.choices, q.correct, q.explanation_he, q.explanation_en, q.reference_id, q.reference_part]) }));

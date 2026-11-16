@@ -40,11 +40,11 @@ test('physics accepts only matching API content, including when the old quiz has
   const apiScope = {};
   runInNewContext(read('content-api.js'), apiScope);
   const ContentApi = apiScope.ContentApi;
-  const fn = source.slice(source.indexOf('function physicsQuizMatches'), source.indexOf('const readBest'));
+  const fn = source.slice(source.indexOf('function structuredQuizMatches'), source.indexOf('const readBest'));
   const content = extractContent();
   for (const key of keys) {
     const inlineQuiz = quizzes[key];
-    const matches = runInNewContext(fn + '\nphysicsQuizMatches;', { ContentApi, inlineQuiz });
+    const matches = runInNewContext(fn + '\nstructuredQuizMatches;', { ContentApi, inlineQuiz });
     const api = { title: inlineQuiz.title, description: inlineQuiz.description, questions: content.questions.filter(q => q.quiz_id === key).map(toApi) };
     assert.equal(matches(api), true, key);
     assert.equal(matches({ ...api, questions: api.questions.map((q, i) => i ? q : { ...q, prompt: 'stale question' }) }), false, key);

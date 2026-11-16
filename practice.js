@@ -479,8 +479,117 @@ const physicsLessons = {
 };
 Object.assign(quizzes, physicsLessons);
 
+// Original exercises aligned to the school's 26.11 Grade 7 topic notice.
+const mathText = text => text.replace(/\{([^}]+)\}/g, '\u2066$1\u2069');
+const mathQuestion = (part, text, he, en) => ({
+  topic: part, text: mathText(text), he: mathText(he), en, ref: { id: 'math-november-topics', part }
+});
+const mathChoice = (part, text, choices, correct, he, en, figure) => ({
+  ...mathQuestion(part, text, he, en), type: 'mcq', choices: choices.map(mathText), correct, figure
+});
+const mathNumber = (part, text, value, unit, he, en, figure) => ({
+  ...mathQuestion(part, text, he, en), type: 'fill', correct: { value, tolerance: 1e-8, unit }, figure
+});
+const coordinates = 'מערכת צירים והרביע הראשון';
+const signedNumbers = 'מספרים מכוונים';
+const areas = 'שטחי ריבוע, מלבן ומשולש';
+const angles = 'זוויות וסימון זוויות';
+const triangles = 'משולשים מיוחדים';
+const coordinateFigure = '<img src="assets/math/coordinate-grid.png" width="640" height="600" alt="רשת של הרביע הראשון עם ציר x אופקי וציר y אנכי. A מיושרת עם 2 על ציר x ועם 5 על ציר y. B מיושרת עם 5 ועם 2, C עם 3 ועם 3, ו-D עם 4 ועם 5.">';
+const angleFigure = '<img src="assets/math/angle-rays.png" width="640" height="330" alt="שלוש קרניים יוצאות מנקודה B: הקרן התחתונה עוברת ב-A, האמצעית ב-D והעליונה ב-C.">';
+
+Object.assign(quizzes, {
+  'math-coordinates': {
+    title: 'מערכת צירים',
+    description: 'קוראים נקודות ברביע הראשון ומחשבים מרחקים ואורכי צלעות.',
+    questions: [
+      mathChoice(coordinates, 'מהם שיעורי הנקודה {A} בשרטוט?', ['{(5, 2)}', '{(2, 5)}', '{(3, 3)}', '{(4, 5)}'], 1,
+        'קודם קוראים את שיעור {x} על הציר האופקי ואז את שיעור {y} על הציר האנכי. לכן {A = (2, 5)}.',
+        'Read x first and y second. Point A is (2, 5).', coordinateFigure),
+      mathChoice(coordinates, 'סמנו בשרטוט את הנקודה {(5, 2)} על ידי בחירת האות שלה.', ['{A}', '{B}', '{C}', '{D}'], 1,
+        'מראשית הצירים זזים 5 יחידות ימינה ואז 2 יחידות למעלה. מגיעים לנקודה {B}.',
+        'Move 5 units right and 2 units up from the origin to reach B.', coordinateFigure),
+      mathChoice(coordinates, 'איזו נקודה נמצאת בתוך הרביע הראשון?', ['{(0, 4)}', '{(4, 0)}', '{(−4, 2)}', '{(4, 2)}'], 3,
+        'בתוך הרביע הראשון שני השיעורים חיוביים. נקודה שיש לה שיעור 0 נמצאת על ציר.',
+        'Both coordinates are positive inside quadrant I. A zero coordinate puts the point on an axis.'),
+      mathNumber(coordinates, 'כמה יחידות אורך יש בין {A(2, 3)} לבין {B(8, 3)}?', 6, null,
+        'שיעור {y} זהה, לכן הקטע אופקי. מחשבים {8 − 2 = 6}.', 'The points share a y-coordinate. Their horizontal distance is 8 − 2 = 6.'),
+      mathNumber(coordinates, 'הצלע {AB} מחברת את {A(4, 9)} ל־{B(4, 2)}. מה אורך הצלע ביחידות?', 7, null,
+        'שיעור {x} זהה, לכן הקטע אנכי. אורך הוא חיובי, ולכן מחשבים {9 − 2 = 7}.', 'The side is vertical. Subtract the smaller y-coordinate from the larger one: 9 − 2 = 7.'),
+      mathChoice(coordinates, 'במלבן {ABCD} נתונות הנקודות {A(2, 2)}, {B(7, 2)} ו־{C(7, 5)}. מהי הנקודה {D}? סמנו את הנקודות על דף משובץ כדי לבדוק.', ['{(7, 5)}', '{(2, 5)}', '{(5, 2)}', '{(2, 7)}'], 1,
+        'הצלע {AD} אנכית ולכן {D} חולקת את שיעור {x} של {A}. הצלע {CD} אופקית ולכן {D} חולקת את שיעור {y} של {C}.',
+        'D has the same x-coordinate as A and the same y-coordinate as C, so D is (2, 5).')
+    ]
+  },
+  'math-signed': {
+    title: 'מספרים מכוונים',
+    description: 'מתרגלים מספרים נגדיים, ערך מוחלט וחיבור וחיסור עם סימנים.',
+    questions: [
+      mathChoice(signedNumbers, 'מה המספר הנגדי ל־{−9}?', ['{−9}', '{0}', '{9}', '{1}'], 2,
+        'מספרים נגדיים נמצאים באותו מרחק מ־0, משני צדדיו. המספר הנגדי ל־{−9} הוא {9}.',
+        'Opposites are equally far from zero on opposite sides. The opposite of −9 is 9.'),
+      mathChoice(signedNumbers, 'באיזה זוג הערך המוחלט של כל אחד משני המספרים הוא 6?', ['{−6} ו־{6}', '{0} ו־{6}', '{−3} ו־{3}', '{−6} ו־{0}'], 0,
+        'ערך מוחלט הוא מרחק מ־0. גם {−6} וגם {6} נמצאים במרחק 6 יחידות מ־0.', 'Absolute value is distance from zero. Both −6 and 6 are six units away.'),
+      mathNumber(signedNumbers, 'חשבו {−8 + 3}.', -5, null,
+        'מתחילים ב־{−8} וזזים 3 צעדים ימינה על ישר המספרים. מגיעים ל־{−5}.', 'Start at −8 and move three units right on the number line to reach −5.'),
+      mathNumber(signedNumbers, 'חשבו {−4 − (−9)}.', 5, null,
+        'חיסור מספר שווה לחיבור המספר הנגדי לו. לכן {−4 − (−9) = −4 + 9 = 5}.', 'Subtracting −9 is the same as adding 9. That takes −4 to 5.'),
+      mathNumber(signedNumbers, 'חשבו {7 + (−12) − (−4) + (−3)}.', -4, null,
+        'מחליפים את חיסור {−4} בחיבור {4}. משמאל לימין מקבלים {7 − 12 = −5}, אחר כך {−5 + 4 = −1}, ולבסוף {−1 − 3 = −4}.',
+        'Work left to right: 7 − 12 = −5, then add 4 to get −1, then subtract 3 to get −4.'),
+      mathNumber(signedNumbers, 'בבוקר הטמפרטורה הייתה {−3} מעלות. היא עלתה ב־6 מעלות, ירדה ב־8 ואז עלתה ב־2. מה הטמפרטורה בסוף?', -3, '°C',
+        'עלייה היא חיבור וירידה היא חיסור. מחשבים {−3 + 6 − 8 + 2 = −3}.', 'Add rises and subtract drops: −3 + 6 − 8 + 2 = −3 degrees.')
+    ]
+  },
+  'math-area': {
+    title: 'שטחים ואורכי צלעות',
+    description: 'מחשבים שטחים של ריבועים, מלבנים ומשולשים, גם במערכת צירים.',
+    questions: [
+      mathNumber(areas, 'אורך צלע של ריבוע הוא 7 ס״מ. מה שטחו בסמ״ר?', 49, 'סמ״ר',
+        'בריבוע האורך והרוחב שווים. מכפילים {7 × 7 = 49}.', 'A square has equal length and width, so the area is 7 × 7 = 49 cm².'),
+      mathNumber(areas, 'מתכננים לכסות לוח מלבני שאורכו 12 ס״מ ורוחבו 5 ס״מ בנייר. מה שטח הלוח בסמ״ר?', 60, 'סמ״ר',
+        'שטח מלבן הוא אורך כפול רוחב. מחשבים {12 × 5 = 60}.', 'Multiply the rectangle’s length and width: 12 × 5 = 60 cm².'),
+      mathChoice(areas, 'אורך בסיס במשולש הוא 9 ס״מ והגובה המאונך לבסיס הוא 4 ס״מ. מה שטח המשולש?', ['18 סמ״ר', '36 סמ״ר', '13 סמ״ר', '26 סמ״ר'], 0,
+        'מכפילים בסיס בגובה המאונך לו ומחלקים ב־2. לכן {9 × 4 ÷ 2 = 18}.', 'Multiply the base by its perpendicular height and divide by two: 9 × 4 ÷ 2 = 18 cm².'),
+      mathNumber(areas, 'שטח מלבן הוא 48 סמ״ר. אורך אחת מצלעותיו 8 ס״מ. מה אורך הצלע הסמוכה לה בס״מ?', 6, 'ס״מ',
+        'מכפלת שתי הצלעות הסמוכות היא 48. מחלקים {48 ÷ 8 = 6}.', 'Divide the area by the known side length: 48 ÷ 8 = 6 cm.'),
+      mathNumber(areas, 'במשולש שקודקודיו {A(2, 1)}, {B(8, 1)} ו־{C(2, 5)}, מה השטח ביחידות ריבועיות?', 12, null,
+        'הבסיס {AB} אופקי ואורכו {8 − 2 = 6}. הגובה {AC} אנכי ואורכו {5 − 1 = 4}. לכן {6 × 4 ÷ 2 = 12}.',
+        'AB is a 6-unit horizontal base and AC is a 4-unit vertical height. The area is 6 × 4 ÷ 2 = 12 square units.'),
+      mathNumber(areas, 'שטח של ריבוע שצלעו 8 ס״מ גדול משטח של משולש שבסיסו 8 ס״מ וגובהו 6 ס״מ. בכמה סמ״ר הוא גדול יותר?', 40, 'סמ״ר',
+        'שטח הריבוע {8 × 8 = 64}. שטח המשולש {8 × 6 ÷ 2 = 24}. ההפרש הוא {64 − 24 = 40}.',
+        'The square has area 64 cm² and the triangle has area 24 cm². Subtract to get 40 cm².')
+    ]
+  },
+  'math-geometry': {
+    title: 'זוויות ומשולשים מיוחדים',
+    description: 'קוראים סימוני זוויות, מחשבים זוויות ומזהים משולשים לפי צלעות וזוויות.',
+    questions: [
+      mathChoice(angles, 'איזו נקודה היא הקודקוד של הזווית {∠ABC} בשרטוט?', ['{A}', '{B}', '{C}', '{D}'], 1,
+        'האות האמצעית בשם הזווית היא הקודקוד. הקרניים {BA} ו־{BC} יוצאות מ־{B}.',
+        'The middle letter names the vertex. Rays BA and BC start at B.', angleFigure),
+      mathNumber(angles, 'בשרטוט הקרן {BD} נמצאת בתוך הזווית {∠ABC}. אם {∠ABD = 30°} ו־{∠DBC = 40°}, מה גודל {∠ABC} במעלות?', 70, '°',
+        'שתי הזוויות הסמוכות מרכיבות את הזווית השלמה, ולכן {30 + 40 = 70}.',
+        'The adjacent angles make up the whole angle. Add 30° and 40° to get 70°.', angleFigure),
+      mathNumber(angles, 'הקרן {BD} נמצאת בתוך {∠ABC}. הזווית {∠ABC} היא {78°} והזווית {∠ABD} היא {35°}. מה גודל {∠DBC} במעלות?', 43, '°',
+        'מחסרים את החלק הידוע מהזווית השלמה. מחשבים {78 − 35 = 43}.',
+        'Subtract the known part from the full angle: 78° − 35° = 43°.'),
+      mathChoice(triangles, 'למשולש צלעות באורכים 5, 5 ו־8 ס״מ. איך מסווגים אותו לפי אורכי הצלעות?', ['משולש שווה־צלעות', 'משולש שווה־שוקיים', 'משולש שונה־צלעות'], 1,
+        'שתי צלעות באורך 5 ס״מ שוות זו לזו. הצלע השלישית שונה, ולכן זהו משולש שווה־שוקיים.',
+        'Two sides are 5 cm and the third is different, so the triangle is isosceles.'),
+      mathChoice(triangles, 'שלוש הצלעות במשולש שוות זו לזו. איזה משפט נכון?', ['המשולש שווה־צלעות', 'המשולש חייב להיות ישר־זווית', 'במשולש יש בדיוק שתי צלעות שוות', 'המשולש שונה־צלעות'], 0,
+        'משולש שיש לו שלוש צלעות שוות נקרא משולש שווה־צלעות.',
+        'A triangle with three equal sides is equilateral.'),
+      mathChoice(triangles, 'במשולש {ABC} נתון {AB = AC} וגודל הזווית {∠BAC} הוא {90°}. איזה תיאור מתאים למשולש?', ['גם ישר־זווית וגם שווה־שוקיים', 'ישר־זווית ושונה־צלעות', 'שווה־צלעות', 'שווה־שוקיים ללא זווית ישרה'], 0,
+        'שתי הצלעות השוות יוצרות משולש שווה־שוקיים. הזווית בגודל {90°} הופכת אותו גם לישר־זווית.',
+        'Two equal sides make it isosceles. The 90° angle also makes it a right triangle.')
+    ]
+  }
+});
+
 // Study material the questions follow (the same references as the exam versions in subject.html).
 const references = {
+  'math-november-topics': { kind: 'passage', title: 'נושאי המבחן במתמטיקה ודוגמאות לתרגול', url: 'math-study.html' },
   'garden-passage': { kind: 'passage', title: 'הטקסט „תלמידי כיתה ז׳ הקימו גינה בבית הספר”', url: 'garden-exam.html#article' },
   'physics-site': { kind: 'site', title: 'אתר התרגול „מתרגלים פיזיקה ז׳”', url: 'https://physics7-measurement-sarit.sarityarongaya.chatgpt.site/' },
   'physics-pdf': { kind: 'pdf', title: 'סיכום נושא מדידות (PDF)', url: 'assets/materials/physics-measurements-grade-7.pdf' }
@@ -515,15 +624,15 @@ let advanceTimer;
 let posted = false;
 
 const isPhysics = quizKey?.startsWith('physics-');
+const isMath = quizKey?.startsWith('math-');
 const bestKey = `prepx-best-${quizKey}${isPhysics ? '-sarit-v1' : ''}`;
 const prepareQuestions = () => selectedQuiz.questions.map((q, i) => ({ ...q, id: `q${i}`, type: q.type || 'mcq', difficulty: q.difficulty || 'medium' }));
 const shuffleQuestion = q => q.type === 'mcq' ? shuffleChoices(q) : { ...q };
 
-// Physics has figures and written/numeric tasks. Keep its verified inline content
-// authoritative until the API contains exactly the same fields supported by the DB.
-function physicsQuizMatches(data) {
-  const expected = inlineQuiz.questions.map(q => ({ prompt: q.text, type: q.type, choices: q.choices ?? null, correct: q.correct, he: q.he, ref: q.ref }));
-  const actual = data?.questions?.map(q => ({ prompt: q.prompt, type: q.type, choices: q.choices ?? null, correct: q.correct, he: q.explanation?.he, ref: q.ref }));
+// Keep local figures and written/numeric tasks when the API confirms the source content.
+function structuredQuizMatches(data) {
+  const expected = inlineQuiz.questions.map(q => ({ prompt: q.text, type: q.type, choices: q.choices ?? null, correct: q.correct, he: q.he, en: q.en, ref: q.ref }));
+  const actual = data?.questions?.map(q => ({ prompt: q.prompt, type: q.type, choices: q.choices ?? null, correct: q.correct, he: q.explanation?.he, en: q.explanation?.en, ref: q.ref }));
   return ContentApi.sameData(actual, expected) && data.title === inlineQuiz.title && data.description === inlineQuiz.description;
 }
 const readBest = () => { try { const raw = localStorage.getItem(bestKey); return /^\d{1,3}$/.test(raw) && Number(raw) <= 100 ? Number(raw) : 0; } catch { return 0; } };
@@ -576,10 +685,11 @@ function postRound(earned, stars) {
 
 async function init() {
   renderNameBox();
+  if (isMath) document.body.classList.add('math-practice');
   if (useApi && inlineQuiz && window.ContentApi) {
     const { loadContent, quizFromApi, quizMatches } = ContentApi;
-    const data = await loadContent(`quizzes/${quizKey}`, null, { valid: quiz => isPhysics ? physicsQuizMatches(quiz) : quizMatches(quiz, inlineQuiz.questions.length) });
-    if (data && !isPhysics) selectedQuiz = quizFromApi(data);
+    const data = await loadContent(`quizzes/${quizKey}`, null, { valid: quiz => isPhysics || isMath ? structuredQuizMatches(quiz) : quizMatches(quiz, inlineQuiz.questions.length) });
+    if (data && !isPhysics && !isMath) selectedQuiz = quizFromApi(data);
   }
   if (!selectedQuiz) {
     byId('quiz-title').textContent = 'התרגול לא נמצא';
@@ -589,9 +699,14 @@ async function init() {
     byId('progress-fill').parentElement.hidden = true;
     byId('question-index').hidden = true;
   } else {
-    if (quizKey.startsWith('physics-')) {
-      document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => { link.href = 'subject.html?subject=physics'; link.textContent = 'לתרגולים בפיזיקה'; });
+    if (isPhysics || isMath) {
+      const [subject, title] = isMath ? ['math', 'מתמטיקה'] : ['physics', 'פיזיקה'];
+      document.querySelectorAll('a[href="subject.html?subject=hebrew"]').forEach(link => {
+        link.href = `subject.html?subject=${subject}`;
+        link.textContent = `לתרגולים ב${title}`;
+      });
     }
+    if (quizKey === 'math-signed') byId('numeric-answer').inputMode = 'text';
     document.title = `${selectedQuiz.title} | PrepX`;
     byId('quiz-title').textContent = selectedQuiz.title;
     byId('quiz-description').textContent = selectedQuiz.description;
@@ -636,7 +751,7 @@ function showQuestion(index = position) {
   byId('question-figure').hidden = !question.figure;
   byId('question-context').hidden = !question.context;
   byId('context-text').innerHTML = question.context || '';
-  byId('answer-hint').textContent = question.type === 'mcq' ? 'בחרו תשובה אחת' : question.type === 'fill' ? 'כתבו מספר ודרך חישוב' : 'כתבו תשובה מנומקת';
+  byId('answer-hint').textContent = question.type === 'mcq' ? 'בחרו תשובה אחת' : question.type === 'fill' ? 'כתבו מספר ולחצו על אישור' : 'כתבו תשובה מנומקת';
   byId('written-answer').hidden = question.type === 'mcq';
   byId('numeric-label').hidden = question.type !== 'fill';
   byId('numeric-answer').value = picks[view]?.value || '';
@@ -708,7 +823,12 @@ function confirmAnswer(event) {
       streak = correct ? streak + 1 : 0;
       if (!correct) queue = scheduleReask(queue, position, shuffleQuestion(question));
     }
-    reviewItems.push({ text: question.text, picked: pick.value + (pick.work ? `\nדרך חישוב: ${pick.work}` : ''), right: question.type === 'fill' ? String(question.correct.value) : question.correct, correct, he: question.he, en: question.en });
+    const display = value => isMath ? `\u2066${value}\u2069` : String(value);
+    reviewItems.push({
+      text: question.text, picked: display(pick.value) + (pick.work ? `\nדרך חישוב: ${pick.work}` : ''),
+      right: question.type === 'fill' ? display(question.correct.value) : question.correct,
+      correct, he: question.he, en: question.en
+    });
   }
   showVerdict(question, pick, true);
   byId('next-button').hidden = false;
@@ -757,7 +877,7 @@ function showSource(ref) {
   if (!reference) return;
   const link = byId('feedback-source-link');
   link.href = reference.url;
-  link.textContent = ref.part ? `${ref.part} ${sourceIn[reference.kind]}` : reference.title;
+  link.textContent = ref.part ? `${ref.part}${ref.id === 'math-november-topics' ? ' בחומר הלימוד' : ` ${sourceIn[reference.kind]}`}` : reference.title;
   if (reference.kind === 'passage') { link.removeAttribute('target'); link.removeAttribute('rel'); }
   else { link.target = '_blank'; link.rel = 'noopener'; }
 }

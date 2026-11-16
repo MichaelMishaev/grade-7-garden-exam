@@ -116,7 +116,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid #173f2b; outline-offs
 .source-line { margin-top: 12px !important; padding-top: 10px; border-top: 1px solid rgba(39, 53, 65, .12); color: #4d5f6b; font-size: 14px; }
 .source-line a { color: #0b6fa3; font-weight: 800; text-underline-offset: 3px; }
 
-/* Teacher measurement tasks reuse the existing practice card and controls. */
+/* Figures and typed responses reuse the practice card. */
+#question-figure img { display: block; width: min(100%, 280px); height: auto; margin: 12px auto; }
+@media (max-width: 560px) {
+  .math-practice .topbar { margin-bottom: 24px; }
+  .math-practice .practice-label { display: none; }
+  .math-practice .subheading, .math-practice .name-box { margin-bottom: 14px; }
+}
 #question-figure svg { display: block; width: 100%; height: auto; margin-block: 20px; direction: ltr; }
 #written-answer { display: grid; gap: 12px; }
 #written-answer label { font-weight: 700; line-height: 1.6; }

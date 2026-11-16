@@ -32,10 +32,10 @@ test('every inline quiz is represented in the extracted content', () => {
 for (const quiz of content.quizzes) {
   test(`API-shaped ${quiz.id} maps back to the inline quiz`, () => {
     const data = apiQuiz(quiz);
-    if (quiz.id.startsWith('physics-')) {
-      // Physics keeps inline figures; accept DB content only when its typed fields match.
-      const fn = practiceJs.slice(practiceJs.indexOf('function physicsQuizMatches'), practiceJs.indexOf('const readBest'));
-      const matches = runInNewContext(fn + '\nphysicsQuizMatches;', { ContentApi, inlineQuiz: inline[quiz.id] });
+    if (quiz.subject_id === 'physics' || quiz.subject_id === 'math') {
+      // Keep inline figures and validate the API's typed fields.
+      const fn = practiceJs.slice(practiceJs.indexOf('function structuredQuizMatches'), practiceJs.indexOf('const readBest'));
+      const matches = runInNewContext(fn + '\nstructuredQuizMatches;', { ContentApi, inlineQuiz: inline[quiz.id] });
       assert.equal(matches(data), true);
     } else {
       assert.ok(quizMatches(data, inline[quiz.id].questions.length));
@@ -122,3 +122,8 @@ for (const id of ['hebrew', 'physics']) {
     assert.deepEqual(subjectFromApi(apiSubject(id), inlineSubjects[id]), inlineSubjects[id]);
   });
 }
+
+test('the API maps a practice-only subject with no exam rows', () => {
+  const { references, ...inline } = inlineSubjects.math;
+  assert.deepEqual(subjectFromApi(apiSubject('math'), inlineSubjects.math), inline);
+});

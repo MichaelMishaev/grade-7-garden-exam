@@ -19,7 +19,7 @@ function round(quiz = 'facts', right = 6) {
 test('every practice quiz has a unique permanent code, in order, and the right question count', () => {
   const content = extractContent();
   assert.deepEqual(Object.keys(QUIZZES), content.quizzes.map((q) => q.id));
-  assert.deepEqual(Object.values(QUIZZES).map((q) => q.code), ['PRA-001', 'PRA-002', 'PRA-003', 'PRA-004', 'PRA-005', 'PRA-006', 'PRA-007']);
+  assert.deepEqual(Object.values(QUIZZES).map((q) => q.code), ['PRA-001', 'PRA-002', 'PRA-003', 'PRA-004', 'PRA-005', 'PRA-006', 'PRA-007', 'PRA-008', 'PRA-009', 'PRA-010', 'PRA-011']);
   for (const q of content.quizzes) assert.equal(QUIZZES[q.id].count, content.questions.filter((x) => x.quiz_id === q.id).length, q.id);
 });
 
