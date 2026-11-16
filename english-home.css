@@ -1,5 +1,11 @@
-/* Keep four subject rows and the existing games visible on the compact home page. */
-.home-page .exam-card, .home-page .exam-card:first-child { min-height: 46px; padding: 4px 12px; }
+/* Keep the featured subject, the subject list and games visible on the compact home page. */
+.home-page .exam-card, .home-page .exam-card:first-child { min-height: 46px; padding: 2px 12px; }
+.home-page .exam-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.home-page .exam-list .exam-card:first-child { grid-column: 1 / -1; }
+@media (max-width: 420px) {
+  .home-page .exam-list .exam-card:not(:first-child) { gap: 6px; padding-inline: 8px; }
+  .home-page .exam-list .exam-card:not(:first-child) .subject-art { flex-basis: 24px; width: 24px; height: 24px; }
+}
 .home-page .exam-copy strong { margin-bottom: 2px; }
 .home-page .exam-copy small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .home-page .subject-art { flex-basis: 32px; width: 32px; height: 32px; }
